@@ -1,12 +1,12 @@
 ﻿{
   "Id": "MicroPatches",
   "DisplayName": "MicroPatches",
-  "Author": "",
+  "Author": "microsoftenator",
   "Version": "1.1.1",
   "ManagerVersion": "0.25.0",
   "Requirements": [],
   "AssemblyName": "MicroPatches.dll",
   "EntryMethod": "MicroPatches.Main.Load",
-  "HomePage": "",
-  "Repository": ""
+  "HomePage": "https://github.com/microsoftenator2022/MicroPatches",
+  "Repository": "https://raw.githubusercontent.com/microsoftenator2022/MicroPatches/master/ModDetails/Repository.json"
 }
