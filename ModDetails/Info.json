@@ -1,0 +1,12 @@
+﻿{
+  "Id": "MicroPatches",
+  "DisplayName": "MicroPatches",
+  "Author": "",
+  "Version": "1.1.1",
+  "ManagerVersion": "0.25.0",
+  "Requirements": [],
+  "AssemblyName": "MicroPatches.dll",
+  "EntryMethod": "MicroPatches.Main.Load",
+  "HomePage": "",
+  "Repository": ""
+}

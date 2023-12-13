@@ -1,0 +1,157 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="GamePath.props" Condition="Exists('GamePath.props')" />
+
+  <PropertyGroup>
+    <TargetFramework>net481</TargetFramework>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
+    <RestoreAdditionalProjectSources>
+      https://api.nuget.org/v3/index.json;
+      https://nuget.bepinex.dev/v3/index.json;
+    </RestoreAdditionalProjectSources>
+    <RogueTraderData>$(LocalAppData)Low\Owlcat Games\Warhammer 40000 Rogue Trader</RogueTraderData>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="UnityEngine.Modules" Version="2022.3.7" IncludeAssets="compile" />
+    <PackageReference Include="Aze.Publicise.MSBuild.Task" Version="1.1.0" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" PrivateAssets="all" />
+    <PackageReference Include="PublishToWorkshop" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" Version="1.0.9" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="UnityModManager">
+      <HintPath>$(RogueTraderData)\UnityModManager\UnityModManager.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Kingmaker.Stores">
+      <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Kingmaker.Stores.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Kingmaker.Blueprints.Base">
+      <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Kingmaker.Blueprints.Base.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Kingmaker.Controllers.Enums">
+      <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Kingmaker.Controllers.Enums.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Kingmaker.Controllers.Interfaces">
+      <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Kingmaker.Controllers.Interfaces.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Kingmaker.Enums">
+      <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Kingmaker.Enums.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Kingmaker.Controllers.Enums">
+      <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Kingmaker.Controllers.Enums.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Kingmaker.Utility.Enums">
+      <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Kingmaker.Utility.Enums.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="LocalizationShared">
+      <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\LocalizationShared.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Newtonsoft.Json.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="RogueTrader.NetPlayer">
+      <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\RogueTrader.NetPlayer.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="PFLog">
+      <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\PFLog.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="StateHasher">
+      <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\StateHasher.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\0Harmony.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Publicize Include="$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Code.dll" />
+    <Reference Include="Code">
+      <HintPath>$(SolutionDir)lib\Code_public.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+
+    <Publicize Include="$(RogueTraderInstallDir)\WH40KRT_Data\Managed\RogueTrader.GameCore.dll" />
+    <Reference Include="RogueTrader.GameCore">
+      <HintPath>$(SolutionDir)lib\RogueTrader.GameCore_public.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+
+    <Publicize Include="$(RogueTraderInstallDir)\WH40KRT_Data\Managed\RogueTrader.SharedTypes.dll" />
+    <Reference Include="RogueTrader.SharedTypes">
+      <HintPath>$(SolutionDir)lib\RogueTrader.SharedTypes_public.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+
+    <Publicize Include="$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Owlcat.Runtime.Core.dll" />
+    <Reference Include="Owlcat.Runtime.Core">
+      <HintPath>$(SolutionDir)lib\Owlcat.Runtime.Core_public.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+
+    <Publicize Include="$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Owlcat.Runtime.UI.dll" />
+    <Reference Include="Owlcat.Runtime.UI">
+      <HintPath>$(SolutionDir)lib\Owlcat.Runtime.UI_public.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="ModDetails\Info.json" CopyToOutputDirectory="PreserveNewest" Link="%(Filename)%(Extension)" />
+    <None Include="ModDetails\OwlcatModificationManifest.json" CopyToOutputDirectory="PreserveNewest" Link="%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <Target Name="Publicize" AfterTargets="BeforeBuild;PublicizeClean" Inputs="@(Publicize)" Outputs="$(SolutionDir)lib\%(Publicize.Filename)_public.dll">
+    <MakeDir Directories="$(SolutionDir)lib/" />
+    <Publicise InputAssemblies="@(Publicize)" OutputPath="$(SolutionDir)lib/" />
+  </Target>
+
+  <Target Name="PublicizeClean" AfterTargets="Clean">
+    <Delete Files="$(SolutionDir)lib\%(Publicize.Filename)_public.dll" />
+    <Delete Files="$(SolutionDir)lib\%(Publicize.Filename)_public.hash" />
+  </Target>
+
+  <Target Name="Deploy" AfterTargets="Build">
+    <ItemGroup>
+      <Files Include="$(TargetDir)\**\*.*" />
+    </ItemGroup>
+
+    <Copy SourceFiles="@(Files)" DestinationFiles="@(Files->'$(RogueTraderData)\UnityModManager\$(AssemblyName)\%(RecursiveDir)%(Filename)%(Extension)')" />
+  </Target>
+
+  <Target Name="PublishToSteamWorkshop" AfterTargets="Publish">
+    <PublishToWorkshop PathToManifest="$(MSBuildThisFileDirectory)\ModDetails\OwlcatModificationManifest.json" ImageDir="$(MSBuildThisFileDirectory)\ModDetails\" BuildDir="$(SolutionDir)$(OutDir)" GameAppId="2186680" />
+  </Target>
+
+  <Target Name="GenerateCustomPropsFile" BeforeTargets="BeforeBuild" Condition="$(RogueTraderInstallDir) == ''">
+    <Exec Command="findstr /C:&quot;Mono path[0]&quot; &quot;$(RogueTraderData)\Player.log&quot;" IgnoreExitCode="true" ConsoleToMSBuild="true">
+      <Output TaskParameter="ExitCode" PropertyName="ExitCode" />
+      <Output TaskParameter="ConsoleOutput" PropertyName="MonoPathLine" />
+    </Exec>
+
+    <PropertyGroup>
+      <MonoPathRegex>^Mono path\[0\] = '(.*?)/WH40KRT_Data/Managed'$</MonoPathRegex>
+    </PropertyGroup>
+
+    <PropertyGroup>
+      <RogueTraderInstallDir>$([System.Text.RegularExpressions.Regex]::Match($(MonoPathLine), $(MonoPathRegex)).Groups[1].Value)</RogueTraderInstallDir>
+    </PropertyGroup>
+
+    <WriteLinesToFile File="GamePath.props" Lines="&lt;Project xmlns='http://schemas.microsoft.com/developer/msbuild/2003'&gt; &#xD;&#xA;	&lt;PropertyGroup&gt; &#xD;&#xA;		&lt;RogueTraderInstallDir&gt;$(RogueTraderInstallDir)&lt;/RogueTraderInstallDir&gt;&#xD;&#xA;	&lt;/PropertyGroup&gt;&#xD;&#xA;&lt;/Project&gt;" Overwrite="true" Encoding="utf-8" />
+  </Target>
+
+</Project>
