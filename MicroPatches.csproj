@@ -52,6 +52,10 @@
       <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Kingmaker.Utility.Enums.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Kingmaker.UI.InputSystems.Enums">
+      <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Kingmaker.UI.InputSystems.Enums.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="LocalizationShared">
       <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\LocalizationShared.dll</HintPath>
       <Private>False</Private>
