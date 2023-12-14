@@ -20,7 +20,7 @@ If you encounter any issues with an experimental patch, let me know in the issue
 
 These have all recieved basic testing, but are not guaranteed to be free of issues:
 
-- Swap calculations for CasterNamedProperty and TargetNamedProperty. Fix for: Some effects that should be using the caster's stats incorrectly use the target's state and vice-versa.
+- Swap calculations for CasterNamedProperty and TargetNamedProperty. Fix for: Some effects that should be using the caster's stats incorrectly use the target's stats and vice-versa.
 - Fixed AchievementsManager initialization
 - Ignore Steam Achievements with Null ID
 - Lowered the severity of missing save file warnings ("DLC has no status in the DLCCache. Defaulting to unavailable") no longer prints a stacktrace
