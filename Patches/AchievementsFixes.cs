@@ -18,81 +18,81 @@ using UnityEngine;
 
 namespace MicroPatches.Patches
 {
-    [MicroPatch("Achievement fixes: AchievementsManager")]
-    [HarmonyPatch(typeof(AchievementsManager), nameof(AchievementsManager.Activate))]
-    [HarmonyPatchCategory(Main.ExperimentalCategory)]
-    static class AchievementsManagerFixes
-    {
-        static void InitAchievementsManager(AchievementsManager __instance)
-        {
-            switch (StoreManager.Store)
-            {
-                case StoreType.Steam:
-#if DEBUG
-                    Main.PatchLog(nameof(AchievementsManagerFixes), $"Init {nameof(SteamAchievementsManager)}");
-#endif
-                    var steamAchievementsManager = SteamAchievementsManager.Instance;
-                    if (!steamAchievementsManager)
-                    {
-                        steamAchievementsManager = new GameObject().AddComponent<SteamAchievementsManager>();
-                        UnityEngine.Object.DontDestroyOnLoad(steamAchievementsManager);
-                    }
-                    steamAchievementsManager.Achievements = __instance;
-                    __instance.m_AchievementHandler = steamAchievementsManager;
+//    [MicroPatch("Achievement fixes: AchievementsManager")]
+//    [HarmonyPatch(typeof(AchievementsManager), nameof(AchievementsManager.Activate))]
+//    [HarmonyPatchCategory(Main.ExperimentalCategory)]
+//    static class AchievementsManagerFixes
+//    {
+//        static void InitAchievementsManager(AchievementsManager __instance)
+//        {
+//            switch (StoreManager.Store)
+//            {
+//                case StoreType.Steam:
+//#if DEBUG
+//                    Main.PatchLog(nameof(AchievementsManagerFixes), $"Init {nameof(SteamAchievementsManager)}");
+//#endif
+//                    var steamAchievementsManager = SteamAchievementsManager.Instance;
+//                    if (!steamAchievementsManager)
+//                    {
+//                        steamAchievementsManager = new GameObject().AddComponent<SteamAchievementsManager>();
+//                        UnityEngine.Object.DontDestroyOnLoad(steamAchievementsManager);
+//                    }
+//                    steamAchievementsManager.Achievements = __instance;
+//                    __instance.m_AchievementHandler = steamAchievementsManager;
 
-                    break;
+//                    break;
 
-                case StoreType.GoG:
-#if DEBUG
-                    Main.PatchLog(nameof(AchievementsManagerFixes), $"Init {nameof(GogAchievementsManager)}");
-#endif
-                    var gogAchievementsManager = GogAchievementsManager.Instance;
-                    if (!gogAchievementsManager)
-                    {
-                        gogAchievementsManager = new GameObject().AddComponent<GogAchievementsManager>();
-                        UnityEngine.Object.DontDestroyOnLoad(gogAchievementsManager);
-                    }
-                    gogAchievementsManager.Achievements = __instance;
-                    break;
+//                case StoreType.GoG:
+//#if DEBUG
+//                    Main.PatchLog(nameof(AchievementsManagerFixes), $"Init {nameof(GogAchievementsManager)}");
+//#endif
+//                    var gogAchievementsManager = GogAchievementsManager.Instance;
+//                    if (!gogAchievementsManager)
+//                    {
+//                        gogAchievementsManager = new GameObject().AddComponent<GogAchievementsManager>();
+//                        UnityEngine.Object.DontDestroyOnLoad(gogAchievementsManager);
+//                    }
+//                    gogAchievementsManager.Achievements = __instance;
+//                    break;
 
-                case StoreType.EpicGames:
-#if DEBUG
-                    Main.PatchLog(nameof(AchievementsManagerFixes), $"Init {nameof(EGSAchievementsManager)}");
-#endif
-                    var egsachievementsManager = new EGSAchievementsManager(__instance);
-                    egsachievementsManager.SyncAchievements();
-                    __instance.m_AchievementHandler = egsachievementsManager;
-                    break;
-            }
-        }
+//                case StoreType.EpicGames:
+//#if DEBUG
+//                    Main.PatchLog(nameof(AchievementsManagerFixes), $"Init {nameof(EGSAchievementsManager)}");
+//#endif
+//                    var egsachievementsManager = new EGSAchievementsManager(__instance);
+//                    egsachievementsManager.SyncAchievements();
+//                    __instance.m_AchievementHandler = egsachievementsManager;
+//                    break;
+//            }
+//        }
 
-        [HarmonyTranspiler]
-        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGen)
-        {
-            (var head, instructions) = instructions.Pop();
+//        [HarmonyTranspiler]
+//        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGen)
+//        {
+//            (var head, instructions) = instructions.Pop();
 
-            while (!head.Calls(AccessTools.PropertyGetter(typeof(Application), nameof(Application.isPlaying))))
-            {
-                yield return head;
+//            while (!head.Calls(AccessTools.PropertyGetter(typeof(Application), nameof(Application.isPlaying))))
+//            {
+//                yield return head;
 
-                (head, instructions) = instructions.Pop();
-            }
+//                (head, instructions) = instructions.Pop();
+//            }
 
-            yield return head;
+//            yield return head;
             
-            (var brfalse_s, instructions) = instructions.Pop();
+//            (var brfalse_s, instructions) = instructions.Pop();
 
-            if (brfalse_s.opcode != OpCodes.Brfalse_S)
-                throw new Exception($"Unexpected instruction {brfalse_s}");
+//            if (brfalse_s.opcode != OpCodes.Brfalse_S)
+//                throw new Exception($"Unexpected instruction {brfalse_s}");
 
-            yield return brfalse_s;
+//            yield return brfalse_s;
 
-            yield return new CodeInstruction(OpCodes.Ldarg_0);
-            yield return CodeInstruction.Call((AchievementsManager instance) => InitAchievementsManager(instance));
+//            yield return new CodeInstruction(OpCodes.Ldarg_0);
+//            yield return CodeInstruction.Call((AchievementsManager instance) => InitAchievementsManager(instance));
 
-            yield return instructions.Last();
-        }
-    }
+//            yield return instructions.Last();
+//        }
+//    }
 
     [MicroPatch("Achievement fixes: Null Achievement SteamId")]
     [HarmonyPatch(typeof(SteamAchievementsManager), nameof(SteamAchievementsManager.OnUserStatsReceived))]
@@ -102,9 +102,9 @@ namespace MicroPatches.Patches
         static void LogSteamId(string steamId)
         {
             if (steamId == null)
-                Main.PatchLog(nameof(AchievementsManagerFixes), $"Achievement NULL");
+                Main.PatchLog(nameof(SteamAchievementsManager), $"Achievement NULL");
             else
-                Main.PatchLog(nameof(AchievementsManagerFixes), $"Achievement '{steamId}'");
+                Main.PatchLog(nameof(SteamAchievementsManager), $"Achievement '{steamId}'");
         }
 
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGen)
