@@ -20,7 +20,7 @@ namespace MicroPatches.Patches
 {
     [MicroPatch("Achievement fixes: AchievementsManager")]
     [HarmonyPatch(typeof(AchievementsManager), nameof(AchievementsManager.Activate))]
-    [HarmonyPatchCategory("Experimental")]
+    [HarmonyPatchCategory(Main.ExperimentalCategory)]
     static class AchievementsManagerFixes
     {
         static void InitAchievementsManager(AchievementsManager __instance)
@@ -29,7 +29,7 @@ namespace MicroPatches.Patches
             {
                 case StoreType.Steam:
 #if DEBUG
-                    Main.Logger.Log($"Init {nameof(SteamAchievementsManager)}");
+                    Main.PatchLog(nameof(AchievementsManagerFixes), $"Init {nameof(SteamAchievementsManager)}");
 #endif
                     var steamAchievementsManager = SteamAchievementsManager.Instance;
                     if (!steamAchievementsManager)
@@ -44,7 +44,7 @@ namespace MicroPatches.Patches
 
                 case StoreType.GoG:
 #if DEBUG
-                    Main.Logger.Log($"Init {nameof(GogAchievementsManager)}");
+                    Main.PatchLog(nameof(AchievementsManagerFixes), $"Init {nameof(GogAchievementsManager)}");
 #endif
                     var gogAchievementsManager = GogAchievementsManager.Instance;
                     if (!gogAchievementsManager)
@@ -57,7 +57,7 @@ namespace MicroPatches.Patches
 
                 case StoreType.EpicGames:
 #if DEBUG
-                    Main.Logger.Log($"Init {nameof(EGSAchievementsManager)}");
+                    Main.PatchLog(nameof(AchievementsManagerFixes), $"Init {nameof(EGSAchievementsManager)}");
 #endif
                     var egsachievementsManager = new EGSAchievementsManager(__instance);
                     egsachievementsManager.SyncAchievements();
@@ -96,15 +96,15 @@ namespace MicroPatches.Patches
 
     [MicroPatch("Achievement fixes: Null Achievement SteamId")]
     [HarmonyPatch(typeof(SteamAchievementsManager), nameof(SteamAchievementsManager.OnUserStatsReceived))]
-    [HarmonyPatchCategory("Experimental")]
+    [HarmonyPatchCategory(Main.ExperimentalCategory)]
     static class NullAchievmentSteamIdFix
     {
         static void LogSteamId(string steamId)
         {
             if (steamId == null)
-                Main.Logger.Log($"DEBUG: Achievement NULL");
+                Main.PatchLog(nameof(AchievementsManagerFixes), $"Achievement NULL");
             else
-                Main.Logger.Log($"DEBUG: Achievement '{steamId}'");
+                Main.PatchLog(nameof(AchievementsManagerFixes), $"Achievement '{steamId}'");
         }
 
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGen)

@@ -14,6 +14,8 @@ namespace MicroPatches
 #endif
     partial class Main
     {
+        internal const string ExperimentalCategory = "Experimental";
+
         internal static Main Instance = null!;
 
         internal Main(UnityModManager.ModEntry modEntry)
@@ -57,7 +59,7 @@ namespace MicroPatches
 
         readonly Dictionary<Type, bool?> AppliedPatches = new();
 
-        static bool IsExperimental(PatchClassProcessor pc) => pc.GetCategory() == "Experimental";
+        static bool IsExperimental(PatchClassProcessor pc) => pc.GetCategory() == ExperimentalCategory;
 
         void RunPatches()
         {
