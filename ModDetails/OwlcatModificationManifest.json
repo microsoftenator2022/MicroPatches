@@ -1,6 +1,6 @@
 {
   "UniqueName": "MicroPatches",
-  "Version": "1.1.1",
+  "Version": "1.2.0",
   "DisplayName": "MicroPatches",
   "Description": "Transmechanic Microsoftenator once again fixing bugs and cleaning logs.\n\nTiny patches attempting to fix minor bugs and silence annoying log messages.\nExperimental patches can be toggled in the mod settings (requires restart to take effect).\n\nWARNING: ALL EXPERIMENTAL PATCHES ARE DISABLED BY DEFAULT FOR A REASON. THEY MAY - AND PROBABLY WILL - BREAK YOUR GAME AND/OR SAVES. ACTIVATE AT YOUR OWN RISK.",
   "Author": "Microsoftenator",
