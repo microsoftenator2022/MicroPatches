@@ -33,7 +33,12 @@ namespace MicroPatches
 
         readonly UnityModManager.ModEntry ModEntry;
 
-        public static UnityModManager.ModEntry.ModLogger Logger => Instance.ModEntry.Logger;
+        private static UnityModManager.ModEntry.ModLogger Logger => Instance.ModEntry.Logger;
+
+        public static void PatchLog(string patchName, string message) => Logger.Log($"[MicroPatch {patchName}] {message}");
+        public static void PatchError(string patchName, string message) => Logger.Error($"[MicroPatch {patchName}] {message}");
+        public static void PatchWarning(string patchName, string message) => Logger.Warning($"[MicroPatch {patchName}] {message}");
+        public static void PatchLogException(Exception ex) => Logger.LogException(ex);
 
         readonly Lazy<(Type t, PatchClassProcessor pc)[]> PatchClasses = new(() =>
             AccessTools.GetTypesFromAssembly(Assembly.GetExecutingAssembly())
