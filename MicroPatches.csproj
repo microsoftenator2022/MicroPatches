@@ -24,6 +24,10 @@
       <HintPath>$(RogueTraderData)\UnityModManager\UnityModManager.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="EOSSDK">
+      <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\EOSSDK.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Kingmaker.Stores">
       <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Kingmaker.Stores.dll</HintPath>
       <Private>False</Private>

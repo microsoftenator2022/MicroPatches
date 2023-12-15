@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using HarmonyLib;
 
 using Kingmaker.Achievements;
+using Kingmaker.EOSSDK;
 using Kingmaker.Stores;
 
 using MicroUtils.Linq;
@@ -99,12 +100,11 @@ namespace MicroPatches.Patches
     [HarmonyPatchCategory(Main.ExperimentalCategory)]
     static class NullAchievmentSteamIdFix
     {
-        static void LogSteamId(string steamId)
+        static void LogSteamId(AchievementData achievementData)
         {
-            if (steamId == null)
-                Main.PatchLog(nameof(SteamAchievementsManager), $"Achievement NULL");
-            else
-                Main.PatchLog(nameof(SteamAchievementsManager), $"Achievement '{steamId}'");
+            var steamId = achievementData.SteamId;
+
+            Main.PatchLog(nameof(SteamAchievementsManager), $"Achievement {achievementData.name} SteamId is {(String.IsNullOrEmpty(steamId) ? "NULL" : steamId)}");
         }
 
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGen)
@@ -142,13 +142,46 @@ namespace MicroPatches.Patches
                 new CodeInstruction(OpCodes.Pop),
                 new CodeInstruction(OpCodes.Br_S, loopStart),
                 new CodeInstruction(OpCodes.Nop) { labels = [notNullTarget] },
-#if DEBUG
-                new CodeInstruction(OpCodes.Dup),
-                CodeInstruction.Call((string s) => LogSteamId(s))
-#endif
             ]);
 
+#if DEBUG
+            iList.InsertRange(match.Last().index, [
+                new CodeInstruction(OpCodes.Dup),
+                CodeInstruction.Call((AchievementData ad) => LogSteamId(ad))
+            ]);
+#endif
+
             return iList;
+        }
+    }
+
+    [MicroPatch("Fix EGS AchievementsManager NRE")]
+    [HarmonyPatch]
+    [HarmonyPatchCategory(Main.ExperimentalCategory)]
+
+    static class ESGAchievementsHelperNullFix
+    {
+        [HarmonyTargetMethods]
+        static IEnumerable<MethodBase> TargetMethods() =>
+        [
+            AccessTools.Method(typeof(EGSAchievementsManager), nameof(EGSAchievementsManager.SyncAchievements)),
+            AccessTools.Method(typeof(EGSAchievementsManager), nameof(EGSAchievementsManager.OnAchievementProgressUpdated)),
+            AccessTools.Method(typeof(EGSAchievementsManager), nameof(EGSAchievementsManager.OnAchievementUnlocked))
+        ];
+
+        [HarmonyTranspiler]
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGen)
+        {
+            var label = ilGen.DefineLabel();
+
+            yield return new CodeInstruction(OpCodes.Ldarg_0);
+            yield return new CodeInstruction(OpCodes.Call, AccessTools.PropertyGetter(typeof(EGSAchievementsManager), nameof(EGSAchievementsManager.m_AchievementsHelper)));
+            yield return new CodeInstruction(OpCodes.Brtrue_S, label);
+            yield return new CodeInstruction(OpCodes.Ret);
+            yield return new CodeInstruction(OpCodes.Nop) { labels = [label] };
+
+            foreach (var ci in instructions)
+                yield return ci;
         }
     }
 }
