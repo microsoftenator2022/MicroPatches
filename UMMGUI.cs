@@ -80,8 +80,6 @@ namespace MicroPatches
 
                         if (t.GetCustomAttribute<MicroPatchAttribute>() is { } attr)
                             name = attr.Name;
-                        else
-                            Logger.Warning($"Missing MicroPatch attribute for patch {name}");
 
                         GUILayout.BeginHorizontal();
                         {

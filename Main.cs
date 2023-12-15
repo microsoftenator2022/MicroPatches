@@ -52,6 +52,15 @@ namespace MicroPatches
 
             Instance.RunPatches();
 
+            //try
+            //{
+            //    AccessTools.Method(typeof(UnityModManager), "CheckModUpdates")?.Invoke(null, []);
+            //}
+            //catch (Exception e)
+            //{
+            //    Logger.LogException(e);
+            //}
+
             return true;
         }
 
@@ -68,6 +77,14 @@ namespace MicroPatches
 
         void RunPatches()
         {
+            foreach (var pc in PatchClasses.Value)
+            {
+
+                if (pc.t.GetCustomAttribute<MicroPatchAttribute>() is not { } attr)
+                    Logger.Warning($"Missing MicroPatch attribute for patch {pc.t.Name}");
+
+            }
+
             RunPatches(PatchClasses.Value.Where(tuple => !IsExperimental(tuple.pc)));
 
             Logger.Log("Running experimental patches");
