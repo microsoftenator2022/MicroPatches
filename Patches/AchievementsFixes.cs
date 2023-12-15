@@ -144,12 +144,12 @@ namespace MicroPatches.Patches
                 new CodeInstruction(OpCodes.Nop) { labels = [notNullTarget] },
             ]);
 
-#if DEBUG
+//#if DEBUG
             iList.InsertRange(match.Last().index, [
                 new CodeInstruction(OpCodes.Dup),
                 CodeInstruction.Call((AchievementData ad) => LogSteamId(ad))
             ]);
-#endif
+//#endif
 
             return iList;
         }

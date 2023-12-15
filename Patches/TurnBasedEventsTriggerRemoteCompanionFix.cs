@@ -43,7 +43,7 @@ namespace MicroPatches.Patches
 
             var methods = interfaces.SelectMany(i => typeof(TurnBasedModeEventsTrigger).GetInterfaceMap(i).TargetMethods);
 
-#if DEBUG
+//#if DEBUG
             var sb = new StringBuilder();
             sb.Append("Target methods:");
             foreach (var mi in methods)
@@ -54,7 +54,7 @@ namespace MicroPatches.Patches
 
             Main.PatchLog(nameof(TurnBasedEventsTriggerRemoteCompanionFix), sb.ToString());
             sb.Clear();
-#endif
+//#endif
 
             return methods;
         }
@@ -69,15 +69,15 @@ namespace MicroPatches.Patches
             if (maybeCompanion is null)
                 return true;
 
-#if DEBUG
+//#if DEBUG
             Main.PatchLog(nameof(TurnBasedEventsTriggerRemoteCompanionFix), $"{__originalMethod}\n" +
                 $"  Owner = {__instance.Fact.Owner.Name}\n" +
                 $"  Companion state = {maybeCompanion.State}\n" +
                 $"  In combat? {__instance.Fact.Owner.IsInCombat}\n" +
                 $"  In party? {__instance.Fact.Owner.IsInPlayerParty}");
-#endif
+//#endif
 
-            return maybeCompanion.State is CompanionState.InParty or CompanionState.InPartyDetached;
+            return maybeCompanion.State is CompanionState.InParty;
         }
     }
 }
