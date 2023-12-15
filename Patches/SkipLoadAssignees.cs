@@ -27,22 +27,15 @@ namespace MicroPatches.Patches
                 {
                     var ps = mi.GetParameters();
 
-#if DEBUG
-                    if (
-#else
-                    return
-#endif
-                        ps.Length == 1 && ps[0].ParameterType == typeof(Task)
-#if DEBUG
-                    )
+                    if (ps.Length == 1 && ps[0].ParameterType == typeof(Task))
                     {
+                        #if DEBUG
                         Main.PatchLog(nameof(SkipLoadAssignees), $"Found method {mi}");
+                        #endif
                         return true;
                     }
 
-                    return false
-#endif
-                    ;
+                    return false;
                 });
 
         [HarmonyTranspiler]
