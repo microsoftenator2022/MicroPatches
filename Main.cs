@@ -1,5 +1,7 @@
 ﻿using HarmonyLib;
 
+using Kingmaker.Modding;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -60,6 +62,9 @@ namespace MicroPatches
             //{
             //    Logger.LogException(e);
             //}
+
+            //Logger.Log($"{Patches.OwlcatModification_LoadAssemblies_Patch.TypeToGuidCache.Value?.Count} guids");
+            //Logger.Log($"{Patches.OwlcatModification_LoadAssemblies_Patch.GuidToTypeCache.Value?.Count} types");
 
             return true;
         }

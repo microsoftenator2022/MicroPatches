@@ -24,6 +24,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="Kingmaker.Blueprints.JsonSystem.Hepers">
+      <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Kingmaker.Blueprints.JsonSystem.Hepers.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="UnityModManager">
       <HintPath>$(RogueTraderData)\UnityModManager\UnityModManager.dll</HintPath>
       <Private>False</Private>
@@ -118,12 +122,6 @@
     <Publicize Include="$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Owlcat.Runtime.UI.dll" />
     <Reference Include="Owlcat.Runtime.UI">
       <HintPath>$(SolutionDir)lib\Owlcat.Runtime.UI_public.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-
-    <Publicize Include="$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Kingmaker.Blueprints.JsonSystem.Hepers.dll" />
-    <Reference Include="Kingmaker.Blueprints.JsonSystem.Hepers">
-      <HintPath>$(SolutionDir)lib\Kingmaker.Blueprints.JsonSystem.Hepers_public.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
