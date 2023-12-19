@@ -19,7 +19,7 @@ namespace MicroPatches
         internal static class Category
         {
             internal const string Experimental = "Experimental";
-            internal const string Hidden = "Experimental";
+            internal const string Hidden = "Hidden";
 
         }
         internal static Main Instance = null!;

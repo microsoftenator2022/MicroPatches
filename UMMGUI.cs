@@ -137,6 +137,14 @@ namespace MicroPatches
                     GUILayout.EndHorizontal();
 
                     //GUILayout.Label($"UMM Harmony Version: {UmmHarmonyVersion}");
+
+                    if (GUILayout.Button("Configure"))
+                    {
+                        if (Main.UIWindow == null)
+                            CreateUI();
+
+                        UnityModManager.UI.Instance.ToggleWindow(false);
+                    }
                 }
                 GUILayout.EndVertical();
             }

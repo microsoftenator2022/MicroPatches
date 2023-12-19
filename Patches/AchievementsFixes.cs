@@ -157,7 +157,7 @@ namespace MicroPatches.Patches
 
     [MicroPatch("Fix EGS AchievementsManager NRE")]
     [HarmonyPatch]
-    [HarmonyPatchCategory(Main.ExperimentalCategory)]
+    [HarmonyPatchCategory(Main.Category.Experimental)]
 
     static class EGSAchievementsHelperNullFix
     {
