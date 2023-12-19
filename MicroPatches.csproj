@@ -88,6 +88,14 @@
       <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\StateHasher.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\UnityEngine.UI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="0Harmony">
       <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\0Harmony.dll</HintPath>
       <Private>False</Private>

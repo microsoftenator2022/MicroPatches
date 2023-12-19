@@ -53,13 +53,13 @@ namespace MicroPatches
             }
         }
 
-        void SetPatchEnabled(string name, bool enabled)
+        public void SetPatchEnabled(string name, bool enabled)
         {
             EnabledPatches[name] = enabled;
             EnabledPatches = EnabledPatches;
         }
 
-        bool GetPatchEnabled(string name) =>
+        public bool GetPatchEnabled(string name) =>
             EnabledPatches.TryGetValue(name, out var enabled) && enabled;
 
         void OnGUI(UnityModManager.ModEntry _)
@@ -72,7 +72,7 @@ namespace MicroPatches
 
                     var font = GUI.skin.label.font;
 
-                    foreach (var (t, pc) in PatchClasses.Value)
+                    foreach (var (t, pc) in PatchClasses)
                     {
                         var name = t.Name;
 

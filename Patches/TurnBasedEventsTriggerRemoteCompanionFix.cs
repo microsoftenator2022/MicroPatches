@@ -22,7 +22,7 @@ namespace MicroPatches.Patches
 {
     [MicroPatch("Ignore TurnBasedEventsTrigger for Remote Companions")]
     [HarmonyPatch]
-    [HarmonyPatchCategory(Main.ExperimentalCategory)]
+    [HarmonyPatchCategory(Main.Category.Experimental)]
     internal static class TurnBasedEventsTriggerRemoteCompanionFix
     {
         [HarmonyTargetMethods]

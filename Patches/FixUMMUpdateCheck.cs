@@ -14,7 +14,7 @@ namespace MicroPatches.Patches
 {
     [MicroPatch("Fix UMM update check")]
     [HarmonyPatch]
-    [HarmonyPatchCategory(Main.ExperimentalCategory)]
+    [HarmonyPatchCategory(Main.Category.Experimental)]
     internal static class FixUMMUpdateCheck
     {
         static bool CheckNetworkConnection()

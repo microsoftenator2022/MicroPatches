@@ -16,8 +16,12 @@ namespace MicroPatches
 #endif
     partial class Main
     {
-        internal const string ExperimentalCategory = "Experimental";
+        internal static class Category
+        {
+            internal const string Experimental = "Experimental";
+            internal const string Hidden = "Experimental";
 
+        }
         internal static Main Instance = null!;
 
         internal Main(UnityModManager.ModEntry modEntry)
@@ -42,29 +46,21 @@ namespace MicroPatches
         public static void PatchWarning(string patchName, string message) => Logger.Warning($"[MicroPatch {patchName}] {message}");
         public static void PatchLogException(Exception ex) => Logger.LogException(ex);
 
-        readonly Lazy<(Type t, PatchClassProcessor pc)[]> PatchClasses = new(() =>
+        static readonly Lazy<(Type t, PatchClassProcessor pc)[]> patchClasses = new(() =>
             AccessTools.GetTypesFromAssembly(Assembly.GetExecutingAssembly())
                 .Select(t => (t, pc: HarmonyInstance.CreateClassProcessor(t)))
                 .Where(tuple => tuple.pc.HasPatchAttribute())
                 .ToArray());
 
+        public static IEnumerable<(Type t, PatchClassProcessor pc)> PatchClasses => patchClasses.Value;
+
         static bool Load(UnityModManager.ModEntry modEntry)
         {
             Instance = new(modEntry);
 
+            Instance.PrePatchTests();
             Instance.RunPatches();
-
-            //try
-            //{
-            //    AccessTools.Method(typeof(UnityModManager), "CheckModUpdates")?.Invoke(null, []);
-            //}
-            //catch (Exception e)
-            //{
-            //    Logger.LogException(e);
-            //}
-
-            //Logger.Log($"{Patches.OwlcatModification_LoadAssemblies_Patch.TypeToGuidCache.Value?.Count} guids");
-            //Logger.Log($"{Patches.OwlcatModification_LoadAssemblies_Patch.GuidToTypeCache.Value?.Count} types");
+            Instance.PostPatchTests();
 
             return true;
         }
@@ -76,26 +72,25 @@ namespace MicroPatches
             return true;
         }
 
-        readonly Dictionary<Type, bool?> AppliedPatches = new();
+        public readonly Dictionary<Type, bool?> AppliedPatches = new();
 
-        static bool IsExperimental(PatchClassProcessor pc) => pc.GetCategory() == ExperimentalCategory;
+        public static bool IsExperimental(PatchClassProcessor pc) => pc.GetCategory() == Category.Experimental;
+        public static bool IsHidden(PatchClassProcessor pc) => pc.GetCategory() == Category.Hidden;
 
         void RunPatches()
         {
-            foreach (var pc in PatchClasses.Value)
+            foreach (var pc in PatchClasses)
             {
-
-                if (pc.t.GetCustomAttribute<MicroPatchAttribute>() is not { } attr)
+                if (pc.t.GetCustomAttribute<MicroPatchAttribute>() is not { } attr && !IsHidden(pc.pc))
                     Logger.Warning($"Missing MicroPatch attribute for patch {pc.t.Name}");
-
             }
 
-            RunPatches(PatchClasses.Value.Where(tuple => !IsExperimental(tuple.pc)));
+            RunPatches(PatchClasses.Where(tuple => !IsExperimental(tuple.pc)));
 
             Logger.Log("Running experimental patches");
             try
             {
-                RunPatches(PatchClasses.Value.Where(tuple => IsExperimental(tuple.pc)
+                RunPatches(PatchClasses.Where(tuple => IsExperimental(tuple.pc)
 #if !DEBUG
                 && EnabledPatches.TryGetValue(tuple.t.Name, out var enabled) && enabled
 #endif

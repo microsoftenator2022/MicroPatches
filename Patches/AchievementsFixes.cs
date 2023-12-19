@@ -97,7 +97,7 @@ namespace MicroPatches.Patches
 
     [MicroPatch("Achievement fixes: Null Achievement SteamId")]
     [HarmonyPatch(typeof(SteamAchievementsManager), nameof(SteamAchievementsManager.OnUserStatsReceived))]
-    [HarmonyPatchCategory(Main.ExperimentalCategory)]
+    [HarmonyPatchCategory(Main.Category.Experimental)]
     static class NullAchievmentSteamIdFix
     {
         static void LogSteamId(AchievementData achievementData)
@@ -159,7 +159,7 @@ namespace MicroPatches.Patches
     [HarmonyPatch]
     [HarmonyPatchCategory(Main.ExperimentalCategory)]
 
-    static class ESGAchievementsHelperNullFix
+    static class EGSAchievementsHelperNullFix
     {
         [HarmonyTargetMethods]
         static IEnumerable<MethodBase> TargetMethods() =>

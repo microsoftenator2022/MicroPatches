@@ -32,7 +32,7 @@ namespace MicroPatches.Patches
             typeof(KeyboardAccess.ModificationSide),
             typeof(bool)
         ])]
-    [HarmonyPatchCategory(Main.ExperimentalCategory)]
+    [HarmonyPatchCategory(Main.Category.Experimental)]
     internal static class SilenceKeyBindingConflict
     {
         [HarmonyTranspiler]
