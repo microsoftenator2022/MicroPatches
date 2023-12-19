@@ -1,19 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
 using HarmonyLib;
-using Kingmaker.Blueprints.Root;
+
 using Kingmaker;
+using Kingmaker.Blueprints.Root;
+
+using MicroPatches.UGUI;
 
 using TMPro;
 
 using UnityEngine;
 using UnityEngine.UI;
-using MicroPatches.UGUI;
-using System.Reflection;
+
+using UniRx;
 
 namespace MicroPatches
 {
@@ -39,9 +43,11 @@ namespace MicroPatches
 
             var t = (obj.transform as RectTransform)!;
 
-            t.anchorMin = new(0.5f, 0.5f);
-            t.anchorMax = new(0.5f, 0.5f);
-            t.pivot = new(0.5f, 0.5f);
+            t.anchorMin = new(1, 1);
+            t.anchorMax = new(1, 1);
+            t.pivot = new(1, 1);
+
+            t.anchoredPosition = new(-100, -100);
 
             obj.transform.SetParent(UICanvas.transform, false);
 
@@ -80,8 +86,10 @@ namespace MicroPatches
 
 namespace MicroPatches.UGUI
 {
-    internal class MicroPatchUGUIBehaviour : MonoBehaviour
+    internal class MicroPatchUGUIBehaviour : MonoBehaviour, IDisposable
     {
+        readonly List<IDisposable> Subscriptions = new();
+
         Material GetUIMaterial() => UnityEngine.Object.Instantiate(Image.defaultGraphicMaterial);
 
         static class Colors
@@ -107,10 +115,10 @@ namespace MicroPatches.UGUI
 
             Utility.SetAnchors(rt, AnchorLocation.Center, AnchorType.Fill);
             
-            var csf = gameObject.AddUIElement<ContentSizeFitter>(out var layout);
+            var csf = gameObject.AddUIElement<ContentSizeFitter>();
 
-            layout.Element.minWidth = 200;
-            layout.Element.minHeight = 200;
+            csf.Layout.Element.minWidth = 200;
+            csf.Layout.Element.minHeight = 200;
             csf.Element.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             csf.Element.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
@@ -131,8 +139,8 @@ namespace MicroPatches.UGUI
                 titleBackground.material.color = Colors.MaterialColors.Medium;
                 titleBackground.color = Colors.Header;
 
-                var titleText = titleLayout.AddTextObject(out var textLayout, "MicroPatches", Colors.Text);
-                textLayout.Element.minHeight = 20;
+                var titleText = titleLayout.AddTextObject("MicroPatches", Colors.Text);
+                titleText.Layout.Element.minHeight = 20;
 
                 var titleTmp = titleText.Element;
                 //titleTmp.text = "Title";
@@ -146,6 +154,17 @@ namespace MicroPatches.UGUI
                 var textFitter = titleText.AddUIElement<ContentSizeFitter>();
                 textFitter.Element.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
                 textFitter.Element.verticalFit = ContentSizeFitter.FitMode.MinSize;
+
+                var closeButton = titleLayout.AddUIObject<Button>("close window");
+                closeButton.RectTransform.sizeDelta = new(20, 20);
+                Utility.SetAnchors(closeButton.RectTransform, AnchorLocation.TopRight, AnchorType.Fixed);
+                
+                var closeButtonImage = closeButton.AddUIElement<Image>();
+                closeButtonImage.Element.color = Colors.Header * 0.8f;
+                
+                closeButton.Element.image = closeButtonImage.Element;
+
+                Subscriptions.Add(closeButton.Element.onClick.AsObservable().Subscribe(_ => UnityEngine.GameObject.Destroy(gameObject)));
             }
 
             var content = vGroup.AddUIObject();
@@ -163,7 +182,7 @@ namespace MicroPatches.UGUI
             windowBackground.material.color = Colors.MaterialColors.Dark;
             windowBackground.color = Colors.Background;
 
-            var patchesList = content.AddUIObject<VerticalLayoutGroup>(out var _);
+            var patchesList = content.AddUIObject<VerticalLayoutGroup>();
             patchesList.Element.childControlWidth = true;
             patchesList.Element.childControlHeight = true;
             patchesList.Element.childForceExpandWidth = true;
@@ -206,8 +225,8 @@ namespace MicroPatches.UGUI
                 else if (!enabled)
                     statusString = "Disabled";
 
-                var line = parent.AddUIObject<HorizontalLayoutGroup>(out var layout, name);
-                layout.Element.minHeight = 20;
+                var line = parent.AddUIObject<HorizontalLayoutGroup>(name);
+                line.Layout.Element.minHeight = 20;
 
                 line.Element.childControlWidth = true;
                 line.Element.childControlHeight = true;
@@ -215,7 +234,7 @@ namespace MicroPatches.UGUI
                 line.Element.childForceExpandHeight = false;
                 line.Element.childAlignment = TextAnchor.MiddleCenter;
 
-                var toggle = line.AddUIObject<Toggle>(out var toggleLayout, $"{name} toggle");
+                var toggle = line.AddUIObject<Toggle>($"{name} toggle");
                 toggle.Layout.Element.preferredWidth = 20;
                 toggle.Layout.Element.preferredHeight = 20;
                 toggle.Element.interactable = Main.IsExperimental(pc);
@@ -241,26 +260,36 @@ namespace MicroPatches.UGUI
                 toggle.Element.targetGraphic = t1.Element;
                 toggle.Element.graphic = t2.Element;
 
-                //toggleLayout.Element.preferredWidth = 20;
-                //toggleLayout.Element.preferredHeight = 20;
+                Subscriptions.Add(toggle.Element.onValueChanged.AsObservable().Subscribe(enabled => Main.Instance.SetPatchEnabled(t.Name, enabled)));
 
-                var nameText = line.AddTextObject(out var nameLayout, name, Colors.Text);
+                var nameText = line.AddTextObject(name, Colors.Text);
                 nameText.Element.fontSize = 12;
                 nameText.Element.alignment = TextAlignmentOptions.BottomLeft;
                 nameText.Element.margin = new(2, 0, 10, 0);
                 
-                nameLayout.Element.flexibleWidth = 1;
+                nameText.Layout.Element.flexibleWidth = 1;
                 
-                var statusText = line.AddTextObject(out var statusLayout, "Disabled", Colors.Text);
+                var statusText = line.AddTextObject("Disabled", Colors.Text);
                 statusText.Element.fontSize = 12;
                 statusText.Element.alignment = TextAlignmentOptions.Bottom;
 
-                statusLayout.Element.preferredWidth = statusText.Element.preferredWidth;
+                statusText.Layout.Element.preferredWidth = statusText.Element.preferredWidth;
 
                 statusText.Element.text = statusString;
 
                 yield return line;
             }
+        }
+
+        public void Dispose()
+        {
+            foreach (var s in Subscriptions)
+                s.Dispose();
+        }
+
+        void OnDestroy()
+        {
+            this.Dispose();
         }
     }
 }

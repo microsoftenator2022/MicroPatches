@@ -96,6 +96,10 @@
       <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Unity.TextMeshPro.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="UniRx">
+      <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\UniRx.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="0Harmony">
       <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\0Harmony.dll</HintPath>
       <Private>False</Private>

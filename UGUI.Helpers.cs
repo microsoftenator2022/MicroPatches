@@ -134,11 +134,13 @@ namespace MicroPatches.UGUI
             return new UIElement<LayoutElement>(go.GetComponent<LayoutElement>());
         }
 
-        public static UIElement<TElement> NewUIObject<TElement>(out UIElement<LayoutElement> layout, string? name = null)
-            where TElement : UIBehaviour => NewUIObject(name ?? $"{typeof(TElement).Name}").AddUIElement<TElement>(out layout);
+        //public static UIElement<TElement> NewUIObject<TElement>(out UIElement<LayoutElement> layout, string? name = null)
+        //    where TElement : UIBehaviour => NewUIObject(name ?? $"{typeof(TElement).Name}").AddUIElement<TElement>(out layout);
 
-        public UIElement<TChild> AddUIElement<TChild>(out UIElement<LayoutElement> layout) where TChild : UIBehaviour
+        public UIElement<TChild> AddUIElement<TChild>() where TChild : UIBehaviour
         {
+            UIElement<LayoutElement> layout;
+
             if (this.gameObject.TryGetComponent<LayoutElement>(out var element))
                 layout = new(element);
             else
@@ -150,18 +152,18 @@ namespace MicroPatches.UGUI
             return new(this.gameObject.AddComponent<TChild>());
         }
 
-        public UIElement<TChild> AddUIElement<TChild>() where TChild : UIBehaviour =>
-            AddUIElement<TChild>(out var _);
+        //public UIElement<TChild> AddUIElement<TChild>() where TChild : UIBehaviour =>
+        //    AddUIElement<TChild>();
 
         public UIElement<LayoutElement> AddUIObject(string? name = null) =>
             this.gameObject.AddUIObject(name);
 
-        public UIElement<TChild> AddUIObject<TChild>(out UIElement<LayoutElement> layout, string? name = null)
+        public UIElement<TChild> AddUIObject<TChild>(string? name = null)
             where TChild : UIBehaviour =>
-            this.gameObject.AddUIObject<TChild>(out layout, name);
+            this.gameObject.AddUIObject<TChild>(name);
 
-        public UIElement<TChild> AddUIObject<TChild>(string? name = null) where TChild : UIBehaviour =>
-            this.AddUIObject<TChild>(out var _, name);
+        //public UIElement<TChild> AddUIObject<TChild>(string? name = null) where TChild : UIBehaviour =>
+        //    this.AddUIObject<TChild>(name);
     }
 
     class UIElement<TElement> : UIElement where TElement : UIBehaviour
@@ -200,10 +202,10 @@ namespace MicroPatches.UGUI
             return element;
         }
 
-        public static UIElement<TElement> AddUIObject<TElement>(this GameObject parent, out UIElement<LayoutElement> initLayout, string? name = null)
+        public static UIElement<TElement> AddUIObject<TElement>(this GameObject parent, string? name = null)
             where TElement : UIBehaviour
         {
-            initLayout = AddUIObject(parent, name);
+            var initLayout = AddUIObject(parent, name);
             initLayout.gameObject.name = name ?? $"{parent.name}.{typeof(TElement).Name}";
 
             if (typeof(TElement) == typeof(LayoutElement))
@@ -212,9 +214,9 @@ namespace MicroPatches.UGUI
             return new(initLayout.gameObject.AddComponent<TElement>());
         }
 
-        public static UIElement<TElement> AddUIObject<TElement>(this GameObject parent, string? name = null)
-            where TElement : UIBehaviour =>
-            AddUIObject<TElement>(parent, out var _, name);
+        //public static UIElement<TElement> AddUIObject<TElement>(this GameObject parent, string? name = null)
+        //    where TElement : UIBehaviour =>
+        //    AddUIObject<TElement>(parent, out var _, name);
 
         public static UIElement<LayoutElement> AddUIElement(this GameObject obj)
         {
@@ -225,9 +227,11 @@ namespace MicroPatches.UGUI
             return new(obj.AddComponent<LayoutElement>());
         }
 
-        public static UIElement<TElement> AddUIElement<TElement>(this GameObject obj, out UIElement<LayoutElement> layout)
+        public static UIElement<TElement> AddUIElement<TElement>(this GameObject obj)
             where TElement : UIBehaviour
         {
+            UIElement<LayoutElement> layout;
+
             if (obj.TryGetComponent<LayoutElement>(out var element))
                 layout = new(element);
             else
@@ -241,8 +245,8 @@ namespace MicroPatches.UGUI
             return new(obj.AddComponent<TElement>());
         }
 
-        public static UIElement<TElement> AddUIElement<TElement>(this GameObject obj) where TElement : UIBehaviour =>
-            obj.AddUIElement<TElement>(out var _);
+        //public static UIElement<TElement> AddUIElement<TElement>(this GameObject obj) where TElement : UIBehaviour =>
+        //    obj.AddUIElement<TElement>(out var _);
 
         public static UIElement<TextMeshProUGUI> AddTextElement(
             this UIElement parent,
@@ -261,12 +265,11 @@ namespace MicroPatches.UGUI
 
         public static UIElement<TextMeshProUGUI> AddTextObject(
             this UIElement parent,
-            out UIElement<LayoutElement> layout,
             string? text = null,
             Color? color = null,
             TextAlignmentOptions? alignment = null)
         {
-            layout = parent.gameObject.AddUIObject();
+            var layout = parent.gameObject.AddUIObject();
             return layout.AddTextElement(text, color, alignment);
         }
     }

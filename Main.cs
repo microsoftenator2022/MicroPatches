@@ -2,8 +2,11 @@
 
 using Kingmaker.Modding;
 
+using Newtonsoft.Json;
+
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 
@@ -122,5 +125,50 @@ namespace MicroPatches
                 }
             }
         }
+
+        static Assembly GetHarmonyAss() => AppDomain.CurrentDomain.GetAssemblies()
+            .FirstOrDefault(ass => ass.GetName().Name == "0Harmony");
+
+        static Version HarmonyVersion => GetHarmonyAss().GetName().Version;
+
+        static string EnabledPatchesFilePath => Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "enabledPatches.json");
+
+        Dictionary<string, bool>? enabledPatches;
+        Dictionary<string, bool> EnabledPatches
+        {
+            get
+            {
+                if (enabledPatches is null && File.Exists(EnabledPatchesFilePath))
+                {
+                    try
+                    {
+                        enabledPatches = JsonConvert.DeserializeObject<Dictionary<string, bool>>(File.ReadAllText(EnabledPatchesFilePath));
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.LogException(e);
+                    }
+                }
+
+                return enabledPatches ??= new();
+            }
+
+            set
+            {
+                enabledPatches = value;
+
+                File.WriteAllText(EnabledPatchesFilePath, JsonConvert.SerializeObject(enabledPatches));
+            }
+        }
+
+        public void SetPatchEnabled(string name, bool enabled)
+        {
+            EnabledPatches[name] = enabled;
+            EnabledPatches = EnabledPatches;
+        }
+
+        public bool GetPatchEnabled(string name) =>
+            EnabledPatches.TryGetValue(name, out var enabled) && enabled;
+
     }
 }
