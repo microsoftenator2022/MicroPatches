@@ -165,7 +165,7 @@
     <PublishToWorkshop PathToManifest="$(MSBuildThisFileDirectory)\ModDetails\OwlcatModificationManifest.json" ImageDir="$(MSBuildThisFileDirectory)\ModDetails\" BuildDir="$(SolutionDir)$(OutDir)" GameAppId="2186680" />
   </Target>
 
-  <Target Name="GenerateCustomPropsFile" BeforeTargets="BeforeBuild" Condition="$(RogueTraderInstallDir) == ''">
+  <Target Name="GenerateCustomPropsFile" BeforeTargets="BeforeBuild" AfterTargets="Clean" Condition="$(RogueTraderInstallDir) == ''">
     <Exec Command="findstr /C:&quot;Mono path[0]&quot; &quot;$(RogueTraderData)\Player.log&quot;" IgnoreExitCode="true" ConsoleToMSBuild="true">
       <Output TaskParameter="ExitCode" PropertyName="ExitCode" />
       <Output TaskParameter="ConsoleOutput" PropertyName="MonoPathLine" />

@@ -23,7 +23,7 @@ namespace MicroPatches
         {
             internal const string Experimental = "Experimental";
             internal const string Hidden = "Hidden";
-
+            internal const string Optional = "Optional";
         }
         internal static Main Instance = null!;
 
@@ -77,8 +77,9 @@ namespace MicroPatches
 
         public readonly Dictionary<Type, bool?> AppliedPatches = new();
 
-        public static bool IsExperimental(PatchClassProcessor pc) => pc.GetCategory() == Category.Experimental;
-        public static bool IsHidden(PatchClassProcessor pc) => pc.GetCategory() == Category.Hidden;
+        public static bool IsExperimental(PatchClassProcessor pc) => pc.GetCategory() is Category.Experimental;
+        public static bool IsHidden(PatchClassProcessor pc) => pc.GetCategory() is Category.Hidden;
+        public static bool IsOptional(PatchClassProcessor pc) => pc.GetCategory() is Category.Optional or Category.Experimental;
 
         void RunPatches()
         {
@@ -167,8 +168,22 @@ namespace MicroPatches
             EnabledPatches = EnabledPatches;
         }
 
-        public bool GetPatchEnabled(string name) =>
-            EnabledPatches.TryGetValue(name, out var enabled) && enabled;
+        public bool GetPatchEnabled((Type, PatchClassProcessor) patch)
+        {
+            var (t, pc) = patch;
 
+            if (EnabledPatches.TryGetValue(t.Name, out var enabled))
+            {
+                return enabled;
+            }
+
+            if (Main.IsExperimental(pc))
+                return false;
+
+            if (Main.IsOptional(pc))
+                return true;
+
+            return true;
+        }
     }
 }

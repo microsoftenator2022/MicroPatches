@@ -16,7 +16,7 @@ namespace MicroPatches.Patches
 {
     [MicroPatch("Quieter missing DLC warnings")]
     [HarmonyPatch]
-    [HarmonyPatchCategory(Main.Category.Experimental)]
+    [HarmonyPatchCategory(Main.Category.Optional)]
     internal static class ShorterMissingDlcMessage
     {
         [HarmonyTargetMethod]

@@ -34,6 +34,19 @@ namespace MicroPatches
 {
     internal partial class Main
     {
+#if DEBUG
+        [HarmonyPatch(typeof(Main), nameof(Main.Load))]
+        [HarmonyPatchCategory(Main.Category.Hidden)]
+        static class TestFailPatch
+        {
+            [HarmonyTranspiler]
+            static IEnumerable<CodeInstruction> Prefix(IEnumerable<CodeInstruction> _)
+            {
+                throw new Exception("Test Exception");
+            }
+        }
+#endif
+
         void PrePatchTests()
         {
 #if DEBUG
