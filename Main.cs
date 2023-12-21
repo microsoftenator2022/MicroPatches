@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 using UnityModManagerNet;
 
@@ -65,7 +66,7 @@ namespace MicroPatches
             Instance.RunPatches();
             Instance.PostPatchTests();
 
-            if (Instance.AppliedPatches.Any(p => p.Value is true))
+            if (PatchClasses.Any(p => Instance.GetPatchEnabled(p) && Instance.AppliedPatches.TryGetValue(p.t, out var applied) && (applied is false)))
                 CreateUI();
 
             return true;
