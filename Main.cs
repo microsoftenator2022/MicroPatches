@@ -65,6 +65,9 @@ namespace MicroPatches
             Instance.RunPatches();
             Instance.PostPatchTests();
 
+            if (Instance.AppliedPatches.Any(p => p.Value is true))
+                CreateUI();
+
             return true;
         }
 
@@ -79,7 +82,12 @@ namespace MicroPatches
 
         public static bool IsExperimental(PatchClassProcessor pc) => pc.GetCategory() is Category.Experimental;
         public static bool IsHidden(PatchClassProcessor pc) => pc.GetCategory() is Category.Hidden;
-        public static bool IsOptional(PatchClassProcessor pc) => pc.GetCategory() is Category.Optional or Category.Experimental;
+        public static bool IsOptional(PatchClassProcessor pc) =>
+#if DEBUG
+            false;
+#else
+            pc.GetCategory() is Category.Optional or Category.Experimental;
+#endif
 
         void RunPatches()
         {

@@ -29,16 +29,19 @@ namespace MicroPatches
 
         static void CreateUI()
         {
-            var canvasObject = new GameObject("MicroPatches GUI canvas", typeof(RectTransform), typeof(Canvas), typeof(GraphicRaycaster));
+            if (UICanvas == null)
+            { 
+                var canvasObject = new GameObject("MicroPatches GUI canvas", typeof(RectTransform), typeof(Canvas), typeof(GraphicRaycaster));
 
-            var canvas = canvasObject.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                var canvas = canvasObject.GetComponent<Canvas>();
+                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
 
-            canvasObject.GetComponent<GraphicRaycaster>().ignoreReversedGraphics = true;
+                canvasObject.GetComponent<GraphicRaycaster>().ignoreReversedGraphics = true;
 
-            UnityEngine.Object.DontDestroyOnLoad(canvasObject);
+                UnityEngine.Object.DontDestroyOnLoad(canvasObject);
 
-            UICanvas = canvasObject;
+                UICanvas = canvasObject;
+            }
 
             var obj = new GameObject("MicroPatches GUI", typeof(RectTransform), typeof(MicroPatchUGUIBehaviour));
 
@@ -359,7 +362,7 @@ namespace MicroPatches.UGUI
             {
                 statusString = "OK";
             }
-            else if (!enabled)
+            else if (Main.IsOptional(pc) && !enabled)
                 statusString = "Disabled";
 
             var line = parent.AddUIObject<HorizontalLayoutGroup>(name);
@@ -375,7 +378,7 @@ namespace MicroPatches.UGUI
             toggle.Layout.Element.preferredWidth = 20;
             toggle.Layout.Element.preferredHeight = 20;
             toggle.Element.interactable = Main.IsOptional(pc);
-            toggle.Element.isOn = (applied ?? false) || enabled;
+            toggle.Element.isOn = !Main.IsOptional(pc) || enabled;
 
             var t1 = toggle.AddUIObject<Image>();
             //t1.Layout.Element.ignoreLayout = true;

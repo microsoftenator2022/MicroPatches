@@ -40,7 +40,7 @@ namespace MicroPatches
         static class TestFailPatch
         {
             [HarmonyTranspiler]
-            static IEnumerable<CodeInstruction> Prefix(IEnumerable<CodeInstruction> _)
+            static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
             {
                 throw new Exception("Test Exception");
             }
@@ -68,8 +68,6 @@ namespace MicroPatches
 
             //Logger.Log($"{Patches.OwlcatModification_LoadAssemblies_Patch.TypeToGuidCache.Value?.Count} guids");
             //Logger.Log($"{Patches.OwlcatModification_LoadAssemblies_Patch.GuidToTypeCache.Value?.Count} types");
-
-            CreateUI();
 #endif
         }
 
