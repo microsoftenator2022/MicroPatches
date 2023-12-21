@@ -28,8 +28,6 @@ namespace MicroPatches.Patches
         [HarmonyTargetMethods]
         static IEnumerable<MethodBase> TargetMethods()
         {
-            //return [typeof(TurnBasedModeEventsTrigger).GetMethod(nameof(TurnBasedModeEventsTrigger.HandleUnitStartTurn))];
-
             Type[] interfaces =
             [
                 typeof(ITurnBasedModeHandler),
@@ -43,7 +41,7 @@ namespace MicroPatches.Patches
 
             var methods = interfaces.SelectMany(i => typeof(TurnBasedModeEventsTrigger).GetInterfaceMap(i).TargetMethods);
 
-//#if DEBUG
+#if DEBUG
             var sb = new StringBuilder();
             sb.Append("Target methods:");
             foreach (var mi in methods)
@@ -54,28 +52,25 @@ namespace MicroPatches.Patches
 
             Main.PatchLog(nameof(TurnBasedEventsTriggerRemoteCompanionFix), sb.ToString());
             sb.Clear();
-//#endif
+#endif
 
             return methods;
         }
 
         static bool Prefix(TurnBasedModeEventsTrigger __instance, MethodBase __originalMethod)
         {
-            //if (__instance.Fact.Blueprint.AssetGuid != "58073019ae10412e9509b6ac97006bf1")
-            //    return true;
-
             var maybeCompanion = __instance.Fact.Owner.GetOptional<UnitPartCompanion>();
 
             if (maybeCompanion is null)
                 return true;
 
-//#if DEBUG
+#if DEBUG
             Main.PatchLog(nameof(TurnBasedEventsTriggerRemoteCompanionFix), $"{__originalMethod}\n" +
                 $"  Owner = {__instance.Fact.Owner.Name}\n" +
                 $"  Companion state = {maybeCompanion.State}\n" +
                 $"  In combat? {__instance.Fact.Owner.IsInCombat}\n" +
                 $"  In party? {__instance.Fact.Owner.IsInPlayerParty}");
-//#endif
+#endif
 
             return maybeCompanion.State is CompanionState.InParty;
         }
