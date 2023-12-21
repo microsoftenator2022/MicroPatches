@@ -17,7 +17,7 @@ namespace MicroPatches.Patches
 {
     [MicroPatch("Do not apply Damage Reduction modifiers from difficulty to friendly fire")]
     [HarmonyPatch(typeof(RuleRollDamage), nameof(RuleRollDamage.ApplyDifficultyModifiers))]
-    [HarmonyPatchCategory(Main.Category.Experimental)]
+    [HarmonyPatchCategory(MicroPatch.Category.Experimental)]
     internal static class DRDifficultyIgnoreAllies
     {
         [HarmonyTranspiler]

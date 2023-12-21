@@ -10,8 +10,14 @@ using HarmonyLib;
 
 using Kingmaker;
 using Kingmaker.Blueprints.Root;
+using Kingmaker.Code.UI.MVVM.VM.Tooltip.Templates;
+using Kingmaker.Code.UI.MVVM.VM.Tooltip.Utils;
 
+using MicroPatches.Patches;
 using MicroPatches.UGUI;
+
+using Owlcat.Runtime.UI.Tooltips;
+using Owlcat.Runtime.UI.Controls.Selectable;
 
 using TMPro;
 
@@ -19,6 +25,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 using UniRx;
+using Kingmaker.UI;
 
 namespace MicroPatches
 {
@@ -36,7 +43,7 @@ namespace MicroPatches
                 var canvas = canvasObject.GetComponent<Canvas>();
                 canvas.renderMode = RenderMode.ScreenSpaceOverlay;
 
-                canvasObject.GetComponent<GraphicRaycaster>().ignoreReversedGraphics = true;
+                //canvasObject.GetComponent<GraphicRaycaster>().ignoreReversedGraphics = true;
 
                 UnityEngine.Object.DontDestroyOnLoad(canvasObject);
 
@@ -56,10 +63,12 @@ namespace MicroPatches
             obj.transform.SetParent(UICanvas.transform, false);
 
             UIWindow = obj;
+
+            obj.AddComponent<CanvasGroup>().blocksRaycasts = true;
         }
 
+        [MicroPatch("", Hidden = true)]
         [HarmonyPatch(typeof(GameStarter), nameof(GameStarter.FixTMPAssets))]
-        [HarmonyPatchCategory(Main.Category.Hidden)]
         static class FixTMP
         {
             static void Prefix()
@@ -83,8 +92,6 @@ namespace MicroPatches
                     if (tmp.spriteAsset != null)
                         tmp.spriteAsset = BlueprintRoot.Instance.UIConfig.DefaultTMPSriteAsset;
                 }
-
-                //UIWindow.GetComponent<MicroPatchUGUIBehaviour>().ResetTextShaders();
             }
         }
     }
@@ -94,64 +101,6 @@ namespace MicroPatches.UGUI
 {
     internal class MicroPatchUGUIBehaviour : MonoBehaviour, IDisposable
     {
-        //Material? TMPMaterial;
-
-        //internal void ResetTextShaders()
-        //{
-        //    if (TMPMaterial != null)
-        //        Destroy(TMPMaterial);
-
-        //    TMPMaterial = null;
-
-        //    foreach (var tmp in gameObject.GetComponentsInChildren<TextMeshProUGUI>())
-        //    {
-        //        if (TMPMaterial == null)
-        //            TMPMaterial = Instantiate(tmp.materialForRendering);
-
-        //        tmp.fontSharedMaterial = TMPMaterial;
-
-        //        if (tmp.fontSharedMaterial.shader.name == "TextMeshPro/Distance Field")
-        //        {
-        //            //Scanlines
-        //            TMPMaterial.shader = GetAssetBundle().LoadAsset<Shader>("809989d88ffd0114ab882ccb906ebff7");
-
-        //            Main.PatchLog("UGUI", $"Setting shader to {TMPMaterial.shader.name}");
-        //        }
-        //    }
-        //}
-
-        //const string AssetBundleName = "MicroPatches_assets_all";
-
-        //static AssetBundle? Bundle;
-        
-        //static AssetBundle GetAssetBundle()
-        //{
-        //    if (Bundle != null)
-        //        return Bundle;
-
-        //    using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"{nameof(MicroPatches)}.{AssetBundleName}");
-
-        //    if (stream is null)
-        //    {
-        //        var sb = new StringBuilder();
-        //        sb.AppendLine($"No resource with name {AssetBundleName}");
-        //        sb.AppendLine($"Assembly resource names:");
-
-        //        foreach (var n in Assembly.GetExecutingAssembly().GetManifestResourceNames())
-        //        {
-        //            sb.AppendLine($"  {n}");
-        //        }
-
-        //        //throw new ArgumentException(sb.ToString());
-
-        //        Main.PatchError("UGUI", sb.ToString());
-
-        //    }
-
-        //    return Bundle = AssetBundle.LoadFromStream(stream);
-        //}
-
-
         readonly List<IDisposable> Subscriptions = [];
 
         Material GetUIMaterial() => UnityEngine.Object.Instantiate(Image.defaultGraphicMaterial);
@@ -165,10 +114,50 @@ namespace MicroPatches.UGUI
             }
 
             public static readonly Color Background = new Color32(0x02, 0x08, 0x04, 0xE8);
-            //public static readonly Color Header = new Color32(0x24, 0xEC, 0x5C, 0xFF);
             public static readonly Color Header = new Color32(0x1A, 0xFF, 0x45, 0xFF);
             public static readonly Color Text = new Color32(0xCD, 0xFF, 0xE5, 0xFF);
             public static readonly Color RedText = new Color32(0xFF, 0x72, 0x6E, 0xFF);
+        }
+
+        UIElement CreateHeader(UIElement parent)
+        {
+            var titleLayout = parent.AddUIObject("title");
+            titleLayout.Element.minHeight = 20;
+            titleLayout.Element.flexibleWidth = 1;
+
+            var titleBackground = titleLayout.gameObject.AddComponent<Image>();
+            titleBackground.material = GetUIMaterial();
+            titleBackground.material.color = Colors.MaterialColors.Medium;
+            titleBackground.color = Colors.Header;
+
+            var titleText = titleLayout.AddTextObject("MicroPatches", Colors.Text);
+            titleText.Layout.Element.minHeight = 20;
+
+            var titleTmp = titleText.Element;
+            titleTmp.fontSizeMin = 10;
+            titleTmp.fontSizeMax = 16;
+            titleTmp.horizontalAlignment = HorizontalAlignmentOptions.Center;
+            titleTmp.verticalAlignment = VerticalAlignmentOptions.Middle;
+            titleTmp.enableAutoSizing = true;
+
+            var textFitter = titleText.AddUIElement<ContentSizeFitter>();
+            textFitter.Element.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            textFitter.Element.verticalFit = ContentSizeFitter.FitMode.MinSize;
+
+            var closeButton = titleLayout.AddUIObject<Button>("close window");
+            closeButton.RectTransform.sizeDelta = new(20, 20);
+            Utility.SetAnchors(closeButton.RectTransform, AnchorLocation.TopRight, AnchorType.Fixed);
+
+            var closeButtonImage = closeButton.AddUIElement<Image>();
+            closeButtonImage.Element.material = GetUIMaterial();
+            closeButtonImage.Element.material.color = Colors.MaterialColors.Medium;
+            closeButtonImage.Element.color = new(Colors.Header.g, Colors.Header.b, Colors.Header.r);
+
+            closeButton.Element.image = closeButtonImage.Element;
+
+            Subscriptions.Add(closeButton.Element.onClick.AsObservable().Subscribe(_ => UnityEngine.GameObject.Destroy(gameObject)));
+
+            return titleLayout;
         }
 
         void Awake()
@@ -193,46 +182,7 @@ namespace MicroPatches.UGUI
             vGroup.Element.childForceExpandWidth = true;
             vGroup.Element.childForceExpandHeight = false;
 
-            // Header
-            {
-                var titleLayout = vGroup.AddUIObject("title");
-                titleLayout.Element.minHeight = 20;
-                titleLayout.Element.flexibleWidth = 1;
-
-                var titleBackground = titleLayout.gameObject.AddComponent<Image>();
-                titleBackground.material = GetUIMaterial();
-                titleBackground.material.color = Colors.MaterialColors.Medium;
-                titleBackground.color = Colors.Header;
-
-                var titleText = titleLayout.AddTextObject("MicroPatches", Colors.Text);
-                titleText.Layout.Element.minHeight = 20;
-
-                var titleTmp = titleText.Element;
-                //titleTmp.text = "Title";
-                titleTmp.fontSizeMin = 10;
-                titleTmp.fontSizeMax = 16;
-                titleTmp.horizontalAlignment = HorizontalAlignmentOptions.Center;
-                titleTmp.verticalAlignment = VerticalAlignmentOptions.Middle;
-                //titleTmp.color = Colors.Text;
-                titleTmp.enableAutoSizing = true;
-
-                var textFitter = titleText.AddUIElement<ContentSizeFitter>();
-                textFitter.Element.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-                textFitter.Element.verticalFit = ContentSizeFitter.FitMode.MinSize;
-
-                var closeButton = titleLayout.AddUIObject<Button>("close window");
-                closeButton.RectTransform.sizeDelta = new(20, 20);
-                Utility.SetAnchors(closeButton.RectTransform, AnchorLocation.TopRight, AnchorType.Fixed);
-                
-                var closeButtonImage = closeButton.AddUIElement<Image>();
-                closeButtonImage.Element.material = GetUIMaterial();
-                closeButtonImage.Element.material.color = Colors.MaterialColors.Medium;
-                closeButtonImage.Element.color = new(Colors.Header.g, Colors.Header.b, Colors.Header.r);
-                
-                closeButton.Element.image = closeButtonImage.Element;
-
-                Subscriptions.Add(closeButton.Element.onClick.AsObservable().Subscribe(_ => UnityEngine.GameObject.Destroy(gameObject)));
-            }
+            CreateHeader(vGroup);
 
             var content = vGroup.AddUIObject();
             
@@ -258,22 +208,17 @@ namespace MicroPatches.UGUI
             var patchLines = PatchesSection(patchesList).ToArray();
 
             var footer = cLayout.AddUIObject();
-
-            //ResetTextShaders();
         }
 
         IEnumerable<UIElement> PatchesSection(UIElement parent)
         {
-            var allPatches = Main.PatchClasses;
+            var hidden = Main.Patches.Where(p => p.IsHidden);
+            var patches = Main.Patches.Where(p => !p.IsHidden);
+            var experimental = patches.Where(p => p.IsExperimental);
+            var optional = patches.Where(p => p.IsOptional && !p.IsExperimental);
+            var forced = patches.Where(p => !p.IsExperimental && !p.IsOptional);
             
-            var hidden = Main.PatchClasses.Where(p => Main.IsHidden(p.pc));
-            var patches = Main.PatchClasses.Where(p => !Main.IsHidden(p.pc));
-            var optional = patches.Where(p => Main.IsOptional(p.pc) && !Main.IsExperimental(p.pc));
-            var experimental = patches.Where(p => Main.IsExperimental(p.pc));
-            
-            var forced = patches.Where(p => !experimental.Any(ep => ep.t == p.t) && !optional.Any(hp => hp.t == p.t));
-
-            IEnumerable<UIElement> tryGetPatchLine(UIElement parent, (Type, PatchClassProcessor) patch)
+            IEnumerable<UIElement> tryGetPatchLine(UIElement parent, MicroPatch patch)
             {
                 var maybeLine = PatchLine(parent, patch);
 
@@ -306,15 +251,10 @@ namespace MicroPatches.UGUI
                 yield return line;
             }
 
-            if (hidden
-                .Select(p => (wasRun: Main.Instance.AppliedPatches.TryGetValue(p.t, out var applied), applied: applied ?? false))
-                .Where(p => p.wasRun)
-                .All(p => p.applied))
-            { 
-#if !DEBUG
+            var hiddenFailed = hidden.Where(p => p.Failed());
+
+            if (!hiddenFailed.Any() && !Main.IsDebug)
                 yield break;
-#endif
-            }
 
             var debugHeader = parent.AddTextObject("Debug", Colors.Text, TextAlignmentOptions.Center);
             debugHeader.Layout.Element.minHeight = 24;
@@ -324,48 +264,35 @@ namespace MicroPatches.UGUI
             debugHeader.Element.fontSizeMax = 16;
             debugHeader.Element.enableAutoSizing = true;
 
+#pragma warning disable CS0162 // Unreachable code detected
+            if (!Main.IsDebug)
+                hidden = hiddenFailed;
+#pragma warning restore CS0162 // Unreachable code detected
+
             foreach (var line in hidden.SelectMany(p => tryGetPatchLine(parent, p)))
             {
                 yield return line;
             }
         }
 
-        public UIElement? PatchLine(UIElement parent, (Type, PatchClassProcessor) patch)
+        public UIElement? PatchLine(UIElement parent, MicroPatch patch)
         {
-            var (t, pc) = patch;
-
-            var name = t.Name;
-
-            Main.Instance.AppliedPatches.TryGetValue(t, out var applied);
-
-            if (t.GetCustomAttribute<MicroPatchAttribute>() is { } attr)
-                name = attr.Name;
-
-            var enabled = Main.Instance.GetPatchEnabled(patch);
+            var displayName = string.IsNullOrEmpty(patch.DisplayName) ? patch.PatchType.Name : patch.DisplayName;
 
 #if DEBUG
-                Main.PatchLog("UGUI", $"Creating UI for {t.Name} Category = {pc.GetCategory() ?? "NULL"}");
+                Main.PatchLog("UGUI", $"Creating UI for {patch.PatchType.Name} Category = {patch.Patch.GetCategory() ?? "NULL"}");
 #endif
 
 
-            if (Main.IsHidden(pc) && (applied ?? false))
+            if (patch.IsHidden && patch.IsApplied())
             {
-                Main.PatchLog("UGUI", $"{t.Name} is hidden");
+                Main.PatchLog("UGUI", $"{patch.PatchType.Name} is hidden");
 #if !DEBUG
                 return null;
 #endif
             }
 
-            var statusString = "Failed";
-
-            if (applied ?? false)
-            {
-                statusString = "OK";
-            }
-            else if (Main.IsOptional(pc) && !enabled)
-                statusString = "Disabled";
-
-            var line = parent.AddUIObject<HorizontalLayoutGroup>(name);
+            var line = parent.AddUIObject<HorizontalLayoutGroup>(displayName);
             line.Layout.Element.minHeight = 20;
 
             line.Element.childControlWidth = true;
@@ -374,14 +301,13 @@ namespace MicroPatches.UGUI
             line.Element.childForceExpandHeight = false;
             line.Element.childAlignment = TextAnchor.MiddleCenter;
 
-            var toggle = line.AddUIObject<Toggle>($"{name} toggle");
+            var toggle = line.AddUIObject<Toggle>($"{displayName} toggle");
             toggle.Layout.Element.preferredWidth = 20;
             toggle.Layout.Element.preferredHeight = 20;
-            toggle.Element.interactable = Main.IsOptional(pc);
-            toggle.Element.isOn = !Main.IsOptional(pc) || enabled;
+            toggle.Element.interactable = patch.IsOptional;
+            toggle.Element.isOn = !patch.IsOptional || patch.IsEnabled();
 
             var t1 = toggle.AddUIObject<Image>();
-            //t1.Layout.Element.ignoreLayout = true;
             Utility.SetAnchors(t1.RectTransform, AnchorLocation.Center, AnchorType.Fixed);
             t1.RectTransform.sizeDelta = new(11, 11);
             t1.Element.material = GetUIMaterial();
@@ -389,7 +315,6 @@ namespace MicroPatches.UGUI
             t1.Element.color = Colors.Text;
 
             var t2 = toggle.AddUIObject<Image>();
-            //t2.Layout.Element.ignoreLayout = true;
             Utility.SetAnchors(t2.RectTransform, AnchorLocation.Center, AnchorType.Fixed);
             t2.RectTransform.sizeDelta = new(5, 5);
             t2.Element.material = GetUIMaterial();
@@ -400,17 +325,24 @@ namespace MicroPatches.UGUI
             toggle.Element.targetGraphic = t1.Element;
             toggle.Element.graphic = t2.Element;
 
-            Subscriptions.Add(toggle.Element.onValueChanged.AsObservable().Subscribe(enabled => Main.Instance.SetPatchEnabled(t.Name, enabled)));
+            Subscriptions.Add(toggle.Element.onValueChanged.AsObservable().Subscribe(enabled => Main.Instance.SetPatchEnabled(patch.PatchType.Name, enabled)));
 
-            var nameText = line.AddTextObject(name, Colors.Text);
+            var nameText = line.AddTextObject(displayName, Colors.Text);
             nameText.Element.fontSize = 12;
             nameText.Element.alignment = TextAlignmentOptions.BottomLeft;
             nameText.Element.margin = new(2, 0, 10, 0);
             
-            if (statusString == "Disabled")
+            if (!patch.IsEnabled() && !patch.Failed())
                 nameText.Element.color *= 0.5f;
 
             nameText.Layout.Element.flexibleWidth = 1;
+
+            if (!string.IsNullOrEmpty(patch.Description))
+            {
+                nameText.Element.raycastTarget = true;
+
+                Subscriptions.Add(nameText.gameObject.AddComponent<OwlcatSelectable>().SetTooltip(new TooltipTemplateHint(patch.Description)));
+            }
 
             var statusText = line.AddTextObject("Disabled", nameText.Element.color);
             statusText.Element.fontSize = 12;
@@ -418,9 +350,14 @@ namespace MicroPatches.UGUI
             
             statusText.Layout.Element.preferredWidth = statusText.Element.preferredWidth;
 
-            statusText.Element.text = statusString;
+            statusText.Element.text = patch switch
+                {
+                    _ when patch.IsApplied() => "OK",
+                    _ when patch.IsEnabled() => "Failed",
+                    _ => "Disabled"
+                };
 
-            if (statusString == "Failed")
+            if (patch.Failed())
                 statusText.Element.color = Colors.RedText;
 
             return line;

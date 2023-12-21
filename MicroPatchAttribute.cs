@@ -5,12 +5,15 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
+using HarmonyLib;
+
 namespace MicroPatches
 {
     [AttributeUsage(AttributeTargets.Class)]
-    internal class MicroPatchAttribute(string name) : Attribute
+    internal sealed class MicroPatchAttribute(string name) : Attribute
     {
         public readonly string Name = name;
         public string Description = "";
+        public bool Hidden = false;
     }
 }

@@ -16,7 +16,7 @@ namespace MicroPatches.Patches
 {
     [MicroPatch("Skip LoadAssigneesAsync")]
     [HarmonyPatch]
-    [HarmonyPatchCategory(Main.Category.Experimental)]
+    [HarmonyPatchCategory(MicroPatch.Category.Experimental)]
     internal static class SkipLoadAssignees
     {
         [HarmonyTargetMethod]

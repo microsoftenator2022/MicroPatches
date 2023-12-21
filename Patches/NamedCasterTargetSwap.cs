@@ -14,7 +14,7 @@ namespace MicroPatches.Patches
 {
     [MicroPatch("Fix inverted CasterNamedProperty/TargetNamedProperty calculation")]
     [HarmonyPatch(typeof(ContextValue), nameof(ContextValue.Calculate))]
-    [HarmonyPatchCategory(Main.Category.Experimental)]
+    [HarmonyPatchCategory(MicroPatch.Category.Experimental)]
     static class NamedCasterTargetSwap
     {
         [HarmonyTranspiler]
