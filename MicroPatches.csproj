@@ -16,7 +16,7 @@
   <ItemGroup>
     <PackageReference Include="UnityEngine.Modules" Version="2022.3.7" IncludeAssets="compile" />
     <PackageReference Include="Aze.Publicise.MSBuild.Task" Version="1.1.0" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" PrivateAssets="all" />
-    <PackageReference Include="PublishToWorkshop" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" Version="1.0.9" PrivateAssets="all" />
+    <PackageReference Include="PublishToWorkshop" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" Version="1.0.10" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
@@ -162,7 +162,7 @@
   </Target>
 
   <Target Name="PublishToSteamWorkshop" AfterTargets="Publish">
-    <PublishToWorkshop PathToManifest="$(MSBuildThisFileDirectory)\ModDetails\OwlcatModificationManifest.json" ImageDir="$(MSBuildThisFileDirectory)\ModDetails\" BuildDir="$(SolutionDir)$(OutDir)" GameAppId="2186680" />
+    <PublishToWorkshop PathToManifest="$(MSBuildThisFileDirectory)\ModDetails\OwlcatModificationManifest.json" ImageDir="$(MSBuildThisFileDirectory)\ModDetails\" BuildDir="$(SolutionDir)$(OutDir)" GameAppId="2186680" PathToDescription="$(MSBuildThisFileDirectory)\ModDetails\description" />
   </Target>
 
   <Target Name="GenerateCustomPropsFile" BeforeTargets="BeforeBuild" AfterTargets="Clean" Condition="$(RogueTraderInstallDir) == ''">

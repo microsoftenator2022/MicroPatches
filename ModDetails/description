@@ -1,0 +1,35 @@
+[h1]MicroPatches (Warhammer 40K: Rogue Trader)[/h1]
+
+Transmechanic Microsoftenator once again fixing bugs and cleaning logs.
+
+Tiny patches attempting to fix minor bugs and silence annoying log messages.
+Experimental patches require more testing and can be toggled in the mod settings (requires restart to take effect). If you encounter any issues with an experimental patch, [url=https://github.com/microsoftenator2022/MicroPatches/issues]let me know in the issues on the github repository[/url].
+
+[u][b]WARNING: ALL EXPERIMENTAL PATCHES ARE DISABLED BY DEFAULT FOR A REASON. THEY MAY BREAK YOUR GAME AND/OR SAVES. ACTIVATE AT YOUR OWN RISK.[/b][/u]
+
+[h2]Current patches as of 1.5:[/h2]
+
+[list]
+[*]Ignore TurnBasedEventsTrigger on features on non-party companions. Fixes the "Infinite Seize The Initiative" bug
+[*]Silenced keybinding conflict log messages
+[*]Lowered the severity of missing certain DLC warnings ("DLC has no status in the DLCCache. Defaulting to unavailable") no longer prints a stacktrace
+[*]Fixed UMM update checks (previously failed when google domains resolve to an ipv6 address)
+[/list]
+
+[h3]Ported from WrathPatches[/h3]
+
+[list]
+[*]Fixed NRE in Element.AssetGuid and Element.AssetGuidShort
+[*]SharedStringConverter.ReadJson now correctly uses ScriptableObject.CreateInstance not the class constructor. Fixes harmless but noisy template mod localization errors
+[*]Silenced "Bind: no binding named X" messages
+[/list]
+
+[h3]Experimental[/h3]
+
+These have all recieved basic testing, but are not guaranteed to be free of issues:
+[list]
+[*]Swap calculations for CasterNamedProperty and TargetNamedProperty. Fix for: Some effects that should be using the caster's stats incorrectly use the target's stats and vice-versa.
+[*]Fixed EGSAchievementsManager NullReferenceExceptions
+[*]Ignore Steam Achievements with Null ID
+[*]Skip LoadAssigneeAsync - prevents internal QA error message
+[/list]
