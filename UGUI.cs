@@ -43,7 +43,10 @@ namespace MicroPatches
                 var canvas = canvasObject.GetComponent<Canvas>();
                 canvas.renderMode = RenderMode.ScreenSpaceOverlay;
 
-                //canvasObject.GetComponent<GraphicRaycaster>().ignoreReversedGraphics = true;
+                var scaler = canvasObject.AddComponent<CanvasScaler>();
+                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                scaler.referenceResolution = new(1280, 720);
+                scaler.matchWidthOrHeight = 1f;
 
                 UnityEngine.Object.DontDestroyOnLoad(canvasObject);
 
