@@ -14,9 +14,10 @@
   </PropertyGroup>
   
   <ItemGroup>
+    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.1" IncludeAssets="build; compile; contentfiles; analyzers; buildtransitive" PrivateAssets="all" />
     <PackageReference Include="UnityEngine.Modules" Version="2022.3.7" IncludeAssets="compile" />
-    <PackageReference Include="Aze.Publicise.MSBuild.Task" Version="1.1.0" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" PrivateAssets="all" />
-    <PackageReference Include="PublishToWorkshop" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" Version="1.0.10" PrivateAssets="all" />
+    <!--<PackageReference Include="Aze.Publicise.MSBuild.Task" Version="1.1.0" IncludeAssets="compile; build; native; contentfiles; analyzers; buildtransitive" PrivateAssets="all" />-->
+    <PackageReference Include="PublishToWorkshop" IncludeAssets="compile; build; native; contentfiles; analyzers; buildtransitive" Version="1.0.10" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
@@ -107,33 +108,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Publicize Include="$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Code.dll" />
-    <Reference Include="Code">
-      <HintPath>$(SolutionDir)lib\Code_public.dll</HintPath>
+    <Reference Include="Code" HintPath="$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Code.dll" Publicize="true">
       <Private>False</Private>
     </Reference>
-
-    <Publicize Include="$(RogueTraderInstallDir)\WH40KRT_Data\Managed\RogueTrader.GameCore.dll" />
-    <Reference Include="RogueTrader.GameCore">
-      <HintPath>$(SolutionDir)lib\RogueTrader.GameCore_public.dll</HintPath>
+    <Reference Include="RogueTrader.GameCore" HintPath="$(RogueTraderInstallDir)\WH40KRT_Data\Managed\RogueTrader.GameCore.dll" Publicize="true">
       <Private>False</Private>
     </Reference>
-
-    <Publicize Include="$(RogueTraderInstallDir)\WH40KRT_Data\Managed\RogueTrader.SharedTypes.dll" />
-    <Reference Include="RogueTrader.SharedTypes">
-      <HintPath>$(SolutionDir)lib\RogueTrader.SharedTypes_public.dll</HintPath>
+    <Reference Include="RogueTrader.SharedTypes" HintPath="$(RogueTraderInstallDir)\WH40KRT_Data\Managed\RogueTrader.SharedTypes.dll" Publicize="true">
       <Private>False</Private>
     </Reference>
-
-    <Publicize Include="$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Owlcat.Runtime.Core.dll" />
-    <Reference Include="Owlcat.Runtime.Core">
-      <HintPath>$(SolutionDir)lib\Owlcat.Runtime.Core_public.dll</HintPath>
+    <Reference Include="Owlcat.Runtime.Core" HintPath="$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Owlcat.Runtime.Core.dll" Publicize="true">
       <Private>False</Private>
     </Reference>
-
-    <Publicize Include="$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Owlcat.Runtime.UI.dll" />
-    <Reference Include="Owlcat.Runtime.UI">
-      <HintPath>$(SolutionDir)lib\Owlcat.Runtime.UI_public.dll</HintPath>
+    <Reference Include="Owlcat.Runtime.UI" HintPath="$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Owlcat.Runtime.UI.dll" Publicize="true">
       <Private>False</Private>
     </Reference>
   </ItemGroup>
@@ -143,7 +130,7 @@
     <None Include="ModDetails\OwlcatModificationManifest.json" CopyToOutputDirectory="PreserveNewest" Link="%(Filename)%(Extension)" />
   </ItemGroup>
 
-  <Target Name="Publicize" AfterTargets="BeforeBuild;PublicizeClean" Inputs="@(Publicize)" Outputs="$(SolutionDir)lib\%(Publicize.Filename)_public.dll">
+  <!--<Target Name="Publicize" AfterTargets="BeforeBuild;PublicizeClean" Inputs="@(Publicize)" Outputs="$(SolutionDir)lib\%(Publicize.Filename)_public.dll">
     <MakeDir Directories="$(SolutionDir)lib/" />
     <Publicise InputAssemblies="@(Publicize)" OutputPath="$(SolutionDir)lib/" />
   </Target>
@@ -151,7 +138,7 @@
   <Target Name="PublicizeClean" AfterTargets="Clean">
     <Delete Files="$(SolutionDir)lib\%(Publicize.Filename)_public.dll" />
     <Delete Files="$(SolutionDir)lib\%(Publicize.Filename)_public.hash" />
-  </Target>
+  </Target>-->
 
   <Target Name="Deploy" AfterTargets="Build">
     <ItemGroup>
