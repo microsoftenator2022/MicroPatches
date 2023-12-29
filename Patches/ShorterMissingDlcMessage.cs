@@ -14,9 +14,9 @@ using Owlcat.Runtime.Core.Logging;
 
 namespace MicroPatches.Patches
 {
-    [MicroPatch("Quieter missing DLC warnings")]
+    [MicroPatch("Quieter missing DLC warnings", Optional = true)]
     [HarmonyPatch]
-    [HarmonyPatchCategory(MicroPatch.Category.Optional)]
+    //[HarmonyPatchCategory(MicroPatch.Category.Optional)]
     internal static class ShorterMissingDlcMessage
     {
         [HarmonyTargetMethod]

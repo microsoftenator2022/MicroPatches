@@ -20,9 +20,9 @@ using Kingmaker.UnitLogic.Progression.Features;
 
 namespace MicroPatches.Patches
 {
-    [MicroPatch("Ignore TurnBasedEventsTrigger for Remote Companions")]
+    [MicroPatch("Ignore TurnBasedEventsTrigger for Remote Companions", Optional = true)]
     [HarmonyPatch]
-    [HarmonyPatchCategory(MicroPatch.Category.Optional)]
+    //[HarmonyPatchCategory(MicroPatch.Category.Optional)]
     internal static class TurnBasedEventsTriggerRemoteCompanionFix
     {
         [HarmonyTargetMethods]

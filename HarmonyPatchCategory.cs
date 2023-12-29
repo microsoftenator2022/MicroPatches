@@ -7,6 +7,7 @@ using HarmonyLib;
 
 namespace HarmonyLib
 {
+    [Obsolete]
     internal static class HarmonyAttributeExtensions
     {
         static readonly FieldInfo containerType =

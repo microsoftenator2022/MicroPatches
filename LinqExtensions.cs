@@ -42,5 +42,49 @@ namespace MicroUtils.Linq
         }
 
         public static (T, IEnumerable<T>) Pop<T>(this IEnumerable<T> source) => (source.First(), source.Skip(1));
+
+        /// <summary>
+        /// Selects distinct elements from a sequence, first applying a selector function and using a provided equality comparer
+        /// </summary>
+        public static IEnumerable<T> DistinctBy<T, U>(this IEnumerable<T> seq, Func<T, U> selector, IEqualityComparer<U> comparer)
+        {
+            var distinct = new List<U>();
+
+            foreach (var item in seq)
+            {
+                var selected = selector(item);
+
+                if (!distinct.Contains(selected, comparer))
+                {
+                    distinct.Add(selected);
+                    yield return item;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates a dictionary from a sequence of Key/Value pairs
+        /// </summary>
+
+        /// <typeparam name="TKey">Key type</typeparam>
+        /// <typeparam name="TValue">Value type</typeparam>
+        /// <param name="source">Source sequence</param>
+        public static IDictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<(TKey key, TValue value)> source) =>
+            source.ToDictionary(kv => kv.key, kv => kv.value);
+
+        /// <summary>
+        /// Creates a dictionary from a sequence of Key/Value pairs using a provided <see cref="IEqualityComparer{T}"/>
+        /// </summary>
+        /// <param name="source">Source sequence</param>
+        /// <param name="keyComparer">Key equality comparer</param>
+        public static IDictionary<TKey, TValue> ToDictionary<TKey, TValue>
+            (this IEnumerable<(TKey key, TValue value)> source, IEqualityComparer<TKey> keyComparer) =>
+            source.ToDictionary(kv => kv.key, kv => kv.value, keyComparer);
+
+
+        /// <summary>
+        /// Selects distinct elements from a sequence, first applying a selector function and using the default equality comparer
+        /// </summary>
+        public static IEnumerable<T> DistinctBy<T, U>(this IEnumerable<T> seq, Func<T, U> selector) => DistinctBy(seq, selector, EqualityComparer<U>.Default);
     }
 }

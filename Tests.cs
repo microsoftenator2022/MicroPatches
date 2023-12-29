@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -11,6 +12,9 @@ using HarmonyLib;
 
 using Kingmaker;
 using Kingmaker.Blueprints;
+using Kingmaker.Blueprints.Items.Weapons;
+using Kingmaker.Blueprints.JsonSystem;
+using Kingmaker.Blueprints.JsonSystem.Converters;
 using Kingmaker.Blueprints.JsonSystem.Helpers;
 using Kingmaker.Blueprints.Root;
 using Kingmaker.ElementsSystem;
@@ -24,7 +28,11 @@ using Kingmaker.UnitLogic.Parts;
 using MicroPatches.Patches;
 using MicroPatches.UGUI;
 
+using MicroUtils.Transpiler;
+
 using Owlcat.Runtime.Core.Logging;
+
+using RogueTrader.SharedTypes;
 
 using TMPro;
 
@@ -36,23 +44,36 @@ namespace MicroPatches
     internal partial class Main
     {
 #if DEBUG
-        [MicroPatch("Hidden Failure Test Patch", Description = "Test\nTest\nTest\nTest\nTest\nTest\nTest", Hidden = true)]
+        [MicroPatch("Hidden Failure Test Patch", Description = "Test\nTest\nTest\nTest\nTest\nTest\nTest", Hidden = true, Optional = true)]
         [HarmonyPatch(typeof(Main), nameof(Main.Load))]
-        [HarmonyPatchCategory(MicroPatch.Category.Optional)]
+        //[HarmonyPatchCategory(MicroPatch.Category.Optional)]
         static class TestHiddenFailPatch
         {
             [HarmonyTranspiler]
-            static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
-            {
+            static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions) =>
                 throw new Exception($"{nameof(TestHiddenFailPatch)}");
-            }
         }
 #endif
 
         void PrePatchTests()
         {
 #if DEBUG
+            var sb = new StringBuilder();
+            sb.Append("PatchGroups:");
 
+            foreach (var g in Main.PatchGroups.Select(g => g.group))
+            {
+                sb.AppendLine();
+                sb.Append($" Group '{g.DisplayName}'");
+
+                foreach (var p in g.GetPatches())
+                {
+                    sb.AppendLine();
+                    sb.Append($"  Patch '{p.PatchClass.Name}");
+                }
+            }
+
+            Logger.Log(sb.ToString());
 #endif
         }
 

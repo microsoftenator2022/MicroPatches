@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -13,73 +14,123 @@ namespace MicroPatches.Patches
 {
     internal static class MicroPatchExtensions
     {
-        [Obsolete]
-        public static Type GetPatchType(this PatchClassProcessor pc) => Main.Patches.First(p => p.Patch == pc).PatchType;
-
         public static bool IsEnabled(this MicroPatch mp) => Main.Instance.GetPatchEnabled(mp);
         public static bool IsApplied(this MicroPatch mp) => Main.Instance.GetPatchApplied(mp);
-
         public static bool Failed(this MicroPatch mp) => mp.IsEnabled() && !mp.IsApplied();
+
+        public static IEnumerable<MicroPatch> GetPatches(this MicroPatch.IPatchGroup group) =>
+            Main.PatchGroups.Single(g => g.group.Equals(group)).patches;
+
+        public static bool IsApplied(this MicroPatch.IPatchGroup group) =>
+            group.GetPatches().All(p => p.IsApplied());
+
+        public static bool IsEnabled(this MicroPatch.IPatchGroup group) =>
+            group.GetPatches().All(p => p.IsEnabled());
+
+        public static bool Failed(this MicroPatch.IPatchGroup group) =>
+            group.GetPatches().Any(p => p.Failed());
+    }
+
+    internal abstract class MicroPatchGroup() : MicroPatch.IPatchGroup
+    {
+        public abstract string DisplayName { get; }
+        public virtual string Description { get; } = "";
+        public virtual bool IsOptional { get; } = true;
+        public virtual bool IsExperimental { get; } = false;
+        public virtual bool IsHidden { get; } = false;
+
+        public virtual bool Equals(MicroPatch.IPatchGroup other)
+        {
+            Main.PatchLog(nameof(MicroPatchGroup), $"this: {this.GetType()}, {this.DisplayName}\nother: {other.GetType()}, {other.DisplayName}");
+
+            return this.GetType() == other.GetType() &&
+            this.DisplayName == other.DisplayName;
+        }
+
+        public override bool Equals(object other) => other is MicroPatchGroup g && this.Equals(g);
+        public override int GetHashCode() => (this.GetType(), this.DisplayName).GetHashCode();
     }
 
     internal class MicroPatch
     {
-        internal static UnityModManager.ModEntry.ModLogger Logger = null!;
-
-        internal static class Category
+        public interface IPatchGroup : IEquatable<IPatchGroup>
         {
-            internal const string Experimental = "Experimental";
-            //internal const string Hidden = "Hidden";
-            internal const string Optional = "Optional";
+            string DisplayName { get; }
+            string Description { get; }
+            bool IsOptional { get; }
+            bool IsExperimental { get; }
+            bool IsHidden { get; }
         }
 
-        public MicroPatch(PatchClassProcessor patch, Type patchType)
+
+
+        private class PatchGroup(
+            string displayName,
+            string? description = null,
+            bool? optional = null,
+            bool? experimental = null,
+            bool? hidden = null) : MicroPatchGroup
+        {
+            public override string DisplayName { get; } = displayName;
+            public override string Description => description ?? base.Description;
+            public override bool IsOptional => optional ?? base.IsOptional;
+            public override bool IsExperimental => experimental ?? base.IsExperimental;
+            public override bool IsHidden => hidden ?? base.IsHidden;
+        }
+
+        internal static UnityModManager.ModEntry.ModLogger Logger = null!;
+
+        //internal static class Category
+        //{
+        //    internal const string Experimental = "Experimental";
+        //    //internal const string Hidden = "Hidden";
+        //    internal const string Optional = "Optional";
+        //}
+
+        private MicroPatch(PatchClassProcessor patch, Type patchClass, IPatchGroup group)
         {
             Patch = patch;
-            PatchType = patchType;
+            PatchClass = patchClass;
+            Group = group;
+        }
 
-            if (PatchType.GetCustomAttribute<MicroPatchAttribute>() is not { } attr)
+        //public static MicroPatch FromGroupType<TGroup>(PatchClassProcessor patch, Type patchClass)
+        //    where TGroup : IPatchGroup, new() =>
+        //    new(patch, patchClass, new TGroup());
+
+        public static MicroPatch FromType(PatchClassProcessor patch, Type patchClass)
+        {
+            if (patchClass.GetCustomAttribute<MicroPatchGroupAttribute>() is { } groupAttr)
             {
-                Logger.Warning($"Missing {nameof(MicroPatchAttribute)} on patch type {PatchType.Name}");
-                attr = new(PatchType.Name) { Hidden = true };
-            }    
+                return new(patch, patchClass, groupAttr.GroupInstance);
+            }
 
-            PatchAttribute = attr;
+            if (patchClass.GetCustomAttribute<MicroPatchAttribute>() is not { } attr)
+            {
+                Logger.Warning($"Missing {nameof(MicroPatchAttribute)} on patch type {patchClass.Name}");
+                attr = new(patchClass.Name) { Hidden = true };
+            }
+
+            return new(patch, patchClass, new PatchGroup(
+                displayName: attr.Name,
+                description: attr.Description,
+                optional: attr.Optional,
+                experimental: attr.Experimental,
+                hidden: attr.Hidden));
         }
 
         public PatchClassProcessor Patch { get; }
-        public Type PatchType { get; }
+        public Type PatchClass { get; }
 
-        public MicroPatchAttribute PatchAttribute { get; }
+        public IPatchGroup Group { get; }
 
-        public string DisplayName => PatchAttribute.Name;
-        public string Description => PatchAttribute.Description;
-        public bool IsHidden => PatchAttribute.Hidden;
+        public string DisplayName => Group.DisplayName;
+        public string? Description => Group.Description;
+        public bool IsHidden => Group.IsHidden;
 
-        public bool IsExperimental => Patch.GetCategory() is Category.Experimental;
-        public bool IsOptional => Patch.GetCategory() is Category.Optional or Category.Experimental;
-
-        [Obsolete]
-        public static PatchClassProcessor GetPatchProcessor(Type t) => Main.PatchClasses.First(p => p.t == t).pc;
-
-        [Obsolete]
-        public static Type GetPatchType(PatchClassProcessor pc) => Main.PatchClasses.First(p => p.pc == pc).t;
-
-        [Obsolete]
-        public static MicroPatchAttribute? GetPatchAttribute(PatchClassProcessor pc) => pc.GetPatchType().GetCustomAttribute<MicroPatchAttribute>();
-
-        [Obsolete]
-        public static bool IsExperimental_Obsolete(PatchClassProcessor pc) => pc.GetCategory() is Category.Experimental;
-
-        [Obsolete]
-        public static bool IsHidden_Obsolete(PatchClassProcessor pc) => false; /*pc.GetCategory() is Category.Hidden;*/
-
-        [Obsolete]
-        public static bool IsOptional_Obsolete(PatchClassProcessor pc) =>
-#if DEBUG
-            false;
-#else
-            pc.GetCategory() is MicroPatch.Category.Optional or MicroPatch.Category.Experimental;
-#endif
+        public bool IsExperimental => Group.IsExperimental;
+            //Patch.GetCategory() is Category.Experimental;
+        public bool IsOptional => Group.IsOptional || IsExperimental;
+            //Patch.GetCategory() is Category.Optional or Category.Experimental;
     }
 }

@@ -12,9 +12,9 @@ using Kingmaker.UnitLogic.Mechanics.Components;
 
 namespace MicroPatches.Patches
 {
-    [MicroPatch("Fix inverted CasterNamedProperty/TargetNamedProperty calculation")]
+    [MicroPatch("Fix inverted CasterNamedProperty/TargetNamedProperty calculation", Experimental = true)]
     [HarmonyPatch(typeof(ContextValue), nameof(ContextValue.Calculate))]
-    [HarmonyPatchCategory(MicroPatch.Category.Experimental)]
+    //[HarmonyPatchCategory(MicroPatch.Category.Experimental)]
     static class NamedCasterTargetSwap
     {
         [HarmonyTranspiler]
@@ -33,11 +33,6 @@ namespace MicroPatches.Patches
 
             jumpTable[casterNamed] = cTarget;
             jumpTable[targetNamed] = tTarget;
-
-            //var casterTargetLabel = jumpTable[casterNamed];
-            //var targetTargetLabel = jumpTable[targetNamed];
-
-            //var iArray = instructions.SkipWhile(ci => !ci.labels.Contains(targetTargetLabel)).ToArray();
 
             return instructions;
         }

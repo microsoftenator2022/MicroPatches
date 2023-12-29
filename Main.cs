@@ -1,16 +1,20 @@
-﻿using HarmonyLib;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text.RegularExpressions;
+
+using HarmonyLib;
 
 using Kingmaker.Modding;
 
 using MicroPatches.Patches;
 
-using Newtonsoft.Json;
+using MicroUtils.Linq;
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
+using Newtonsoft.Json;
 
 using UnityModManagerNet;
 
@@ -58,11 +62,12 @@ namespace MicroPatches
                 .Where(tuple => tuple.pc.HasPatchAttribute())
                 .ToArray());
 
-        [Obsolete]
-        public static IEnumerable<(Type t, PatchClassProcessor pc)> PatchClasses => patchClasses.Value;
-
-        static readonly Lazy<MicroPatch[]> patches = new(() => patchClasses.Value.Select(p => new MicroPatch(p.pc, p.t)).ToArray());
+        static readonly Lazy<MicroPatch[]> patches = new(() => patchClasses.Value.Select(p => MicroPatch.FromType(p.pc, p.t)).ToArray());
         public static IEnumerable<MicroPatch> Patches => patches.Value;
+
+        public static IEnumerable<(MicroPatch.IPatchGroup group, MicroPatch[] patches)> PatchGroups => Patches
+            .GroupBy(p => p.Group)
+            .Select(g => (g.Key, g.ToArray()));
 
         static bool Load(UnityModManager.ModEntry modEntry)
         {
@@ -75,7 +80,7 @@ namespace MicroPatches
             Instance.PostPatchTests();
 
             if (Patches.Any(p => p.IsEnabled() &&
-                Instance.AppliedPatches.TryGetValue(p.PatchType, out var applied) &&
+                Instance.AppliedPatches.TryGetValue(p.PatchClass, out var applied) &&
                 (applied is false)))
                 CreateUI();
 
@@ -93,12 +98,6 @@ namespace MicroPatches
 
         void RunPatches()
         {
-            //foreach (var pc in Patches)
-            //{
-            //    if (pc.PatchType.GetCustomAttribute<MicroPatchAttribute>() is not { } attr && !MicroPatch.IsHidden_Obsolete(pc.Patch))
-            //        Logger.Warning($"Missing MicroPatch attribute for patch {pc.PatchType.Name}");
-            //}
-
             var enabledPatches = Patches.Where(p => p.IsEnabled());
 
             RunPatches(enabledPatches.Where(p => !p.IsExperimental));
@@ -120,41 +119,20 @@ namespace MicroPatches
             {
                 try
                 {
-                    Logger.Log($"Running patch class {p.PatchType.Name}");
+                    Logger.Log($"Running patch class {p.PatchClass.Name}");
                     p.Patch.Patch();
 
-                    AppliedPatches[p.PatchType] = true;
+                    AppliedPatches[p.PatchClass] = true;
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error($"Exception in patch class {p.PatchType.Name}");
+                    Logger.Error($"Exception in patch class {p.PatchClass.Name}");
                     Logger.LogException(ex);
 
-                    AppliedPatches[p.PatchType] = false;
+                    AppliedPatches[p.PatchClass] = false;
                 }
             }
         }
-
-        //void RunPatches(IEnumerable<(Type, PatchClassProcessor)> typesAndPatches)
-        //{
-        //    foreach (var (t, pc) in typesAndPatches)
-        //    {
-        //        try
-        //        {
-        //            Logger.Log($"Running patch class {t.Name}");
-        //            pc.Patch();
-
-        //            AppliedPatches[t] = true;
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            Logger.Error($"Exception in patch class {t.Name}");
-        //            Logger.LogException(ex);
-
-        //            AppliedPatches[t] = false;
-        //        }
-        //    }
-        //}
 
         static Assembly GetHarmonyAss() => AppDomain.CurrentDomain.GetAssemblies()
             .FirstOrDefault(ass => ass.GetName().Name == "0Harmony");
@@ -197,26 +175,9 @@ namespace MicroPatches
             EnabledPatches = EnabledPatches;
         }
 
-        [Obsolete]
-        public bool GetPatchEnabled(PatchClassProcessor patch)
-        {
-            if (EnabledPatches.TryGetValue(patch.GetPatchType().Name, out var enabled))
-            {
-                return enabled;
-            }
-
-            if (MicroPatch.IsExperimental_Obsolete(patch) && !IsDebug)
-                return false;
-
-            //if (MicroPatch.IsOptional(patch))
-            //    return true;
-
-            return true;
-        }
-
         public bool GetPatchEnabled(MicroPatch patch)
         {
-            if (EnabledPatches.TryGetValue(patch.PatchType.Name, out var enabled))
+            if (EnabledPatches.TryGetValue(patch.PatchClass.Name, out var enabled))
             {
                 return enabled;
             }
@@ -227,6 +188,6 @@ namespace MicroPatches
             return true;
         }
 
-        public bool GetPatchApplied(MicroPatch patch) => AppliedPatches.TryGetValue(patch.PatchType, out var applied) && applied;
+        public bool GetPatchApplied(MicroPatch patch) => AppliedPatches.TryGetValue(patch.PatchClass, out var applied) && applied;
     }
 }

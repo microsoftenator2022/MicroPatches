@@ -12,9 +12,9 @@ using UnityModManagerNet;
 
 namespace MicroPatches.Patches
 {
-    [MicroPatch("Fix UMM update check")]
+    [MicroPatch("Fix UMM update check", Optional = true)]
     [HarmonyPatch]
-    [HarmonyPatchCategory(MicroPatch.Category.Optional)]
+    //[HarmonyPatchCategory(MicroPatch.Category.Optional)]
     internal static class FixUMMUpdateCheck
     {
         static bool CheckNetworkConnection()

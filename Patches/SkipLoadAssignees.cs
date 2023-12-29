@@ -14,16 +14,16 @@ using MicroUtils.Transpiler;
 
 namespace MicroPatches.Patches
 {
-    [MicroPatch("Skip LoadAssigneesAsync")]
+    [MicroPatch("Skip LoadAssigneesAsync", Experimental = true)]
     [HarmonyPatch]
-    [HarmonyPatchCategory(MicroPatch.Category.Experimental)]
+    //[HarmonyPatchCategory(MicroPatch.Category.Experimental)]
     internal static class SkipLoadAssignees
     {
         [HarmonyTargetMethod]
         static MethodBase TargetMethod() =>
             typeof(ReportingUtils)
                 .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
-                .First(mi =>
+                .Single(mi =>
                 {
                     var ps = mi.GetParameters();
 

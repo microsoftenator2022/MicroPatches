@@ -19,7 +19,7 @@ using UnityEngine;
 
 namespace MicroPatches.Patches
 {
-    [MicroPatch("Silence key bind conflict warnings")]
+    [MicroPatch("Silence key bind conflict warnings", Optional = true)]
     [HarmonyPatch(typeof(KeyboardAccess), nameof(KeyboardAccess.RegisterBinding),
         [
             typeof(string),
@@ -32,7 +32,7 @@ namespace MicroPatches.Patches
             typeof(KeyboardAccess.ModificationSide),
             typeof(bool)
         ])]
-    [HarmonyPatchCategory(MicroPatch.Category.Optional)]
+    //[HarmonyPatchCategory(MicroPatch.Category.Optional)]
     internal static class SilenceKeyBindingConflict
     {
         [HarmonyTranspiler]

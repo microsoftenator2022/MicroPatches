@@ -19,9 +19,9 @@ using UnityEngine;
 
 namespace MicroPatches.Patches
 {
-    [MicroPatch("Achievement fixes: Null Achievement SteamId")]
+    [MicroPatch("Achievement fixes: Null Achievement SteamId", Experimental = true)]
     [HarmonyPatch(typeof(SteamAchievementsManager), nameof(SteamAchievementsManager.OnUserStatsReceived))]
-    [HarmonyPatchCategory(MicroPatch.Category.Experimental)]
+    //[HarmonyPatchCategory(MicroPatch.Category.Experimental)]
     static class NullAchievmentSteamIdFix
     {
         static void LogSteamId(AchievementData achievementData)
@@ -79,9 +79,9 @@ namespace MicroPatches.Patches
         }
     }
 
-    [MicroPatch("Fix EGS AchievementsManager NRE")]
+    [MicroPatch("Fix EGS AchievementsManager NRE", Experimental = true)]
     [HarmonyPatch]
-    [HarmonyPatchCategory(MicroPatch.Category.Experimental)]
+    //[HarmonyPatchCategory(MicroPatch.Category.Experimental)]
 
     static class EGSAchievementsHelperNullFix
     {

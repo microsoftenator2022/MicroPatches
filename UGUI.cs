@@ -26,6 +26,7 @@ using UnityEngine.UI;
 
 using UniRx;
 using Kingmaker.UI;
+using Owlcat.Runtime.Core;
 
 namespace MicroPatches
 {
@@ -70,7 +71,7 @@ namespace MicroPatches
             obj.AddComponent<CanvasGroup>().blocksRaycasts = true;
         }
 
-        [MicroPatch("", Hidden = true)]
+        [MicroPatch("FixTMP", Hidden = true)]
         [HarmonyPatch(typeof(GameStarter), nameof(GameStarter.FixTMPAssets))]
         static class FixTMP
         {
@@ -215,15 +216,15 @@ namespace MicroPatches.UGUI
 
         IEnumerable<UIElement> PatchesSection(UIElement parent)
         {
-            var hidden = Main.Patches.Where(p => p.IsHidden);
-            var patches = Main.Patches.Where(p => !p.IsHidden);
-            var experimental = patches.Where(p => p.IsExperimental);
-            var optional = patches.Where(p => p.IsOptional && !p.IsExperimental);
-            var forced = patches.Where(p => !p.IsExperimental && !p.IsOptional);
+            var hidden = Main.PatchGroups.Where(p => p.group.IsHidden);
+            var patches = Main.PatchGroups.Where(p => !p.group.IsHidden);
+            var experimental = patches.Where(p => p.group.IsExperimental);
+            var optional = patches.Where(p => p.group.IsOptional && !p.group.IsExperimental);
+            var forced = patches.Where(p => !p.group.IsExperimental && !p.group.IsOptional);
             
-            IEnumerable<UIElement> tryGetPatchLine(UIElement parent, MicroPatch patch)
+            IEnumerable<UIElement> tryGetPatchLine(UIElement parent, MicroPatch.IPatchGroup patchGroup)
             {
-                var maybeLine = PatchLine(parent, patch);
+                var maybeLine = PatchLine(parent, patchGroup);
 
                 if (maybeLine == null)
                     return [];
@@ -231,12 +232,12 @@ namespace MicroPatches.UGUI
                 return [maybeLine];
             }
 
-            foreach (var line in forced.SelectMany(p => tryGetPatchLine(parent, p)))
+            foreach (var line in forced.SelectMany(p => tryGetPatchLine(parent, p.group)))
             {
                 yield return line;
             }
 
-            foreach (var line in optional.SelectMany(p => tryGetPatchLine(parent, p)))
+            foreach (var line in optional.SelectMany(p => tryGetPatchLine(parent, p.group)))
             {
                 yield return line;
             }
@@ -249,12 +250,12 @@ namespace MicroPatches.UGUI
             experimentalHeader.Element.fontSizeMax = 16;
             experimentalHeader.Element.enableAutoSizing = true;
 
-            foreach (var line in experimental.SelectMany(p => tryGetPatchLine(parent, p)))
+            foreach (var line in experimental.SelectMany(p => tryGetPatchLine(parent, p.group)))
             {
                 yield return line;
             }
 
-            var hiddenFailed = hidden.Where(p => p.Failed());
+            var hiddenFailed = hidden.Where(p => p.group.Failed());
 
             if (!hiddenFailed.Any() && !Main.IsDebug)
                 yield break;
@@ -272,24 +273,23 @@ namespace MicroPatches.UGUI
                 hidden = hiddenFailed;
 #pragma warning restore CS0162 // Unreachable code detected
 
-            foreach (var line in hidden.SelectMany(p => tryGetPatchLine(parent, p)))
+            foreach (var line in hidden.SelectMany(p => tryGetPatchLine(parent, p.group)))
             {
                 yield return line;
             }
         }
 
-        public UIElement? PatchLine(UIElement parent, MicroPatch patch)
+        public UIElement? PatchLine(UIElement parent, MicroPatch.IPatchGroup patchGroup)
         {
-            var displayName = string.IsNullOrEmpty(patch.DisplayName) ? patch.PatchType.Name : patch.DisplayName;
+            var displayName = patchGroup.DisplayName;
 
 #if DEBUG
-                Main.PatchLog("UGUI", $"Creating UI for {patch.PatchType.Name} Category = {patch.Patch.GetCategory() ?? "NULL"}");
+                Main.PatchLog("UGUI", $"Creating UI for {displayName}");
 #endif
 
-
-            if (patch.IsHidden && patch.IsApplied())
+            if (patchGroup.IsHidden && patchGroup.IsApplied())
             {
-                Main.PatchLog("UGUI", $"{patch.PatchType.Name} is hidden");
+                Main.PatchLog("UGUI", $"{patchGroup.DisplayName} is hidden");
 #if !DEBUG
                 return null;
 #endif
@@ -307,8 +307,8 @@ namespace MicroPatches.UGUI
             var toggle = line.AddUIObject<Toggle>($"{displayName} toggle");
             toggle.Layout.Element.preferredWidth = 20;
             toggle.Layout.Element.preferredHeight = 20;
-            toggle.Element.interactable = patch.IsOptional;
-            toggle.Element.isOn = !patch.IsOptional || patch.IsEnabled();
+            toggle.Element.interactable = patchGroup.IsOptional;
+            toggle.Element.isOn = !patchGroup.IsOptional || patchGroup.IsEnabled();
 
             var t1 = toggle.AddUIObject<Image>();
             Utility.SetAnchors(t1.RectTransform, AnchorLocation.Center, AnchorType.Fixed);
@@ -328,23 +328,24 @@ namespace MicroPatches.UGUI
             toggle.Element.targetGraphic = t1.Element;
             toggle.Element.graphic = t2.Element;
 
-            Subscriptions.Add(toggle.Element.onValueChanged.AsObservable().Subscribe(enabled => Main.Instance.SetPatchEnabled(patch.PatchType.Name, enabled)));
+            Subscriptions.Add(toggle.Element.onValueChanged.AsObservable().Subscribe(enabled =>
+                patchGroup.GetPatches().ForEach(p => Main.Instance.SetPatchEnabled(p.PatchClass.Name, enabled))));
 
             var nameText = line.AddTextObject(displayName, Colors.Text);
             nameText.Element.fontSize = 12;
             nameText.Element.alignment = TextAlignmentOptions.BottomLeft;
             nameText.Element.margin = new(2, 0, 10, 0);
             
-            if (!patch.IsEnabled() && !patch.Failed())
+            if (!patchGroup.IsEnabled() && !patchGroup.Failed())
                 nameText.Element.color *= 0.5f;
 
             nameText.Layout.Element.flexibleWidth = 1;
 
-            if (!string.IsNullOrEmpty(patch.Description))
+            if (!string.IsNullOrEmpty(patchGroup.Description))
             {
                 nameText.Element.raycastTarget = true;
 
-                Subscriptions.Add(nameText.gameObject.AddComponent<OwlcatSelectable>().SetTooltip(new TooltipTemplateHint(patch.Description)));
+                Subscriptions.Add(nameText.gameObject.AddComponent<OwlcatSelectable>().SetTooltip(new TooltipTemplateHint(patchGroup.Description)));
             }
 
             var statusText = line.AddTextObject("Disabled", nameText.Element.color);
@@ -353,14 +354,14 @@ namespace MicroPatches.UGUI
             
             statusText.Layout.Element.preferredWidth = statusText.Element.preferredWidth;
 
-            statusText.Element.text = patch switch
+            statusText.Element.text = patchGroup switch
                 {
-                    _ when patch.IsApplied() => "OK",
-                    _ when patch.IsEnabled() => "Failed",
+                    _ when patchGroup.IsApplied() => "OK",
+                    _ when patchGroup.IsEnabled() => "Failed",
                     _ => "Disabled"
                 };
 
-            if (patch.Failed())
+            if (patchGroup.Failed())
                 statusText.Element.color = Colors.RedText;
 
             return line;
