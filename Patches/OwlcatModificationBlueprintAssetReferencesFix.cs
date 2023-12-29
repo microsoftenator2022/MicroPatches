@@ -19,8 +19,8 @@ namespace MicroPatches.Patches
     internal class OwlcatModificationBlueprintAssetReferencesFix : MicroPatchGroup
     {
         public override string DisplayName => "OwlcatModification asset references fix";
-        public override bool IsOptional => false;
-        public override bool IsExperimental => true;
+        public override bool Optional => false;
+        public override bool Experimental => true;
 
         [MicroPatchGroup(typeof(OwlcatModificationBlueprintAssetReferencesFix))]
         [HarmonyPatch]

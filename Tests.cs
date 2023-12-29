@@ -59,17 +59,24 @@ namespace MicroPatches
         {
 #if DEBUG
             var sb = new StringBuilder();
-            sb.Append("PatchGroups:");
 
+            sb.Append("PatchGroups:");
             foreach (var g in Main.PatchGroups.Select(g => g.group))
             {
                 sb.AppendLine();
-                sb.Append($" Group '{g.DisplayName}'");
+                sb.AppendLine($" Group '{g.DisplayName}'");
 
+                sb.AppendLine($"  Optional {g.IsOptional()}");
+                sb.AppendLine($"  Hidden {g.Hidden}");
+                sb.AppendLine($"  Experimental {g.IsExperimental()}");
+                sb.AppendLine($"  Enabled: {g.IsEnabled()}");
+                sb.AppendLine($"  Applied: {g.IsApplied()}");
+
+                sb.Append("  Patches:");
                 foreach (var p in g.GetPatches())
                 {
                     sb.AppendLine();
-                    sb.Append($"  Patch '{p.PatchClass.Name}");
+                    sb.Append($"   Patch '{p.PatchClass.Name}");
                 }
             }
 

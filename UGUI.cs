@@ -216,11 +216,13 @@ namespace MicroPatches.UGUI
 
         IEnumerable<UIElement> PatchesSection(UIElement parent)
         {
-            var hidden = Main.PatchGroups.Where(p => p.group.IsHidden);
-            var patches = Main.PatchGroups.Where(p => !p.group.IsHidden);
-            var experimental = patches.Where(p => p.group.IsExperimental);
-            var optional = patches.Where(p => p.group.IsOptional && !p.group.IsExperimental);
-            var forced = patches.Where(p => !p.group.IsExperimental && !p.group.IsOptional);
+            var groups = Main.PatchGroups.Select(p => p.group);
+
+            var hidden = groups.Where(g => g.Hidden);
+            var patchGroups = groups.Where(g => !g.Hidden);
+            var experimental = patchGroups.Where(g => g.IsExperimental());
+            var optional = patchGroups.Where(g => g.IsOptional() && !g.IsExperimental());
+            var forced = patchGroups.Where(g => !g.IsExperimental() && !g.IsOptional());
             
             IEnumerable<UIElement> tryGetPatchLine(UIElement parent, MicroPatch.IPatchGroup patchGroup)
             {
@@ -232,12 +234,12 @@ namespace MicroPatches.UGUI
                 return [maybeLine];
             }
 
-            foreach (var line in forced.SelectMany(p => tryGetPatchLine(parent, p.group)))
+            foreach (var line in forced.SelectMany(g => tryGetPatchLine(parent, g)))
             {
                 yield return line;
             }
 
-            foreach (var line in optional.SelectMany(p => tryGetPatchLine(parent, p.group)))
+            foreach (var line in optional.SelectMany(g => tryGetPatchLine(parent, g)))
             {
                 yield return line;
             }
@@ -250,12 +252,12 @@ namespace MicroPatches.UGUI
             experimentalHeader.Element.fontSizeMax = 16;
             experimentalHeader.Element.enableAutoSizing = true;
 
-            foreach (var line in experimental.SelectMany(p => tryGetPatchLine(parent, p.group)))
+            foreach (var line in experimental.SelectMany(g => tryGetPatchLine(parent, g)))
             {
                 yield return line;
             }
 
-            var hiddenFailed = hidden.Where(p => p.group.Failed());
+            var hiddenFailed = hidden.Where(g => g.Failed());
 
             if (!hiddenFailed.Any() && !Main.IsDebug)
                 yield break;
@@ -273,7 +275,7 @@ namespace MicroPatches.UGUI
                 hidden = hiddenFailed;
 #pragma warning restore CS0162 // Unreachable code detected
 
-            foreach (var line in hidden.SelectMany(p => tryGetPatchLine(parent, p.group)))
+            foreach (var line in hidden.SelectMany(g => tryGetPatchLine(parent, g)))
             {
                 yield return line;
             }
@@ -287,7 +289,7 @@ namespace MicroPatches.UGUI
                 Main.PatchLog("UGUI", $"Creating UI for {displayName}");
 #endif
 
-            if (patchGroup.IsHidden && patchGroup.IsApplied())
+            if (patchGroup.Hidden && patchGroup.IsApplied())
             {
                 Main.PatchLog("UGUI", $"{patchGroup.DisplayName} is hidden");
 #if !DEBUG
@@ -307,8 +309,8 @@ namespace MicroPatches.UGUI
             var toggle = line.AddUIObject<Toggle>($"{displayName} toggle");
             toggle.Layout.Element.preferredWidth = 20;
             toggle.Layout.Element.preferredHeight = 20;
-            toggle.Element.interactable = patchGroup.IsOptional;
-            toggle.Element.isOn = !patchGroup.IsOptional || patchGroup.IsEnabled();
+            toggle.Element.interactable = patchGroup.IsOptional();
+            toggle.Element.isOn = patchGroup.IsEnabled();
 
             var t1 = toggle.AddUIObject<Image>();
             Utility.SetAnchors(t1.RectTransform, AnchorLocation.Center, AnchorType.Fixed);

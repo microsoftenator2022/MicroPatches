@@ -29,19 +29,23 @@ namespace MicroPatches.Patches
 
         public static bool Failed(this MicroPatch.IPatchGroup group) =>
             group.GetPatches().Any(p => p.Failed());
+
+        public static bool IsOptional(this MicroPatch.IPatchGroup group) => group.Optional || group.Experimental;
+        public static bool IsExperimental(this MicroPatch.IPatchGroup group) => group.Experimental;
     }
 
     internal abstract class MicroPatchGroup() : MicroPatch.IPatchGroup
     {
         public abstract string DisplayName { get; }
         public virtual string Description { get; } = "";
-        public virtual bool IsOptional { get; } = true;
-        public virtual bool IsExperimental { get; } = false;
-        public virtual bool IsHidden { get; } = false;
+        public virtual bool Experimental { get; } = false;
+
+        public virtual bool Optional { get; } = false;
+        public virtual bool Hidden { get; } = false;
 
         public virtual bool Equals(MicroPatch.IPatchGroup other)
         {
-            Main.PatchLog(nameof(MicroPatchGroup), $"this: {this.GetType()}, {this.DisplayName}\nother: {other.GetType()}, {other.DisplayName}");
+            //Main.PatchLog(nameof(MicroPatchGroup), $"this: {this.GetType()}, {this.DisplayName}\nother: {other.GetType()}, {other.DisplayName}");
 
             return this.GetType() == other.GetType() &&
             this.DisplayName == other.DisplayName;
@@ -57,25 +61,23 @@ namespace MicroPatches.Patches
         {
             string DisplayName { get; }
             string Description { get; }
-            bool IsOptional { get; }
-            bool IsExperimental { get; }
-            bool IsHidden { get; }
+            bool Optional { get; }
+            bool Experimental { get; }
+            bool Hidden { get; }
         }
-
-
 
         private class PatchGroup(
             string displayName,
-            string? description = null,
-            bool? optional = null,
-            bool? experimental = null,
-            bool? hidden = null) : MicroPatchGroup
+            string? description,
+            bool optional,
+            bool experimental,
+            bool hidden) : MicroPatchGroup
         {
-            public override string DisplayName { get; } = displayName;
+            public override string DisplayName => displayName;
             public override string Description => description ?? base.Description;
-            public override bool IsOptional => optional ?? base.IsOptional;
-            public override bool IsExperimental => experimental ?? base.IsExperimental;
-            public override bool IsHidden => hidden ?? base.IsHidden;
+            public override bool Optional => optional;
+            public override bool Experimental => experimental;
+            public override bool Hidden => hidden;
         }
 
         internal static UnityModManager.ModEntry.ModLogger Logger = null!;
@@ -126,11 +128,11 @@ namespace MicroPatches.Patches
 
         public string DisplayName => Group.DisplayName;
         public string? Description => Group.Description;
-        public bool IsHidden => Group.IsHidden;
+        public bool IsHidden => Group.Hidden;
 
-        public bool IsExperimental => Group.IsExperimental;
+        public bool IsExperimental => Group.IsExperimental();
             //Patch.GetCategory() is Category.Experimental;
-        public bool IsOptional => Group.IsOptional || IsExperimental;
+        public bool IsOptional => Group.IsOptional();
             //Patch.GetCategory() is Category.Optional or Category.Experimental;
     }
 }

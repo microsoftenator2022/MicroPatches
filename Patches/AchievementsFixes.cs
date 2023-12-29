@@ -79,7 +79,7 @@ namespace MicroPatches.Patches
         }
     }
 
-    [MicroPatch("Fix EGS AchievementsManager NRE", Experimental = true)]
+    [MicroPatch("Achievement fixes: EGS AchievementsManager NRE", Experimental = true)]
     [HarmonyPatch]
     //[HarmonyPatchCategory(MicroPatch.Category.Experimental)]
 
