@@ -79,14 +79,17 @@ namespace MicroPatches
             {
                 if (UIWindow == null)
                     return;
-
+#if DEBUG
                 Main.PatchLog(nameof(FixTMP), "Fixing TMP");
+#endif
 
                 var defaultFont = BlueprintRoot.Instance.UIConfig.DefaultTMPFontAsset;
 
                 foreach (var tmp in UIWindow.GetComponentsInChildren<TextMeshProUGUI>())
                 {
+#if DEBUG
                     Main.PatchLog(nameof(FixTMP), $"Fixing {tmp.font} -> {defaultFont}");
+#endif
 
                     tmp.font = defaultFont;
 
@@ -291,8 +294,9 @@ namespace MicroPatches.UGUI
 
             if (patchGroup.Hidden && patchGroup.IsApplied())
             {
+#if DEBUG
                 Main.PatchLog("UGUI", $"{patchGroup.DisplayName} is hidden");
-#if !DEBUG
+#else
                 return null;
 #endif
             }
