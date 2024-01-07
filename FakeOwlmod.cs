@@ -39,7 +39,7 @@ namespace MicroPatches
 
             int? Minor(Match match)
             {
-                if (match.Groups[2].Success && int.TryParse(match.Groups[3].Value, out var value))
+                if (match.Groups[2].Success && int.TryParse(match.Groups[2].Value, out var value))
                 {
                     return value;
                 }
