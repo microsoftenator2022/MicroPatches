@@ -7,13 +7,15 @@ Experimental patches require more testing and can be toggled in the mod settings
 
 [u][b]WARNING: ALL EXPERIMENTAL PATCHES ARE DISABLED BY DEFAULT FOR A REASON. THEY MAY BREAK YOUR GAME AND/OR SAVES. ACTIVATE AT YOUR OWN RISK.[/b][/u]
 
-[h2]Current patches as of 1.6:[/h2]
+[h2]Current patches as of 1.8:[/h2]
 
 [list]
 [*]Ignore TurnBasedEventsTrigger on features on non-party companions. Fixes the "Infinite Seize The Initiative" bug
 [*]Silenced keybinding conflict log messages
 [*]Lowered the severity of certain missing DLC warnings ("DLC has no status in the DLCCache. Defaulting to unavailable") no longer prints a stacktrace
 [*]Fixed UMM update checks (previously failed when google domains resolve to an ipv6 address)
+[*]Swap calculations for CasterNamedProperty and TargetNamedProperty. Fix for: Some effects that should be using the caster's stats incorrectly use the target's stats and vice-versa.
+[*]Fix for Owlcat mods being unable to load game assets
 [/list]
 
 [h3]Ported from WrathPatches[/h3]
@@ -28,10 +30,8 @@ Experimental patches require more testing and can be toggled in the mod settings
 
 These have all recieved basic testing, but are not guaranteed to be free of issues:
 [list]
-[*]Swap calculations for CasterNamedProperty and TargetNamedProperty. Fix for: Some effects that should be using the caster's stats incorrectly use the target's stats and vice-versa
 [*]Fixed EGSAchievementsManager NullReferenceExceptions
 [*]Ignore Steam Achievements with Null ID
 [*]Skip LoadAssigneeAsync - prevents internal QA error message
 [*]Skip adding invalid EntityParts in BaseUnitEntity.OnCreateParts
-[*]Fix for Owlcat mods being unable to load game assets
 [/list]

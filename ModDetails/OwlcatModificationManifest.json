@@ -1,6 +1,6 @@
 {
   "UniqueName": "MicroPatches",
-  "Version": "1.7.0",
+  "Version": "1.8.0",
   "DisplayName": "MicroPatches",
   "Description": "Tiny patches attempting to fix minor bugs and silence annoying log messages.",
   "Author": "Microsoftenator",
