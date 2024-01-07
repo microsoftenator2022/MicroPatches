@@ -47,7 +47,7 @@ namespace MicroPatches
 
         public static Harmony HarmonyInstance => Instance.Harmony;
 
-        readonly UnityModManager.ModEntry ModEntry;
+        internal readonly UnityModManager.ModEntry ModEntry;
 
         private static UnityModManager.ModEntry.ModLogger Logger => Instance.ModEntry.Logger;
 
