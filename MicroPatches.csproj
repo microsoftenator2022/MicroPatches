@@ -15,6 +15,7 @@
   
   <ItemGroup>
     <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.1" IncludeAssets="build; compile; contentfiles; analyzers; buildtransitive" PrivateAssets="all" />
+    <!--<PackageReference Include="System.IO.Compression" Version="4.3.0" />-->
     <PackageReference Include="UnityEngine.Modules" Version="2022.3.7" IncludeAssets="compile" />
     <!--<PackageReference Include="Aze.Publicise.MSBuild.Task" Version="1.1.0" IncludeAssets="compile; build; native; contentfiles; analyzers; buildtransitive" PrivateAssets="all" />-->
     <PackageReference Include="PublishToWorkshop" IncludeAssets="compile; build; native; contentfiles; analyzers; buildtransitive" Version="1.0.10" PrivateAssets="all" />
@@ -28,6 +29,7 @@
     <Reference Include="Kingmaker.Blueprints.JsonSystem.Hepers">
       <HintPath>$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Kingmaker.Blueprints.JsonSystem.Hepers.dll</HintPath>
       <Private>false</Private>
+      <Publicize>true</Publicize>
     </Reference>
     <Reference Include="UnityModManager">
       <HintPath>$(RogueTraderData)\UnityModManager\UnityModManager.dll</HintPath>
