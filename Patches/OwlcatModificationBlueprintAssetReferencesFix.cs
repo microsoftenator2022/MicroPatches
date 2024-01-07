@@ -61,9 +61,23 @@ namespace MicroPatches.Patches
                 foreach (var mod in OwlcatModificationsManager.Instance.AppliedModifications)
                 {
                     Main.PatchLog(nameof(OwlcatModificationBlueprintAssetReferencesFix), $"Loading resources for mod '{mod.Manifest.UniqueName}'");
+                    try
+                    {
+                        mod.LoadBundles();
+                    }
+                    catch (Exception ex)
+                    {
+                        mod.Logger.Exception(ex);
+                    }
 
-                    mod.LoadBundles();
-                    mod.LoadBlueprints();
+                    try
+                    {
+                        mod.LoadBlueprints();
+                    }
+                    catch (Exception ex)
+                    {
+                        mod.Logger.Exception(ex);
+                    }
                 }
             }
 
