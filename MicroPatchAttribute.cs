@@ -20,6 +20,7 @@ namespace MicroPatches
         public bool Experimental { get; init; } = false;
         public bool Optional { get; init; } = false;
         public bool Hidden { get; init; } = false;
+        public Version? MaxGameVersion { get; init; } = null;
     }
 
     [AttributeUsage(AttributeTargets.Class)]

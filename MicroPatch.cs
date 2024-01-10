@@ -42,6 +42,7 @@ namespace MicroPatches.Patches
 
         public virtual bool Optional { get; } = false;
         public virtual bool Hidden { get; } = false;
+        public virtual Version? MaxGameVersion => null;
 
         public virtual bool Equals(MicroPatch.IPatchGroup other)
         {
@@ -64,6 +65,7 @@ namespace MicroPatches.Patches
             bool Optional { get; }
             bool Experimental { get; }
             bool Hidden { get; }
+            Version? MaxGameVersion { get; }
         }
 
         private class PatchGroup(
@@ -71,13 +73,15 @@ namespace MicroPatches.Patches
             string? description,
             bool optional,
             bool experimental,
-            bool hidden) : MicroPatchGroup
+            bool hidden,
+            Version? maxGameVersion) : MicroPatchGroup
         {
             public override string DisplayName => displayName;
             public override string Description => description ?? base.Description;
             public override bool Optional => optional;
             public override bool Experimental => experimental;
             public override bool Hidden => hidden;
+            public override Version? MaxGameVersion => maxGameVersion;
         }
 
         internal static UnityModManager.ModEntry.ModLogger Logger = null!;
@@ -118,7 +122,8 @@ namespace MicroPatches.Patches
                 description: attr.Description,
                 optional: attr.Optional,
                 experimental: attr.Experimental,
-                hidden: attr.Hidden));
+                hidden: attr.Hidden,
+                maxGameVersion: attr.MaxGameVersion));
         }
 
         public PatchClassProcessor Patch { get; }
@@ -134,5 +139,6 @@ namespace MicroPatches.Patches
             //Patch.GetCategory() is Category.Experimental;
         public bool IsOptional => Group.IsOptional();
             //Patch.GetCategory() is Category.Optional or Category.Experimental;
+        public Version? MaxGameVersion => Group.MaxGameVersion;
     }
 }
