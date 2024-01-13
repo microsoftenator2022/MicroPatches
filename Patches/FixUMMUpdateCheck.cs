@@ -12,7 +12,7 @@ using UnityModManagerNet;
 
 namespace MicroPatches.Patches
 {
-    [MicroPatch("Fix UMM update check", Optional = true)]
+    [MicroPatch("UMM update check fix", Optional = true)]
     [HarmonyPatch]
     //[HarmonyPatchCategory(MicroPatch.Category.Optional)]
     internal static class FixUMMUpdateCheck

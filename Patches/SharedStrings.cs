@@ -16,7 +16,7 @@ using UnityEngine;
 
 namespace MicroPatches.Patches
 {
-    [MicroPatch("Fix Shared Strings")]
+    [MicroPatch("Shared String constructor fix")]
     [HarmonyPatch]
     public static class SharedStrings
     {

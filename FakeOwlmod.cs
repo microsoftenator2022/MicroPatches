@@ -16,6 +16,7 @@ using MicroUtils.Transpiler;
 
 namespace MicroPatches
 {
+    [MicroPatch("Owlmod dependency", Hidden = true, Optional = false)]
     [HarmonyPatch]
     internal static class FakeOwlmodDependency
     {

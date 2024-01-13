@@ -18,7 +18,7 @@ namespace MicroPatches.Patches
 {
     internal class OwlcatModificationBlueprintAssetReferencesFix : MicroPatchGroup
     {
-        public override string DisplayName => "OwlcatModification asset references fix";
+        public override string DisplayName => "OwlMod fixes: asset references";
         public override bool Optional => false;
         public override bool Experimental => false;
 

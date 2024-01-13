@@ -67,6 +67,7 @@ namespace MicroPatches
 
         public static IEnumerable<(MicroPatch.IPatchGroup group, MicroPatch[] patches)> PatchGroups => Patches
             .GroupBy(p => p.Group)
+            .OrderBy(p => p.Key.DisplayName)
             .Select(g => (g.Key, g.ToArray()));
 
         static bool Load(UnityModManager.ModEntry modEntry)

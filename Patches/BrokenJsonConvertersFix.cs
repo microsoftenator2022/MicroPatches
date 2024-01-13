@@ -16,7 +16,7 @@ using UnityModManagerNet;
 
 namespace MicroPatches.Patches
 {
-    [MicroPatch("Fix Broken Json Converters", Hidden = false, Optional = false)]
+    [MicroPatch("OwlMod fixes: Broken Json Converters", Hidden = false, Optional = false)]
     [HarmonyPatch]
     internal static class BrokenJsonConvertersFix
     {

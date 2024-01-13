@@ -18,7 +18,7 @@ namespace MicroPatches.Patches
 {
     class NamedCasterTargetSwap : MicroPatchGroup
     {
-        public override string DisplayName => "Fix inverted CasterNamedProperty/TargetNamedProperty calculation";
+        public override string DisplayName => "Inverted CasterNamedProperty/TargetNamedProperty calculation fix";
         public override bool Optional => true;
         public override bool Experimental => false;
     }
