@@ -7,31 +7,32 @@ Experimental patches require more testing and can be toggled in the mod settings
 
 [u][b]WARNING: ALL EXPERIMENTAL PATCHES ARE DISABLED BY DEFAULT FOR A REASON. THEY MAY BREAK YOUR GAME AND/OR SAVES. ACTIVATE AT YOUR OWN RISK.[/b][/u]
 
-[h2]Current patches as of 1.8:[/h2]
+[h2]Current patches as of 1.9:[/h2]
 
 [list]
 [*]Ignore TurnBasedEventsTrigger on features on non-party companions. Fixes the "Infinite Seize The Initiative" bug
-[*]Silenced keybinding conflict log messages
-[*]Lowered the severity of certain missing DLC warnings ("DLC has no status in the DLCCache. Defaulting to unavailable") no longer prints a stacktrace
-[*]Fixed UMM update checks (previously failed when google domains resolve to an ipv6 address)
-[*]Swap calculations for CasterNamedProperty and TargetNamedProperty. Fix for: Some effects that should be using the caster's stats incorrectly use the target's stats and vice-versa.
+[*]Silence keybinding conflict log messages
+[*]Lower the severity of certain missing DLC warnings ("DLC has no status in the DLCCache. Defaulting to unavailable") and no longer prints a stacktrace
+[*]Fix for UMM update checks failing when google addresses resolve to an ipv6 address
+[*]Swap calculations for CasterNamedProperty and TargetNamedProperty. Some effects incorrectly read data from the target when they should be using the caster and vice-versa
 [*]Fix for Owlcat mods being unable to load game assets
+[*]Fix for several bugs in Owlcat mod blueprint patching
 [/list]
 
 [h3]Ported from WrathPatches[/h3]
 
 [list]
-[*]Fixed NRE in Element.AssetGuid and Element.AssetGuidShort
+[*]Fix for NRE in Element.AssetGuid and Element.AssetGuidShort
 [*]SharedStringConverter.ReadJson now correctly uses ScriptableObject.CreateInstance not the class constructor. Fixes harmless but noisy template mod localization errors
-[*]Silenced "Bind: no binding named X" messages
+[*]Silence "Bind: no binding named X" messages
 [/list]
 
 [h3]Experimental[/h3]
 
 These have all recieved basic testing, but are not guaranteed to be free of issues:
 [list]
-[*]Fixed EGSAchievementsManager NullReferenceExceptions
-[*]Ignore Steam Achievements with Null ID
+[*]Fix EGSAchievementsManager NullReferenceExceptions
+[*]Ignore Steam Achievements with missing ID
 [*]Skip LoadAssigneeAsync - prevents internal QA error message
 [*]Skip adding invalid EntityParts in BaseUnitEntity.OnCreateParts
 [/list]
