@@ -133,15 +133,6 @@ namespace MicroPatches
 
             iList.InsertRange(getElement[1].index + 1, toInsert);
 
-            //var sb = new StringBuilder();
-
-            //foreach (var i in iList)
-            //{
-            //    sb.AppendLine(i.ToString());
-            //}
-
-            //Main.Instance.ModEntry.Logger.Log(sb.ToString());
-
             return iList;
         }
     }

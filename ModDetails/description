@@ -14,9 +14,11 @@ Experimental patches require more testing and can be toggled in the mod settings
 [*]Silence keybinding conflict log messages
 [*]Lower the severity of certain missing DLC warnings ("DLC has no status in the DLCCache. Defaulting to unavailable") and no longer prints a stacktrace
 [*]Fix for UMM update checks failing when google addresses resolve to an ipv6 address
-[*]Swap calculations for CasterNamedProperty and TargetNamedProperty. Some effects incorrectly read data from the target when they should be using the caster and vice-versa
+[*][strike]Swap calculations for CasterNamedProperty and TargetNamedProperty. Some effects incorrectly read data from the target when they should be using the caster and vice-versa[/strike] Fixed in 1.1
 [*]Fix for Owlcat mods being unable to load game assets
 [*]Fix for several bugs in Owlcat mod blueprint patching
+[*]Ignore missing OwlMod localization file
+[*]Fix Owlcat's mod material shaders "fix"
 [/list]
 
 [h3]Ported from WrathPatches[/h3]
