@@ -134,9 +134,6 @@ namespace MicroPatches.UGUI
             return new UIElement<LayoutElement>(go.GetComponent<LayoutElement>());
         }
 
-        //public static UIElement<TElement> NewUIObject<TElement>(out UIElement<LayoutElement> layout, string? name = null)
-        //    where TElement : UIBehaviour => NewUIObject(name ?? $"{typeof(TElement).Name}").AddUIElement<TElement>(out layout);
-
         public UIElement<TChild> AddUIElement<TChild>() where TChild : UIBehaviour
         {
             UIElement<LayoutElement> layout;
@@ -152,18 +149,12 @@ namespace MicroPatches.UGUI
             return new(this.gameObject.AddComponent<TChild>());
         }
 
-        //public UIElement<TChild> AddUIElement<TChild>() where TChild : UIBehaviour =>
-        //    AddUIElement<TChild>();
-
         public UIElement<LayoutElement> AddUIObject(string? name = null) =>
             this.gameObject.AddUIObject(name);
 
         public UIElement<TChild> AddUIObject<TChild>(string? name = null)
             where TChild : UIBehaviour =>
             this.gameObject.AddUIObject<TChild>(name);
-
-        //public UIElement<TChild> AddUIObject<TChild>(string? name = null) where TChild : UIBehaviour =>
-        //    this.AddUIObject<TChild>(name);
     }
 
     class UIElement<TElement> : UIElement where TElement : UIBehaviour
@@ -214,10 +205,6 @@ namespace MicroPatches.UGUI
             return new(initLayout.gameObject.AddComponent<TElement>());
         }
 
-        //public static UIElement<TElement> AddUIObject<TElement>(this GameObject parent, string? name = null)
-        //    where TElement : UIBehaviour =>
-        //    AddUIObject<TElement>(parent, out var _, name);
-
         public static UIElement<LayoutElement> AddUIElement(this GameObject obj)
         {
 
@@ -244,9 +231,6 @@ namespace MicroPatches.UGUI
 
             return new(obj.AddComponent<TElement>());
         }
-
-        //public static UIElement<TElement> AddUIElement<TElement>(this GameObject obj) where TElement : UIBehaviour =>
-        //    obj.AddUIElement<TElement>(out var _);
 
         public static UIElement<TextMeshProUGUI> AddTextElement(
             this UIElement parent,

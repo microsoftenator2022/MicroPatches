@@ -25,6 +25,13 @@ namespace MicroPatches.Patches
         [HarmonyPrefix]
         static void Prefix(SimpleBlueprint bp)
         {
+            if (Json.BlueprintBeingRead == null)
+            {
+                //Main.PatchWarning(nameof(BlueprintPatchComponentOwnerFix), $"Json.BlueprintBeingRead is null. Blueprint is {bp}");
+
+                return;
+            }
+
             if (Json.BlueprintBeingRead.Data != bp)
                 Json.BlueprintBeingRead = new(bp);
         }

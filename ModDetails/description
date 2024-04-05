@@ -7,7 +7,7 @@ Experimental patches require more testing and can be toggled in the mod settings
 
 [u][b]WARNING: ALL EXPERIMENTAL PATCHES ARE DISABLED BY DEFAULT FOR A REASON. THEY MAY BREAK YOUR GAME AND/OR SAVES. ACTIVATE AT YOUR OWN RISK.[/b][/u]
 
-[h2]Current patches as of 1.9:[/h2]
+[h2]Current patches as of 1.11:[/h2]
 
 [list]
 [*]Ignore TurnBasedEventsTrigger on features on non-party companions. Fixes the "Infinite Seize The Initiative" bug
@@ -15,8 +15,8 @@ Experimental patches require more testing and can be toggled in the mod settings
 [*]Lower the severity of certain missing DLC warnings ("DLC has no status in the DLCCache. Defaulting to unavailable") and no longer prints a stacktrace
 [*]Fix for UMM update checks failing when google addresses resolve to an ipv6 address
 [*][strike]Swap calculations for CasterNamedProperty and TargetNamedProperty. Some effects incorrectly read data from the target when they should be using the caster and vice-versa[/strike] Fixed in 1.1
-[*]Fix for Owlcat mods being unable to load game assets
-[*]Fix for several bugs in Owlcat mod blueprint patching
+[*][strike]Fix for Owlcat mods being unable to load game assets[/strike] Fixed in 1.1.52
+[*][strike]Fix for several bugs in Owlcat mod blueprint patching[/strike] Fixed in 1.1.52
 [*]Ignore missing OwlMod localization file
 [*]Fix Owlcat's mod material shaders "fix"
 [/list]

@@ -16,7 +16,6 @@ namespace MicroPatches.Patches
 {
     [MicroPatch("Skip invalid EntityParts in BaseUnitEntity.OnCreateParts", Experimental = true)]
     [HarmonyPatch]
-    //[HarmonyPatchCategory(MicroPatch.Category.Experimental)]
     static class EntityPart_OnCreateParts_SkipInvalid
     {
         //static bool IsUnitEntity(BaseUnitEntity __instance) => __instance is UnitEntity;

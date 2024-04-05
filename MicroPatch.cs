@@ -14,6 +14,14 @@ namespace MicroPatches.Patches
 {
     internal static class MicroPatchExtensions
     {
+        static readonly FieldInfo containerType =
+            typeof(PatchClassProcessor).GetField(nameof(containerType), BindingFlags.Instance | BindingFlags.NonPublic);
+
+        static readonly FieldInfo containerAttributes =
+            typeof(PatchClassProcessor).GetField(nameof(containerAttributes), BindingFlags.Instance | BindingFlags.NonPublic);
+
+        public static bool HasPatchAttribute(this PatchClassProcessor patchClass) => containerAttributes.GetValue(patchClass) is not null;
+
         public static bool IsEnabled(this MicroPatch mp) => Main.Instance.GetPatchEnabled(mp);
         public static bool IsApplied(this MicroPatch mp) => Main.Instance.GetPatchApplied(mp);
         public static bool Failed(this MicroPatch mp) => mp.IsEnabled() && !mp.IsApplied();

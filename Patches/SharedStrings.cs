@@ -31,8 +31,6 @@ namespace MicroPatches.Patches
         [HarmonyTranspiler]
         static IEnumerable<CodeInstruction> SharedStringConverter_ReadJson_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            //Main.Logger.Log($"{nameof(SharedStringConverter_ReadJson_Transpiler)}");
-
             var ssCons = typeof(SharedStringAsset).GetConstructor([]);
 
             var createSs = CreateSharedStringInstance ?? throw new Exception($"Unable to find or create constructor");
