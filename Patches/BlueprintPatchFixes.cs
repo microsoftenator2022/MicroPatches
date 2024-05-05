@@ -16,8 +16,8 @@ using Kingmaker.Blueprints;
 using MicroUtils.Linq;
 using MicroUtils.Transpiler;
 
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 using Owlcat.Runtime.Core;
 
@@ -52,7 +52,7 @@ namespace MicroPatches.Patches.BlueprintPatchFixes
         }
 
         [HarmonyTranspiler]
-        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGen)
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             foreach (var i in instructions)
             {
@@ -152,7 +152,7 @@ namespace MicroPatches.Patches.BlueprintPatchFixes
         static class ListPatchRemoveItemFix
         {
             [HarmonyTranspiler]
-            static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> _)
             {
                 yield return new CodeInstruction(OpCodes.Ret);
             }
@@ -201,7 +201,7 @@ namespace MicroPatches.Patches.BlueprintPatchFixes
     static class CalculateReplaceIndexFix
     {
         [HarmonyTranspiler]
-        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> _)
         {
             yield return new CodeInstruction(OpCodes.Ldc_I4_M1);
             yield return new CodeInstruction(OpCodes.Ret);
@@ -221,12 +221,10 @@ namespace MicroPatches.Patches.BlueprintPatchFixes
             {
                 BlueprintPatchOperationType.InsertAtBeginning => 0,
                 BlueprintPatchOperationType.InsertLast => array.Count,
-                BlueprintPatchOperationType.InsertAfterElement => targetElements.Any() ? targetElements.Last().index : -1,
+                BlueprintPatchOperationType.InsertAfterElement => targetElements.Any() ? targetElements.Last().index + 1 : -1,
                 BlueprintPatchOperationType.InsertBeforeElement => targetElements.Any() ? targetElements.First().index : -1,
                 _ => throw new Exception($"Replace index cannot be calculated for operation type {__instance.OperationType}"),
             };
         }
-    }
-
-    
+    }   
 }
