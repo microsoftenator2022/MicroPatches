@@ -21,7 +21,6 @@ using Newtonsoft.Json;
 
 using Owlcat.Runtime.Core;
 
-
 namespace MicroPatches.Patches.BlueprintPatchFixes
 {
     class BlueprintPatchFixesGroup : MicroPatchGroup
@@ -31,6 +30,7 @@ namespace MicroPatches.Patches.BlueprintPatchFixes
         public override bool Experimental => true;
     }
 
+    // Use generic arg from IList<T> instead of Type.GetElementType() which only works for arrays
     [MicroPatchGroup(typeof(BlueprintPatchFixesGroup))]
     [HarmonyPatch]
     static class ListPatchElementTypeFix
@@ -39,7 +39,7 @@ namespace MicroPatches.Patches.BlueprintPatchFixes
         static IEnumerable<MethodBase> TargetMethods() =>
             [
                 AccessTools.Method(typeof(BlueprintPatchOperation), nameof(BlueprintPatchOperation.CheckTypeIsArrayOrListOfBlueprintReferences)),
-                    AccessTools.Method(typeof(BlueprintSimpleArrayPatchOperation), nameof(BlueprintSimpleArrayPatchOperation.GetArrayElementType))
+                AccessTools.Method(typeof(BlueprintSimpleArrayPatchOperation), nameof(BlueprintSimpleArrayPatchOperation.GetArrayElementType))
             ];
 
         static Type? GetListElementType(Type type)
@@ -54,8 +54,6 @@ namespace MicroPatches.Patches.BlueprintPatchFixes
         [HarmonyTranspiler]
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGen)
         {
-            var notNull = ilGen.DefineLabel();
-
             foreach (var i in instructions)
             {
                 if (i.Calls(AccessTools.Method(typeof(Type), nameof(Type.GetElementType))))
@@ -68,6 +66,7 @@ namespace MicroPatches.Patches.BlueprintPatchFixes
 
     static class ListPatchOperationFixes
     {
+        // Convert new array to list if the original field is a list
         static IList MaybeToList(IList array, BlueprintSimpleArrayPatchOperation patchOp)
         {
             if (!patchOp.CheckTypeIsList(patchOp.fieldType))
@@ -89,7 +88,7 @@ namespace MicroPatches.Patches.BlueprintPatchFixes
             static IEnumerable<MethodBase> TargetMethods() =>
                 [
                     AccessTools.Method(typeof(BlueprintSimpleArrayPatchOperation), nameof(BlueprintSimpleArrayPatchOperation.InsertElement)),
-                        AccessTools.Method(typeof(BlueprintSimpleArrayPatchOperation), nameof(BlueprintSimpleArrayPatchOperation.ReplaceElement))
+                    AccessTools.Method(typeof(BlueprintSimpleArrayPatchOperation), nameof(BlueprintSimpleArrayPatchOperation.ReplaceElement))
                 ];
 
             [HarmonyTranspiler]
@@ -108,6 +107,8 @@ namespace MicroPatches.Patches.BlueprintPatchFixes
             }
         }
 
+        // 1. Replace ((JObject)this.Value) with JValue.Create((string)this.Value)
+        // 2. Use BlueprintPatcher.Settings to deserialize
         [MicroPatchGroup(typeof(BlueprintPatchFixesGroup))]
         [HarmonyPatch(typeof(BlueprintSimpleArrayPatchOperation), nameof(BlueprintSimpleArrayPatchOperation.InsertElement))]
         static class InsertOperationFixes
@@ -145,6 +146,7 @@ namespace MicroPatches.Patches.BlueprintPatchFixes
             }
         }
 
+        // Replace method entirely
         [MicroPatchGroup(typeof(BlueprintPatchFixesGroup))]
         [HarmonyPatch(typeof(BlueprintSimpleArrayPatchOperation), nameof(BlueprintSimpleArrayPatchOperation.RemoveElement))]
         static class ListPatchRemoveItemFix
@@ -167,19 +169,9 @@ namespace MicroPatches.Patches.BlueprintPatchFixes
 
                 IList list = (IList)__instance.field.GetValue(__instance.fieldHolder);
 
-                //Main.Logger.Log($"fieldHolder is {(__instance.fieldHolder is null ? "null" : "not null")}");
-                //Main.Logger.Log($"fieldHolder type: {__instance.fieldHolder?.GetType()}");
-                //Main.Logger.Log($"source list has {list.Count} items");
-
-                //foreach (var obj in list)
-                //{
-                //    Main.Logger.Log($"  {obj.GetType()}");
-                //    if (obj is BlueprintReferenceBase brb)
-                //        Main.Logger.Log($"    {brb.Guid}");
-                //}
-
                 IList list2 = MaybeToList(Array.CreateInstance(arrayElementType, list.Count - 1), __instance);
 
+                // This is much easier to understand than the original method
                 var index =
                     list.Cast<object>()
                         .FindIndex(obj =>
@@ -203,6 +195,7 @@ namespace MicroPatches.Patches.BlueprintPatchFixes
         }
     }
 
+    // Also replace this method
     [MicroPatchGroup(typeof(BlueprintPatchFixesGroup))]
     [HarmonyPatch(typeof(BlueprintSimpleArrayPatchOperation), nameof(BlueprintSimpleArrayPatchOperation.CalculateReplaceIndex))]
     static class CalculateReplaceIndexFix
@@ -221,6 +214,7 @@ namespace MicroPatches.Patches.BlueprintPatchFixes
                 (obj is BlueprintReferenceBase brb && brb.Guid == __instance.TargetValueGuid) ||
                 (obj == __instance.TargetValue);
 
+            // This could also be done with a FindIndices extension, but Owlcat does not have one
             var targetElements = array.Cast<object>().Indexed().Where(i => predicate(i.item));
 
             return __instance.OperationType switch
