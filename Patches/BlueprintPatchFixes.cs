@@ -26,8 +26,8 @@ namespace MicroPatches.Patches.BlueprintPatchFixes
     class BlueprintPatchFixesGroup : MicroPatchGroup
     {
         public override string DisplayName => "OwlMod fixes: Blueprint patch fixes";
-        public override bool Optional => true;
-        public override bool Experimental => true;
+        public override bool Optional => false;
+        public override bool Experimental => false;
     }
 
     // Use generic arg from IList<T> instead of Type.GetElementType() which only works for arrays
