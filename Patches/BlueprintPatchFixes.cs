@@ -226,5 +226,69 @@ namespace MicroPatches.Patches.BlueprintPatchFixes
                 _ => throw new Exception($"Replace index cannot be calculated for operation type {__instance.OperationType}"),
             };
         }
-    }   
+    }
+
+    [MicroPatchGroup(typeof(BlueprintPatchFixesGroup))]
+    [HarmonyPatch(typeof(BlueprintFieldOverrideOperation), nameof(BlueprintFieldOverrideOperation.Apply))]
+    static class FieldOverrideBlueprintReferenceFix
+    {
+        static bool TryDeserializeString(BlueprintFieldOverrideOperation __instance)
+        {
+            if (__instance.FieldValue is not string s)
+                return false;
+            try
+            {
+                var serializer = JsonSerializer.Create(BlueprintPatcher.Settings);
+
+                __instance.field.SetValue(__instance.fieldHolder, new JValue(s).ToObject(__instance.fieldType, serializer));
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Main.PatchLogException(ex);
+            }
+            return false;
+        }
+
+        [HarmonyTranspiler]
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGen)
+        {
+            var notEnumMatch = instructions.FindInstructionsIndexed(
+            [
+                ci => ci.Calls(AccessTools.PropertyGetter(typeof(Type), nameof(Type.IsEnum))),
+                ci => ci.opcode == OpCodes.Brfalse_S
+            ]).ToArray();
+
+            if (notEnumMatch.Length != 2)
+            {
+                Main.PatchError(nameof(FieldOverrideBlueprintReferenceFix), "Failed to find target instructions");
+                return instructions;
+            }
+
+            var notEnumTarget = notEnumMatch[1].instruction.operand;
+
+            var insertIndex = instructions.FindIndex(ci => ci.labels.Any(l => l == ((Label)notEnumTarget))) + 1;
+
+            if (insertIndex <= 0)
+            {
+                Main.PatchError(nameof(FieldOverrideBlueprintReferenceFix), "Failed to find target instructions");
+                return instructions;
+            }
+            var ifFalseLabel = ilGen.DefineLabel();
+
+            var toInsert = new[]
+            {
+                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FieldOverrideBlueprintReferenceFix), nameof(FieldOverrideBlueprintReferenceFix.TryDeserializeString))),
+                new CodeInstruction(OpCodes.Brfalse_S, ifFalseLabel),
+                new CodeInstruction(OpCodes.Ret),
+                new CodeInstruction(OpCodes.Ldarg_0) { labels = [ifFalseLabel]}
+            };
+
+            var iList = instructions.ToList();
+            iList.InsertRange(insertIndex, toInsert);
+
+            return iList;
+        }
+    }
 }
