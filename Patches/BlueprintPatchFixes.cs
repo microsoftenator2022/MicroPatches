@@ -291,4 +291,34 @@ namespace MicroPatches.Patches.BlueprintPatchFixes
             return iList;
         }
     }
+
+    [MicroPatchGroup(typeof(BlueprintPatchFixesGroup))]
+    [HarmonyPatch(typeof(BlueprintFieldOverrideOperation), nameof(BlueprintFieldOverrideOperation.ToString))]
+    static class BlueprintFieldOverrideOperation_FixToString
+    {
+        [HarmonyTranspiler]
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGen)
+        {
+            foreach (var i in instructions)
+            {
+                if (i.Calls(AccessTools.Method(typeof(System.Object), nameof(System.Object.ToString))))
+                {
+                    var notNullLabel = ilGen.DefineLabel();
+                    var nullObjectLabel = ilGen.DefineLabel();
+
+                    yield return new(OpCodes.Dup);
+                    yield return new(OpCodes.Brfalse_S, nullObjectLabel);
+
+                    yield return i;
+                    yield return new(OpCodes.Br_S, notNullLabel);
+
+                    yield return new(OpCodes.Pop) { labels = [nullObjectLabel] };
+                    yield return new(OpCodes.Ldstr, "NULL");
+
+                    yield return new(OpCodes.Nop) { labels = [notNullLabel] };
+                }
+                else yield return i;
+            }
+        }
+    }
 }
