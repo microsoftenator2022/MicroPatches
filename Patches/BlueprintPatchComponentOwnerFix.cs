@@ -24,8 +24,8 @@ namespace MicroPatches.Patches
     }
 
     //[MicroPatch("OwlMod fixes: Component/Element null OwnerBlueprint")]
-    [MicroPatchGroup(typeof(ElementOwnerFixesGroup))]
-    [HarmonyPatch]
+    //[MicroPatchGroup(typeof(ElementOwnerFixesGroup))]
+    //[HarmonyPatch]
     static class BlueprintPatchComponentOwnerFix
     {
         [HarmonyTargetMethods]
@@ -38,8 +38,8 @@ namespace MicroPatches.Patches
             {
 #if DEBUG
                 Main.PatchWarning(nameof(BlueprintPatchComponentOwnerFix), $"Json.BlueprintBeingRead is null. Blueprint is {bp}");
-#else
-                //return;
+//#else
+//                return;
 #endif
             }
 
@@ -57,22 +57,4 @@ namespace MicroPatches.Patches
         static void Prefix(SimpleBlueprint bp) =>
             FixBlueprintBeingRead(bp, typeof(BlueprintPatchComponentOwnerFix));
     }
-
-    //[MicroPatchGroup(typeof(ElementOwnerFixesGroup))]
-    //[HarmonyPatch(typeof(Element), nameof(Element.OnDeserialized))]
-    //static class Element_OnDeserialized_Patch
-    //{
-    //    [HarmonyPrefix]
-    //    static void Prefix(Element __instance) =>
-    //        BlueprintPatchComponentOwnerFix.FixBlueprintBeingRead(__instance.Owner, typeof(Element_OnDeserialized_Patch));
-    //}
-
-    //[MicroPatchGroup(typeof(ElementOwnerFixesGroup))]
-    //[HarmonyPatch(typeof(BlueprintComponent), nameof(BlueprintComponent.OnDeserialized))]
-    //static class BlueprintComponent_OnDeserialized_Patch
-    //{
-    //    [HarmonyPrefix]
-    //    static void Prefix(BlueprintComponent __instance) =>
-    //        BlueprintPatchComponentOwnerFix.FixBlueprintBeingRead(__instance.OwnerBlueprint, typeof(BlueprintComponent_OnDeserialized_Patch));
-    //}
 }

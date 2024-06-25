@@ -18,8 +18,6 @@ namespace MicroPatches.Patches
     [HarmonyPatch]
     static class EntityPart_OnCreateParts_SkipInvalid
     {
-        //static bool IsUnitEntity(BaseUnitEntity __instance) => __instance is UnitEntity;
-
         static bool CanAddPart<T>(BaseUnitEntity __instance) where T : EntityPart
         {
             var canAdd = Activator.CreateInstance<T>().RequiredEntityType.IsAssignableFrom(__instance.GetType());
@@ -38,15 +36,6 @@ namespace MicroPatches.Patches
             var getOrCreate = typeof(Entity).GetMethod(nameof(Entity.GetOrCreate));
             var canAddPart = typeof(EntityPart_OnCreateParts_SkipInvalid).GetMethod(nameof(CanAddPart), BindingFlags.NonPublic | BindingFlags.Static);
 
-            //if (ci.Calls(AccessTools.Method(typeof(Entity), nameof(Entity.GetOrCreate), [], [typeof(PartProvidesFullCover)])))
-            //{
-            //    var label = ilGen.DefineLabel();
-            //    yield return new(OpCodes.Ldarg_0);
-            //    yield return CodeInstruction.Call((BaseUnitEntity entity) => IsUnitEntity(entity));
-            //    yield return new(OpCodes.Brfalse_S,  label);
-            //    yield return ci;
-            //    yield return new(OpCodes.Nop) { labels = [label] };
-            //}
             foreach (var ci in instructions)
             {
                 if (ci.opcode == OpCodes.Call &&

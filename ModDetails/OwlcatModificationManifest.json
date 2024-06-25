@@ -1,6 +1,6 @@
 {
   "UniqueName": "MicroPatches",
-  "Version": "1.12.2",
+  "Version": "1.13.0",
   "DisplayName": "MicroPatches",
   "Description": "Tiny patches attempting to fix minor bugs and silence annoying log messages.",
   "Author": "Microsoftenator",

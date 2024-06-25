@@ -1,72 +1,79 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.NetworkInformation;
-using System.Text;
-using System.Threading.Tasks;
+﻿//using System;
+//using System.Collections.Generic;
+//using System.Linq;
+//using System.Net;
+//using System.Net.NetworkInformation;
+//using System.Text;
+//using System.Threading.Tasks;
 
-using HarmonyLib;
+//using HarmonyLib;
 
-using UnityModManagerNet;
+//using UnityModManagerNet;
 
-namespace MicroPatches.Patches
-{
-    [MicroPatch("UMM update check fix", Optional = true)]
-    [HarmonyPatch]
-    internal static class FixUMMUpdateCheck
-    {
-        static bool CheckNetworkConnection()
-        {
-            try
-            {
-                using var sp = new Ping();
+//namespace MicroPatches.Patches
+//{
+//    [MicroPatch("UMM update check fix", Optional = true)]
+//    [HarmonyPatch]
+//    internal static class FixUMMUpdateCheck
+//    {
+//        static bool CheckNetworkConnection()
+//        {
+//            try
+//            {
+//                using var sp = new Ping();
 
-                var addresses = Dns.GetHostAddresses("www.google.com");
-                var reply = sp.Send(addresses.First(ip => ip.AddressFamily is System.Net.Sockets.AddressFamily.InterNetwork), 3000);
+//                var addresses = Dns.GetHostAddresses("www.google.com");
 
-                if (reply.Status is IPStatus.Success)
-                    return true;
+//                var reply = sp.Send(
+//#if DEBUG
+//                    addresses.First(),
+//#else
+//                    addresses.First(ip => ip.AddressFamily is System.Net.Sockets.AddressFamily.InterNetwork), 
+//#endif
+//                    3000);
 
-                Main.PatchLog(nameof(FixUMMUpdateCheck), $"Checking for network failed with status {reply.Status}");
-            }
-            catch (Exception e)
-            {
-                Main.PatchLogException(e);
-            }
+//                if (reply.Status is IPStatus.Success)
+//                    return true;
 
-            return false;
-        }
+//                Main.PatchLog(nameof(FixUMMUpdateCheck), $"Checking for network failed with status {reply.Status}");
+//            }
+//            catch (Exception e)
+//            {
+//                Main.PatchLogException(e);
+//            }
 
-        [HarmonyPatch(typeof(UnityModManager), nameof(UnityModManager.HasNetworkConnection))]
-        [HarmonyPostfix]
-        static bool HasNetworkConnection_Postfix(bool __result)
-        {
-            if (__result)
-                return true;
+//            return false;
+//        }
 
-            return CheckNetworkConnection();
-        }
+//        [HarmonyPatch(typeof(UnityModManager), nameof(UnityModManager.HasNetworkConnection))]
+//        [HarmonyPostfix]
+//        static bool HasNetworkConnection_Postfix(bool __result)
+//        {
+//            if (__result)
+//                return true;
 
-        static bool triedCheckUpdates;
+//            return CheckNetworkConnection();
+//        }
 
-        [HarmonyPatch(typeof(UnityModManager.UI), nameof(UnityModManager.UI.ToggleWindow), [typeof(bool)])]
-        [HarmonyPrefix]
-        static void ToggleWindow_Prefix(bool open)
-        {
-            if (!open || triedCheckUpdates)
-                return;
+//        static bool triedCheckUpdates;
 
-            try
-            {
-                AccessTools.Method(typeof(UnityModManager), "CheckModUpdates")?.Invoke(null, []);
+//        [HarmonyPatch(typeof(UnityModManager.UI), nameof(UnityModManager.UI.ToggleWindow), [typeof(bool)])]
+//        [HarmonyPrefix]
+//        static void ToggleWindow_Prefix(bool open)
+//        {
+//            if (!open || triedCheckUpdates)
+//                return;
 
-                triedCheckUpdates = true;
-            }
-            catch (Exception e)
-            {
-                Main.PatchLogException(e);
-            }
-        }
-    }
-}
+//            try
+//            {
+//                AccessTools.Method(typeof(UnityModManager), "CheckModUpdates")?.Invoke(null, []);
+
+//                triedCheckUpdates = true;
+//            }
+//            catch (Exception e)
+//            {
+//                Main.PatchLogException(e);
+//            }
+//        }
+//    }
+//}
