@@ -2,8 +2,8 @@
   "Releases": [
     {
       "Id": "MicroPatches",
-      "Version": "1.12.2",
-      "DownloadUrl": "https://github.com/microsoftenator2022/MicroPatches/releases/download/v1.12.2/MicroPatches-1.12.2.zip"
+      "Version": "1.13.0",
+      "DownloadUrl": "https://github.com/microsoftenator2022/MicroPatches/releases/download/v1.13/MicroPatches-1.13.0.zip"
     }
   ]
 }
