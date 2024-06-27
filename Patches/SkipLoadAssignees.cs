@@ -14,8 +14,8 @@ using MicroUtils.Transpiler;
 
 namespace MicroPatches.Patches
 {
-    [MicroPatch("Skip LoadAssigneesAsync", Experimental = true)]
-    [HarmonyPatch]
+    //[MicroPatch("Skip LoadAssigneesAsync", Experimental = true)]
+    //[HarmonyPatch]
     internal static class SkipLoadAssignees
     {
         [HarmonyTargetMethod]
