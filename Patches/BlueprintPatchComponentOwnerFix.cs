@@ -23,9 +23,9 @@ namespace MicroPatches.Patches
         public override bool Experimental => false;
     }
 
-    //[MicroPatch("OwlMod fixes: Component/Element null OwnerBlueprint")]
-    //[MicroPatchGroup(typeof(ElementOwnerFixesGroup))]
-    //[HarmonyPatch]
+    [MicroPatch("OwlMod fixes: Component/Element null OwnerBlueprint")]
+    [MicroPatchGroup(typeof(ElementOwnerFixesGroup))]
+    [HarmonyPatch]
     static class BlueprintPatchComponentOwnerFix
     {
         [HarmonyTargetMethods]

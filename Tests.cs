@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -26,6 +27,7 @@ using Kingmaker.Blueprints.Root;
 using Kingmaker.Code.UI.MVVM.VM.Retrain;
 using Kingmaker.Code.UI.MVVM.VM.SystemMap;
 using Kingmaker.Designers.EventConditionActionSystem.Actions;
+using Kingmaker.DialogSystem.Blueprints;
 using Kingmaker.ElementsSystem;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.EntitySystem.Entities.Base;
@@ -43,6 +45,7 @@ using Kingmaker.View;
 using MicroPatches.Patches;
 using MicroPatches.UGUI;
 
+using MicroUtils.Linq;
 using MicroUtils.Transpiler;
 
 using Newtonsoft.Json;
@@ -58,13 +61,15 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+using UnityModManagerNet;
+
 namespace MicroPatches
 {
     internal partial class Main
     {
 #if DEBUG
-        [MicroPatch("Hidden Failure Test Patch", Description = "Test\nTest\nTest\nTest\nTest\nTest\nTest", Hidden = true, Optional = true)]
-        [HarmonyPatch(typeof(Main), nameof(Main.Load))]
+        //[MicroPatch("Hidden Failure Test Patch", Description = "Test\nTest\nTest\nTest\nTest\nTest\nTest", Hidden = true, Optional = true)]
+        //[HarmonyPatch(typeof(Main), nameof(Main.Load))]
         static class TestHiddenFailPatch
         {
             [HarmonyTranspiler]
@@ -129,9 +134,15 @@ namespace MicroPatches
             }
         }
 
+#endif
+
         void PrePatchTests()
         {
-
+#if DEBUG
+            //var fieldName = nameof(BlueprintFeature.m_Icon).Split(['.'], StringSplitOptions.None);
+            //Logger.Log($"FieldName: {fieldName.First()}");
+            //var field = typeof(BlueprintFeature).GetField(fieldName.First(), BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            //Logger.Log($"Field: {field?.ToString() ?? "NULL"}");
 
             var sb = new StringBuilder();
 
@@ -156,38 +167,18 @@ namespace MicroPatches
             }
 
             Logger.Log(sb.ToString());
+#endif
         }
 
         void PostPatchTests()
         {
+#if DEBUG
 
+#endif
         }
 
-        [HarmonyPatch]
-        static class TestBlueprints
-        {
-            static string[] blueprintGuids =
-            [
-                "edd3d413559d4c7d8e21fb4c6f5559d4",
-                "4bc6fdad9b2444f18ce9ba95f5aea36e"
-            ];
-        
-            [HarmonyPatch(typeof(BlueprintsCache), nameof(BlueprintsCache.Init))]
-            [HarmonyPostfix]
-            static void TestLoadBlueprints()
-            {
-                Main.Logger.Log("START LOAD BLUEPRINTS");
+#if DEBUG
 
-                foreach (var s in blueprintGuids)
-                {
-                    var bp = ResourcesLibrary.BlueprintsCache.Load(s);
-
-                    Main.Logger.Log(s + " - " + (bp?.ToString() ?? "NULL"));
-                }
-
-                Main.Logger.Log("END LOAD BLUEPRINTS");
-            }
-        }
 #endif
     }
 }
