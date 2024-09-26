@@ -33,36 +33,36 @@ namespace MicroPatches.Patches.BlueprintPatchFixes
     // Use generic arg from IList<T> instead of Type.GetElementType() which only works for arrays
     //[MicroPatchGroup(typeof(BlueprintPatchFixesGroup))]
     //[HarmonyPatch]
-    static class ListPatchElementTypeFix
-    {
-        [HarmonyTargetMethods]
-        static IEnumerable<MethodBase> TargetMethods() =>
-            [
-                AccessTools.Method(typeof(BlueprintPatchOperation), nameof(BlueprintPatchOperation.CheckTypeIsArrayOrListOfBlueprintReferences)),
-                AccessTools.Method(typeof(BlueprintSimpleArrayPatchOperation), nameof(BlueprintSimpleArrayPatchOperation.GetArrayElementType))
-            ];
+    //static class ListPatchElementTypeFix
+    //{
+    //    [HarmonyTargetMethods]
+    //    static IEnumerable<MethodBase> TargetMethods() =>
+    //        [
+    //            AccessTools.Method(typeof(BlueprintPatchOperation), nameof(BlueprintPatchOperation.CheckTypeIsArrayOrListOfBlueprintReferences)),
+    //            AccessTools.Method(typeof(BlueprintSimpleArrayPatchOperation), nameof(BlueprintSimpleArrayPatchOperation.GetArrayElementType))
+    //        ];
 
-        static Type? GetListElementType(Type type)
-        {
-            var elementType = type.GetInterfaces()
-                .FirstOrDefault(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IList<object>).GetGenericTypeDefinition())
-                ?.GetGenericArguments()[0];
+    //    static Type? GetListElementType(Type type)
+    //    {
+    //        var elementType = type.GetInterfaces()
+    //            .FirstOrDefault(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IList<object>).GetGenericTypeDefinition())
+    //            ?.GetGenericArguments()[0];
 
-            return elementType;
-        }
+    //        return elementType;
+    //    }
 
-        [HarmonyTranspiler]
-        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
-        {
-            foreach (var i in instructions)
-            {
-                if (i.Calls(AccessTools.Method(typeof(Type), nameof(Type.GetElementType))))
-                    yield return CodeInstruction.Call((Type type) => GetListElementType(type));
-                else
-                    yield return i;
-            }
-        }
-    }
+    //    [HarmonyTranspiler]
+    //    static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+    //    {
+    //        foreach (var i in instructions)
+    //        {
+    //            if (i.Calls(AccessTools.Method(typeof(Type), nameof(Type.GetElementType))))
+    //                yield return CodeInstruction.Call((Type type) => GetListElementType(type));
+    //            else
+    //                yield return i;
+    //        }
+    //    }
+    //}
 
     static class ListPatchOperationFixes
     {
@@ -82,69 +82,69 @@ namespace MicroPatches.Patches.BlueprintPatchFixes
 
         //[MicroPatchGroup(typeof(BlueprintPatchFixesGroup))]
         //[HarmonyPatch(typeof(BlueprintSimpleArrayPatchOperation))]
-        static class ListOperationFixes
-        {
-            [HarmonyTargetMethods]
-            static IEnumerable<MethodBase> TargetMethods() =>
-                [
-                    AccessTools.Method(typeof(BlueprintSimpleArrayPatchOperation), nameof(BlueprintSimpleArrayPatchOperation.InsertElement)),
-                    AccessTools.Method(typeof(BlueprintSimpleArrayPatchOperation), nameof(BlueprintSimpleArrayPatchOperation.ReplaceElement))
-                ];
+        //static class ListOperationFixes
+        //{
+        //    [HarmonyTargetMethods]
+        //    static IEnumerable<MethodBase> TargetMethods() =>
+        //        [
+        //            AccessTools.Method(typeof(BlueprintSimpleArrayPatchOperation), nameof(BlueprintSimpleArrayPatchOperation.InsertElement)),
+        //            AccessTools.Method(typeof(BlueprintSimpleArrayPatchOperation), nameof(BlueprintSimpleArrayPatchOperation.ReplaceElement))
+        //        ];
 
-            [HarmonyTranspiler]
-            static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
-            {
-                foreach (var i in instructions)
-                {
-                    yield return i;
+        //    [HarmonyTranspiler]
+        //    static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        //    {
+        //        foreach (var i in instructions)
+        //        {
+        //            yield return i;
 
-                    if (i.Calls(AccessTools.Method(typeof(Array), nameof(Array.CreateInstance), [typeof(Type), typeof(Int32)])))
-                    {
-                        yield return new CodeInstruction(OpCodes.Ldarg_0);
-                        yield return CodeInstruction.Call((IList array, BlueprintSimpleArrayPatchOperation patchOp) => MaybeToList(array, patchOp));
-                    }
-                }
-            }
-        }
+        //            if (i.Calls(AccessTools.Method(typeof(Array), nameof(Array.CreateInstance), [typeof(Type), typeof(Int32)])))
+        //            {
+        //                yield return new CodeInstruction(OpCodes.Ldarg_0);
+        //                yield return CodeInstruction.Call((IList array, BlueprintSimpleArrayPatchOperation patchOp) => MaybeToList(array, patchOp));
+        //            }
+        //        }
+        //    }
+        //}
 
         // 1. Replace ((JObject)this.Value) with JValue.Create((string)this.Value)
         // 2. Use BlueprintPatcher.Settings to deserialize
         //[MicroPatchGroup(typeof(BlueprintPatchFixesGroup))]
         //[HarmonyPatch(typeof(BlueprintSimpleArrayPatchOperation), nameof(BlueprintSimpleArrayPatchOperation.InsertElement))]
-        static class InsertOperationFixes
-        {
-            static object? ToObject(string value, Type type)
-            {
-                var serializer = JsonSerializer.Create(BlueprintPatcher.Settings);
+        //static class InsertOperationFixes
+        //{
+        //    static object? ToObject(string value, Type type)
+        //    {
+        //        var serializer = JsonSerializer.Create(BlueprintPatcher.Settings);
 
-                return new JValue(value).ToObject(type, serializer);
-            }
+        //        return new JValue(value).ToObject(type, serializer);
+        //    }
 
-            [HarmonyTranspiler]
-            static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
-            {
-                var match =
-                    instructions.FindInstructionsIndexed(
-                    [
-                        ci => ci.opcode == OpCodes.Ldarg_0,
-                        ci => ci.LoadsField(AccessTools.Field(typeof(BlueprintSimpleArrayPatchOperation), nameof(BlueprintSimpleArrayPatchOperation.Value))),
-                        ci => ci.opcode == OpCodes.Castclass,
-                        ci => ci.opcode == OpCodes.Ldloc_0,
-                        ci => ci.Calls(AccessTools.Method(typeof(JToken), nameof(JToken.ToObject), [typeof(Type)]))
-                    ]).ToArray();
+        //    [HarmonyTranspiler]
+        //    static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        //    {
+        //        var match =
+        //            instructions.FindInstructionsIndexed(
+        //            [
+        //                ci => ci.opcode == OpCodes.Ldarg_0,
+        //                ci => ci.LoadsField(AccessTools.Field(typeof(BlueprintSimpleArrayPatchOperation), nameof(BlueprintSimpleArrayPatchOperation.Value))),
+        //                ci => ci.opcode == OpCodes.Castclass,
+        //                ci => ci.opcode == OpCodes.Ldloc_0,
+        //                ci => ci.Calls(AccessTools.Method(typeof(JToken), nameof(JToken.ToObject), [typeof(Type)]))
+        //            ]).ToArray();
 
-                if (match.Length != 5)
-                {
-                    Main.PatchError(nameof(InsertOperationFixes), "Target instructions not found");
-                    return instructions;
-                }
+        //        if (match.Length != 5)
+        //        {
+        //            Main.PatchError(nameof(InsertOperationFixes), "Target instructions not found");
+        //            return instructions;
+        //        }
 
-                match[2].instruction.operand = typeof(string);
-                match[4].instruction.operand = AccessTools.Method(typeof(InsertOperationFixes), nameof(InsertOperationFixes.ToObject));
+        //        match[2].instruction.operand = typeof(string);
+        //        match[4].instruction.operand = AccessTools.Method(typeof(InsertOperationFixes), nameof(InsertOperationFixes.ToObject));
                 
-                return instructions;
-            }
-        }
+        //        return instructions;
+        //    }
+        //}
 
        // Replace method entirely
        //[MicroPatchGroup(typeof(BlueprintPatchFixesGroup))]

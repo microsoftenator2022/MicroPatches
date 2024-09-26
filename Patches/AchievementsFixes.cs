@@ -19,8 +19,8 @@ using UnityEngine;
 
 namespace MicroPatches.Patches
 {
-    [MicroPatch("Achievement fixes: Null Achievement SteamId", Experimental = true)]
-    [HarmonyPatch(typeof(SteamAchievementsManager), nameof(SteamAchievementsManager.OnUserStatsReceived))]
+    //[MicroPatch("Achievement fixes: Null Achievement SteamId", Experimental = true)]
+    //[HarmonyPatch(typeof(SteamAchievementsManager), nameof(SteamAchievementsManager.OnUserStatsReceived))]
     static class NullAchievmentSteamIdFix
     {
         static void LogSteamId(AchievementData achievementData)
