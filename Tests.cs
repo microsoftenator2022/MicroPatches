@@ -70,69 +70,69 @@ namespace MicroPatches
 #if DEBUG
         //[MicroPatch("Hidden Failure Test Patch", Description = "Test\nTest\nTest\nTest\nTest\nTest\nTest", Hidden = true, Optional = true)]
         //[HarmonyPatch(typeof(Main), nameof(Main.Load))]
-        static class TestHiddenFailPatch
-        {
-            [HarmonyTranspiler]
-            static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions) =>
-                throw new Exception($"{nameof(TestHiddenFailPatch)}");
-        }
+        //static class TestHiddenFailPatch
+        //{
+        //    [HarmonyTranspiler]
+        //    static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions) =>
+        //        throw new Exception($"{nameof(TestHiddenFailPatch)}");
+        //}
 
         //[HarmonyPatch]
-        static class FreeMercs
-        {
-            [HarmonyTargetMethod]
-            static MethodBase TargetMethod() =>
-                typeof(CreateCustomCompanion)
-                .GetNestedTypes(AccessTools.all)
-                .First()
-                .GetMethods(AccessTools.all)
-                .First(mi => mi.GetParameters()[0].ParameterType == typeof(BaseUnitEntity));
+        //static class FreeMercs
+        //{
+        //    [HarmonyTargetMethod]
+        //    static MethodBase TargetMethod() =>
+        //        typeof(CreateCustomCompanion)
+        //        .GetNestedTypes(AccessTools.all)
+        //        .First()
+        //        .GetMethods(AccessTools.all)
+        //        .First(mi => mi.GetParameters()[0].ParameterType == typeof(BaseUnitEntity));
 
-            [HarmonyTranspiler]
-            static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
-            {
-                bool patched = false;
+        //    [HarmonyTranspiler]
+        //    static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        //    {
+        //        bool patched = false;
 
-                foreach (var i in instructions)
-                {
-                    if (!patched)
-                    {
-                        if (i.opcode == OpCodes.Brtrue_S)
-                        {
-                            patched = true;
+        //        foreach (var i in instructions)
+        //        {
+        //            if (!patched)
+        //            {
+        //                if (i.opcode == OpCodes.Brtrue_S)
+        //                {
+        //                    patched = true;
 
-                            yield return new CodeInstruction(OpCodes.Pop);
+        //                    yield return new CodeInstruction(OpCodes.Pop);
 
-                            i.opcode = OpCodes.Br_S;
-                        }
-                    }
+        //                    i.opcode = OpCodes.Br_S;
+        //                }
+        //            }
                     
-                    yield return i;
-                }
-            }
-        }
+        //            yield return i;
+        //        }
+        //    }
+        //}
 
         //[HarmonyPatch]
-        static class RemoveRespecPFPenalty
-        {
-            [HarmonyPatch(typeof(RespecVM), MethodType.Constructor, typeof(List<BaseUnitEntity>), typeof(Action<BaseUnitEntity>), typeof(Action))]
-            [HarmonyTranspiler]
-            static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
-            {
-                foreach (var i in instructions)
-                {
-                    if (i.Calls(AccessTools.Method(typeof(SystemMapSpaceResourcesVM), nameof(SystemMapSpaceResourcesVM.SetAdditionalProfitFactor))))
-                    {
-                        i.opcode = OpCodes.Pop;
-                        i.operand = null;
+        //static class RemoveRespecPFPenalty
+        //{
+        //    [HarmonyPatch(typeof(RespecVM), MethodType.Constructor, typeof(List<BaseUnitEntity>), typeof(Action<BaseUnitEntity>), typeof(Action))]
+        //    [HarmonyTranspiler]
+        //    static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        //    {
+        //        foreach (var i in instructions)
+        //        {
+        //            if (i.Calls(AccessTools.Method(typeof(SystemMapSpaceResourcesVM), nameof(SystemMapSpaceResourcesVM.SetAdditionalProfitFactor))))
+        //            {
+        //                i.opcode = OpCodes.Pop;
+        //                i.operand = null;
                         
-                        yield return i;
-                    }
+        //                yield return i;
+        //            }
 
-                    yield return i;
-                }
-            }
-        }
+        //            yield return i;
+        //        }
+        //    }
+        //}
 
 #endif
 

@@ -10,6 +10,9 @@ using Code.GameCore.Blueprints.BlueprintPatcher;
 using HarmonyLib;
 
 using Kingmaker.Blueprints;
+using Kingmaker.Blueprints.JsonSystem;
+using Kingmaker.Blueprints.Root;
+using Kingmaker.EOSSDK;
 using Kingmaker.Modding;
 
 using Newtonsoft.Json.Linq;
@@ -49,34 +52,55 @@ internal static class OwlmodFixes1_2_1
         }
     }
 
+    [HarmonyPatch(typeof(BlueprintPatchObjectComparator), nameof(BlueprintPatchObjectComparator.ObjectsAreEqual))]
+    [HarmonyPrefix]
+    static bool CompareSoulMarkToFact(object? protoItem, object? targetItem, ref bool __result)
+    {
+        if (protoItem is not SoulMarkToFact && targetItem is not SoulMarkToFact)
+            return true;
+
+        var proto = protoItem as SoulMarkToFact;
+        var target = targetItem as SoulMarkToFact;
+
+        Main.PatchLog(nameof(CompareSoulMarkToFact), 
+            $"Compare soulmarks ({proto?.m_SoulMarkBlueprint}, {proto?.SoulMarkDirection}) to ({target?.m_SoulMarkBlueprint}, {target?.SoulMarkDirection})");
+
+        if (proto is null || target is null)
+        {
+            __result = false;
+            return false;
+        }
+
+        __result = proto.m_SoulMarkBlueprint.Equals(target.m_SoulMarkBlueprint) && (proto.SoulMarkDirection == target.SoulMarkDirection);
+
+        return false;
+    }
+
+    static object? MaybeFixJObject(object? obj, Type expectedType)
+    {
+        if (obj is not JObject jObject)
+            return obj;
+
+        return jObject.ToObject(expectedType, Json.Serializer);
+    }
+
     [HarmonyPatch(typeof(BlueprintPatchOperation), nameof(BlueprintPatchOperation.Apply))]
     [HarmonyPostfix]
     static void FixBlueprintPatchOperation(BlueprintPatchOperation __instance)
     {
         if (__instance is BlueprintSimpleArrayPatchOperation ap)
         {
-            if (ap.Value == null)
-                return;
-
             var elementType = ap.GetArrayElementType(ap.field);
 
-            if (ap.Value.GetType() != elementType && ap.Value is JObject jobj)
-            {
-                ap.Value = jobj.ToObject(elementType);
-            }
+            ap.Value = MaybeFixJObject(ap.Value, elementType);
+            ap.TargetValue =  MaybeFixJObject(ap.TargetValue, elementType);
 
             return;
         }
 
         if (__instance is BlueprintFieldOverrideOperation fp)
         {
-            if (fp.FieldValue == null)
-                return;
-            
-            if (fp.FieldValue.GetType() != fp.fieldType && fp.FieldValue is JObject jobj)
-            {
-                fp.FieldValue = jobj.ToObject(fp.fieldType);
-            }
+            fp.FieldValue = MaybeFixJObject(fp.FieldValue, fp.FieldType);
 
             return;
         }
