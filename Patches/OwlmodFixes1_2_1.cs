@@ -11,8 +11,10 @@ using HarmonyLib;
 
 using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.JsonSystem;
+using Kingmaker.Blueprints.Loot;
 using Kingmaker.Blueprints.Root;
 using Kingmaker.EOSSDK;
+using Kingmaker.Globalmap.Blueprints.Colonization;
 using Kingmaker.Modding;
 
 using Newtonsoft.Json.Linq;
@@ -72,6 +74,48 @@ internal static class OwlmodFixes1_2_1
         }
 
         __result = proto.m_SoulMarkBlueprint.Equals(target.m_SoulMarkBlueprint) && (proto.SoulMarkDirection == target.SoulMarkDirection);
+
+        return false;
+    }
+
+    [HarmonyPatch(typeof(BlueprintPatchObjectComparator), nameof(BlueprintPatchObjectComparator.ObjectsAreEqual))]
+    [HarmonyPrefix]
+    static bool CompareLootEntry(object? protoItem, object? targetItem, ref bool __result)
+    {
+        var proto = protoItem as LootEntry;
+        var target = targetItem as LootEntry;
+
+        if (proto is null && target is null)
+            return true;
+
+        if (proto is null || target is null)
+        {
+            __result = false;
+            return false;
+        }
+
+        __result = proto.IsDuplicate(target);
+
+        return false;
+    }
+
+    [HarmonyPatch(typeof(BlueprintPatchObjectComparator), nameof(BlueprintPatchObjectComparator.ObjectsAreEqual))]
+    [HarmonyPrefix]
+    static bool CompareResourceData(object? protoItem, object? targetItem, ref bool __result)
+    {
+        var proto = protoItem as ResourceData;
+        var target = targetItem as ResourceData;
+
+        if (proto is null && target is null)
+            return true;
+
+        if (proto is null || target is null)
+        {
+            __result = false;
+            return false;
+        }
+
+        __result = proto.Resource == target.Resource && proto.Count == target.Count;
 
         return false;
     }
