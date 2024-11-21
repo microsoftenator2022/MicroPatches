@@ -36,6 +36,27 @@ internal static class OwlmodFixes1_2_1
         return null;
     }
 
+    [HarmonyPatch(typeof(OwlcatModification), nameof(OwlcatModification.GetBlueprintPatch))]
+    [HarmonyPrefix]
+    static void GetBlueprintPatch_Prefix(object resource, out bool __state)
+    {
+        __state = false;
+
+        if (resource is SimpleBlueprint blueprint && Json.BlueprintBeingRead is null)
+        {
+            Json.BlueprintBeingRead = new(blueprint);
+            __state = true;
+        }
+    }
+
+    [HarmonyPatch(typeof(OwlcatModification), nameof(OwlcatModification.GetBlueprintPatch))]
+    [HarmonyPostfix]
+    static void GetBlueprintPatch_Postfix(bool __state)
+    {
+        if (__state)
+            Json.BlueprintBeingRead = null;
+    }
+    
     [HarmonyPatch(typeof(BlueprintPatchObjectComparator), nameof(BlueprintPatchObjectComparator.ObjectsAreEqual))]
     [HarmonyTranspiler]
     static IEnumerable<CodeInstruction> ReferenceCasts(IEnumerable<CodeInstruction> instructions)
