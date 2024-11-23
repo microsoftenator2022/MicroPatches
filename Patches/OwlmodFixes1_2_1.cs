@@ -13,7 +13,6 @@ using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.JsonSystem;
 using Kingmaker.Blueprints.Loot;
 using Kingmaker.Blueprints.Root;
-using Kingmaker.EOSSDK;
 using Kingmaker.Globalmap.Blueprints.Colonization;
 using Kingmaker.Modding;
 

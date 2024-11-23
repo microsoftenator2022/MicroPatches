@@ -41,6 +41,8 @@
     <Reference Include="$(RogueTraderData)\UnityModManager\UnityModManager.dll*" Publicize="true" Private="false" />
     <Reference Include="$(RogueTraderInstallDir)\WH40KRT_Data\Managed\0Harmony.dll*" Private="false" />
     <Reference Include="$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Newtonsoft.Json.dll*" Private="false" />
+    <Reference Include="$(RogueTraderInstallDir)\WH40KRT_Data\Managed\UberLogger.dll*" Private="false" />
+    <Reference Include="$(RogueTraderInstallDir)\WH40KRT_Data\Managed\PFLog.dll*" Private="false" />
   </ItemGroup>
 
   <ItemGroup>
