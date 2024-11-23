@@ -48,9 +48,9 @@ static class BetterModLogger
 
         var path = Path.GetDirectoryName(__instance.DataFilePath);
 
-        var fileName = Path.Combine($"{OwlcatModification.InvalidPathCharsRegex.Replace(__instance.Manifest.UniqueName, "")}_Log.txt");
+        var fileName = $"{OwlcatModification.InvalidPathCharsRegex.Replace(__instance.Manifest.UniqueName, "")}_Log.txt";
 
-        Main.PatchLog(nameof(BetterModLogger), $"Log file path: {path}\\{fileName}");
+        Main.PatchLog(nameof(BetterModLogger), $"Log file path: {Path.Combine(path, fileName)}");
 
         var sink = new UberLoggerFilter(new UberLoggerFile(fileName, path), LogSeverity.Disabled, [__instance.Manifest.UniqueName], []);
 
@@ -125,8 +125,6 @@ class BlueprintPatchWithMod : BlueprintPatch
     static void SetPatchComparatorLogger(LogChannel? logger)
     {
         ModLogger = logger ?? PFLog.Mods;
-
-        //typeof(BlueprintPatchObjectComparator).GetField(nameof(BlueprintPatchObjectComparator.Logger), AccessTools.all).SetValue(null, logger ?? PFLog.Mods);
     }
 
     public static BlueprintPatchWithMod CopyWithMod(BlueprintPatch original, OwlcatModification mod)
@@ -219,7 +217,6 @@ class BlueprintPatchWithMod : BlueprintPatch
             }
         }
 
-
         public static TOut CopyPatchOperation<TIn, TOut>(TIn original, OwlcatModification mod)
             where TIn : BlueprintPatchOperation
             where TOut : TIn, IPatchOperationWithMod, new()
@@ -256,7 +253,6 @@ class BlueprintPatchWithMod : BlueprintPatch
             }
 
             return result;
-
         }
 
         static IEnumerable<MethodInfo> TargetMethods()
@@ -286,7 +282,7 @@ class BlueprintPatchWithMod : BlueprintPatch
                 {
                     yield return new(OpCodes.Pop);
                     yield return new(OpCodes.Ldarg_0);
-                    yield return new(OpCodes.Call, AccessTools.Method(typeof(BlueprintPatchWithMod.PatchOperations), nameof(BlueprintPatchWithMod.PatchOperations.TryGetLogger)));
+                    yield return CodeInstruction.Call((BlueprintPatchOperation operation) => TryGetLogger(operation));
                 }
             }
         }
