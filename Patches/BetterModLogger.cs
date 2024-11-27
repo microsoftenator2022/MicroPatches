@@ -86,6 +86,15 @@ static class BetterModLogger
         if (!applied)
             throw new Exception("Target instruction not found");
     }
+
+    [HarmonyPatch(typeof(OwlcatModification), nameof(OwlcatModification.TryPatchBlueprint))]
+    static Exception? Finalizer(Exception __exception, OwlcatModification __instance)
+    {
+        if (__exception is not null)
+            __instance.Logger.Exception(__exception);
+
+        return null;
+    }
 }
 
 [MicroPatchGroup(typeof(BetterModLoggerPatchesGroup))]
@@ -288,5 +297,3 @@ class BlueprintPatchWithMod : BlueprintPatch
         }
     }
 }
-
-
