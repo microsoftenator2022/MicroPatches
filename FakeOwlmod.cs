@@ -16,6 +16,7 @@ using MicroUtils.Transpiler;
 
 namespace MicroPatches
 {
+#if false
     [MicroPatch("Owlmod dependency", Hidden = true, Optional = false)]
     [HarmonyPatch]
     internal static class FakeOwlmodDependency
@@ -136,4 +137,5 @@ namespace MicroPatches
             return iList;
         }
     }
+    #endif
 }
