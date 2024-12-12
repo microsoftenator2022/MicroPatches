@@ -4,9 +4,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Kingmaker.Blueprints;
+using Kingmaker.Blueprints.JsonSystem;
+using Kingmaker.Blueprints.JsonSystem.Helpers;
+using Kingmaker.ElementsSystem;
+
 using Microsoft.CodeAnalysis;
 
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
+using Owlcat.Runtime.Core.Utility;
 
 namespace MicroPatches;
 
@@ -40,7 +48,24 @@ public class JsonPatch
 
         if (value["m_Overrides"] is JArray overrideProps)
         {
-            overridePaths = overrideProps.Select(n => n.ToString().Split(['.'])).Where(p => p.Length > 0).ToArray();
+            IEnumerable<(string Name, string? PropertyName)> propertyNameMap = [];
+
+            if (GetType(value["$type"]?.ToString()) is Type type)
+            {
+                propertyNameMap = type.GetMembers()
+                    .Choose(m => m.GetAttribute<JsonPropertyAttribute>() is { } attribute ? Optional.Some((m.Name, attribute.PropertyName)) : default);
+            }
+
+            overridePaths = overrideProps.Select(n => n.ToString().Split(['.']))
+                .Where(p => p.Length > 0)
+                .Select(path =>
+                {
+                    if (propertyNameMap.FirstOrDefault(m => m.Name == path[0]) is (_, string mappedName))
+                        return [mappedName, ..path.Skip(1)];
+
+                    return path;
+                })
+                .ToArray();
         }
 
         if (overridePaths is not null && (overridePaths.Length < 1 ||
@@ -84,9 +109,33 @@ public class JsonPatch
         return default;
     }
 
+    static Type? GetType(string? typeString)
+    {
+        if (typeString is null)
+            return null;
+
+        if (typeString.Split([',']).FirstOrDefault() is not string guid)
+            return null;
+
+        if (GuidClassBinder.GuidToTypeCache.TryGetValue(guid, out var t))
+            return t;
+
+        return null;
+    }
+
     static JToken ElementIdentity(JToken element)
     {
-        if (element is JObject o && o["name"]?.ToString() is { } name)
+        if (element is not JObject o)
+            return element;
+            
+        if(o["$type"] is not { } typeString || GetType(typeString.ToString()) is not Type type)
+            return element;
+
+        if (!typeof(Element).IsAssignableFrom(type) ||
+            !typeof(BlueprintComponent).IsAssignableFrom(type))
+            return element;
+        
+        if (o["name"]?.ToString() is { } name)
             return JValue.CreateString(name);
 
         return element;
