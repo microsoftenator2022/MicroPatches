@@ -145,14 +145,7 @@ public static class JsonPatch
     {
         if (element is not JObject o)
             return element;
-            
-        //if(o["$type"] is not { } typeString || GetType(typeString.ToString()) is not Type type)
-        //    return element;
 
-        //if (!typeof(Element).IsAssignableFrom(type) &&
-        //    !typeof(BlueprintComponent).IsAssignableFrom(type))
-        //    return element;
-        
         if (o["name"]?.ToString() is { } name)
         {
             var t = GetType(o["$type"]?.ToString());
