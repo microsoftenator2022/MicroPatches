@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Kingmaker;
 using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.JsonSystem;
 using Kingmaker.Blueprints.JsonSystem.Helpers;
@@ -18,8 +20,12 @@ using Owlcat.Runtime.Core.Utility;
 
 namespace MicroPatches;
 
-public class JsonPatch
+public static class JsonPatch
 {
+    public static Action<string>? Logger;
+
+    static void Log(string msg) => Logger?.Invoke(msg);
+
     public static Optional<JToken> GetPatch(JToken value, JToken original, string[][]? overridePaths = null)
     {
         if (value is JArray arrayValue &&
@@ -31,7 +37,8 @@ public class JsonPatch
             original is JObject originalObjectValue)
             return GetObjectPatch(objectValue, originalObjectValue, overridePaths)
                 .Upcast<JObject, JToken>();
-
+        
+        //return !JToken.DeepEquals(value, original) ? Optional.Some(value.DeepClone()) : default;
         return value.DeepClone();
     }
 
@@ -46,6 +53,13 @@ public class JsonPatch
 
         var props = value.Properties();
 
+        if (overridePaths is not null)
+        {
+            overridePaths = overridePaths.Where(p => p.Length > 0).ToArray();
+            if (!overridePaths.Any())
+                overridePaths = null;
+        }
+
         if (value["m_Overrides"] is JArray overrideProps)
         {
             IEnumerable<(string Name, string? PropertyName)> propertyNameMap = [];
@@ -54,24 +68,28 @@ public class JsonPatch
             {
                 propertyNameMap = type.GetMembers()
                     .Choose(m => m.GetAttribute<JsonPropertyAttribute>() is { } attribute ? Optional.Some((m.Name, attribute.PropertyName)) : default);
+
+                if (typeof(BlueprintScriptableObject).IsAssignableFrom(type))
+                {
+                    overrideProps = (JArray)overrideProps.DeepClone();
+                    overrideProps.Add("Components");
+                }
             }
 
             overridePaths = overrideProps.Select(n => n.ToString().Split(['.']))
                 .Where(p => p.Length > 0)
                 .Select(path =>
                 {
-                    if (propertyNameMap.FirstOrDefault(m => m.Name == path[0]) is (_, string mappedName))
-                        return [mappedName, ..path.Skip(1)];
+                    var nameMap = propertyNameMap.TryFind(m => m.Name == path[0]);
+
+                    if (nameMap.HasValue && nameMap.Value.PropertyName is not null)
+                        return [nameMap.Value.PropertyName, .. path.Skip(1)];
 
                     return path;
                 })
                 .ToArray();
-        }
 
-        if (overridePaths is not null && (overridePaths.Length < 1 ||
-            // FIXME: Sometimes the property names don't match the serialized field name.
-            !overridePaths.Any(n => props.Any(p => p.Name == n[0]))))
-            overridePaths = null;
+        }
 
         foreach (var prop in props)
         {
@@ -128,15 +146,21 @@ public class JsonPatch
         if (element is not JObject o)
             return element;
             
-        if(o["$type"] is not { } typeString || GetType(typeString.ToString()) is not Type type)
-            return element;
+        //if(o["$type"] is not { } typeString || GetType(typeString.ToString()) is not Type type)
+        //    return element;
 
-        if (!typeof(Element).IsAssignableFrom(type) ||
-            !typeof(BlueprintComponent).IsAssignableFrom(type))
-            return element;
+        //if (!typeof(Element).IsAssignableFrom(type) &&
+        //    !typeof(BlueprintComponent).IsAssignableFrom(type))
+        //    return element;
         
         if (o["name"]?.ToString() is { } name)
-            return JValue.CreateString(name);
+        {
+            var t = GetType(o["$type"]?.ToString());
+
+            if (typeof(BlueprintComponent).IsAssignableFrom(t) ||
+                typeof(Element).IsAssignableFrom(t))
+                return JValue.CreateString(name);
+        }
 
         return element;
     }
@@ -207,9 +231,14 @@ public class JsonPatch
         return -1;
     }
 
+    public static JToken ApplyPatch(JToken value, JToken patch)
+    {
+        return PatchValue(value, patch);
+    }
+
     internal static JToken PatchValue(JToken value, JToken patch)
     {
-        value = (JValue)value.DeepClone();
+        value = value.DeepClone();
 
         if (value is JArray valueArray &&
             patch is JArray patchArray)
