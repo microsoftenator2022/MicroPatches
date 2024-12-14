@@ -15,6 +15,6 @@ If you encounter any issues with an experimental patch, let me know in the issue
 
 ### If the editor gets stuck importing assets
 
-1. Replace the contents of `Assets/UnitModManager` with [this zip](https://github.com/microsoftenator2022/MicroPatches/releases/download/umm-stub/UnityModManager.zip)
+1. Replace the contents of `Assets/UnitModManager` with the contents of [this zip](https://github.com/microsoftenator2022/MicroPatches/releases/download/umm-stub/UnityModManager.zip)
 2. Delete `Assets/Libs/dnlib.dll`
 3. **With the editor closed**, delete `Library\APIUpdater\project-dependencies.graph`
