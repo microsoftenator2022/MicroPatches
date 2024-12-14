@@ -2,6 +2,8 @@
   <Import Project="GamePath.props" Condition="Exists('GamePath.props')" />
 
   <PropertyGroup>
+    <VersionPrefix>1.17.0</VersionPrefix>
+    <VersionSuffix Condition=" '$(Configuration)' == 'Debug' ">debug</VersionSuffix>
     <TargetFramework>net481</TargetFramework>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -11,6 +13,7 @@
       https://nuget.bepinex.dev/v3/index.json;
     </RestoreAdditionalProjectSources>
     <RogueTraderData>$(LocalAppData)Low\Owlcat Games\Warhammer 40000 Rogue Trader</RogueTraderData>
+    <IntermediateOutputDir>$(MSBuildProjectDirectory)\Build</IntermediateOutputDir>
   </PropertyGroup>
   
   <ItemGroup>
@@ -50,6 +53,33 @@
     <None Include="ModDetails\Info.json" CopyToOutputDirectory="PreserveNewest" Link="%(Filename)%(Extension)" />
     <None Include="ModDetails\OwlcatModificationManifest.json" CopyToOutputDirectory="PreserveNewest" Link="%(Filename)%(Extension)" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Editor\*.*" CopyToOutputDirectory="Never" />
+    <Compile Remove="**\Editor\**\*.*" />
+    <None Remove="Build\**\*.*" />
+    <Compile Remove="Build\**\*.*" />
+  </ItemGroup>
+
+  <Target Name="OutputDirectories" AfterTargets="Build">
+    <ItemGroup>
+      <Files Include="$(TargetDir)\**\*.*" />
+      <EditorFilesExclude Include="$(TargetDir)\**\OwlcatModificationManifest.json;$(TargetDir)\**\Info.json" />
+      <EditorFiles Include="@(Files)" Exclude="@(EditorFilesExclude)" />
+      <EditorFiles Include="Editor\**\*.*" />
+    </ItemGroup>
+
+    <Copy SourceFiles="@(Files)" DestinationFiles="@(Files->'$(IntermediateOutputDir)\Mod\$(MSBuildProjectName)\%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy SourceFiles="@(EditorFiles)" DestinationFiles="@(EditorFiles->'$(IntermediateOutputDir)\Editor\$(MSBuildProjectName)\%(RecursiveDir)%(Filename)%(Extension)')" />
+    
+    <ZipDirectory
+      SourceDirectory="$(IntermediateOutputDir)\Mod\$(MSBuildProjectName)"
+      DestinationFile="$(IntermediateOutputDir)\$(SolutionName)-Mod-$(Version).zip" Overwrite="true" />
+    <ZipDirectory
+      Condition=" '$(Configuration)' == 'Debug' "
+      SourceDirectory="$(IntermediateOutputDir)\Editor"
+      DestinationFile="$(IntermediateOutputDir)\$(SolutionName)-Editor-$(VersionPrefix).zip" Overwrite="true" />
+  </Target>
 
   <Target Name="Deploy" AfterTargets="Build">
     <ItemGroup>

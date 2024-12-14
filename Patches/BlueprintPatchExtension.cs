@@ -26,7 +26,7 @@ using Newtonsoft.Json.Linq;
 
 namespace MicroPatches.Patches;
 
-[MicroPatch("Micro's Enhanced Blueprint Patches", Experimental = true, Optional = false)]
+[MicroPatch("Micro's Enhanced Blueprint Patches", Optional = false)]
 [HarmonyPatch]
 public static class BlueprintPatchExtension
 {
