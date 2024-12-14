@@ -2,28 +2,19 @@
 
 Transmechanic Microsoftenator once again fixing bugs and cleaning logs.
 
-Tiny patches attempting to fix minor bugs and silence annoying log messages.
+Tiny patches attempting to fix bugs in the game's mod support, extend tools for modders, fix other minor bugs, and silence annoying log messages.
 Experimental patches require more testing and can be toggled in the mod settings (requires restart to take effect).
 If you encounter any issues with an experimental patch, let me know in the issues on this repository.
 
 **WARNING: ALL EXPERIMENTAL PATCHES ARE DISABLED BY DEFAULT FOR A REASON. THEY MAY BREAK YOUR GAME AND/OR SAVES. ACTIVATE AT YOUR OWN RISK.**
 
-## Current patches as of 1.2:
+## Mod Developers: Editor Template Extension Installation
 
-### Ported from WrathPatches
+1. Add `RogueTrader.Blueprints.Editor` to the Assembly Definition References of `Mods.Editor` ![image](https://github.com/user-attachments/assets/571d3be0-c059-4e6d-97be-7c363d596c86)
+2. Extract the contents of `MicroPatches-Editor-x.y.z.zip` to `Assets/Editor` ![image](https://github.com/user-attachments/assets/ce7cab93-5d8b-45e1-b37b-12340e0cb46e)
 
-- Fixed NRE in Element.AssetGuid and Element.AssetGuidShort
-- SharedStringConverter.ReadJson now correctly uses ScriptableObject.CreateInstance not the class constructor. Fixes harmless but noisy template mod localization errors
-- Silenced "Bind: no binding named X" messages
+### If the editor gets stuck importing assets
 
-### Experimental
-
-These have all recieved basic testing, but are not guaranteed to be free of issues:
-
-- Swap calculations for CasterNamedProperty and TargetNamedProperty. Fix for: Some effects that should be using the caster's stats incorrectly use the target's stats and vice-versa.
-- Ignore TurnBasedEventsTrigger on features on non-party companions. Fixes the "Infinite Seize The Initiative" bug
-- Fixed EGSAchievementsManager NullReferenceExceptions
-- Ignore Steam Achievements with Null ID
-- Lowered the severity of missing save file warnings ("DLC has no status in the DLCCache. Defaulting to unavailable") no longer prints a stacktrace
-- Silenced keybinding conflict messages
-- Skip LoadAssigneeAsync - prevents internal QA error message
+1. Replace the contents of `Assets/UnitModManager` with [this zip](https://github.com/microsoftenator2022/MicroPatches/releases/download/umm-stub/UnityModManager.zip)
+2. Delete `Assets/Libs/dnlib.dll`
+3. **With the editor closed**, delete `Library\APIUpdater\project-dependencies.graph`
