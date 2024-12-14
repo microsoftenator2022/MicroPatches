@@ -218,7 +218,15 @@ static class BlueprintPatchEditorPatches
 
         var targetJson = JObject.Parse(s.ToString())["Data"];
 
-        var patchJson = JsonPatch.GetPatch(targetJson, protoJson);
+        var maybePatchJson = JsonPatch.GetPatch(targetJson, protoJson);
+
+        if (!maybePatchJson.HasValue)
+        {
+            Debug.LogWarning($"{targetBlueprint.name} has no patchable changes to {protoPath}");
+            return false;
+        }
+
+        var patchJson = maybePatchJson.Value;
         
         Debug.Log("Patch:\n" + patchJson.ToString());
 
