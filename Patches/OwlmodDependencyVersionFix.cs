@@ -9,7 +9,7 @@ using Kingmaker.Modding;
 
 namespace MicroPatches.Patches
 {
-    #if DEBUG
+    #if false
     internal static class OwlmodDependencyVersionFix
     {
         static readonly Regex VersionRegex = new(@"(\d+)(?:\.(\d+))?(?:\.(\d+))?.*");
