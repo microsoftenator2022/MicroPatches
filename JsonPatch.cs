@@ -231,7 +231,7 @@ public static class JsonPatch
 
     internal static JToken PatchValue(JToken value, JToken patch)
     {
-        value = value.DeepClone();
+        //value = value.DeepClone();
 
         if (value is JArray valueArray &&
             patch is JArray patchArray)
@@ -271,7 +271,17 @@ public static class JsonPatch
 
         foreach (var elementPatch in patch.OfType<JObject>().Select(ArrayElementPatch.FromJObject))
         {
+#if DEBUG
+
+            PFLog.Mods.Log($"Applying element patch:\n{elementPatch}");
+            PFLog.Mods.Log($"Before:\n{value}");
+#endif
+
             value = elementPatch.Apply(value);
+
+#if DEBUG
+            PFLog.Mods.Log($"After:\n{value}");
+#endif
         }
 
         return value;
@@ -339,6 +349,8 @@ public static class JsonPatch
         {
             int targetIndex = -1;
 
+            array = (JArray)array.DeepClone();
+
             switch (this)
             {
                 case Prepend prepend:
@@ -359,7 +371,7 @@ public static class JsonPatch
                     if (targetIndex < 0)
                         throw new KeyNotFoundException();
 
-                    array.Remove(targetIndex);
+                    array.RemoveAt(targetIndex);
 
                     break;
                 case PatchElement patchElement:

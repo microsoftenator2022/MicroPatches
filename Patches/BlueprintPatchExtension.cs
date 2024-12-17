@@ -92,12 +92,24 @@ public static class BlueprintPatchExtension
             !patches.TryGetValue(guid, out var patchFile))
             return __result;
         
-            var obj = __result ?? resource;
+        var obj = __result ?? resource;
 
-            if (obj is not SimpleBlueprint bp)
-                return __result;
+        if (obj is not SimpleBlueprint bp)
+            return __result;
 
-            __instance.Logger.Log($"Applying patch {patchFile} to {bp}");
+        if (Path.GetExtension(patchFile) is not ".patch")
+        {
+            patchFile = $"{patchFile}.patch";
+            __instance.Logger.Warning($"Patch filename for {guid} does not have .patch extension. Using {patchFile}");
+        }
+
+        if (!File.Exists(patchFile))
+        {
+            __instance.Logger.Error($"Patch file {patchFile} does not exist");
+            return __result;
+        }
+
+        __instance.Logger.Log($"Applying patch {patchFile} to {bp}");
 
         try
         {

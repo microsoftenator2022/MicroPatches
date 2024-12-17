@@ -2,7 +2,7 @@
   <Import Project="GamePath.props" Condition="Exists('GamePath.props')" />
 
   <PropertyGroup>
-    <VersionPrefix>1.17.0</VersionPrefix>
+    <VersionPrefix>1.17.1</VersionPrefix>
     <VersionSuffix Condition=" '$(Configuration)' == 'Debug' ">debug</VersionSuffix>
     <TargetFramework>net481</TargetFramework>
     <Nullable>enable</Nullable>
