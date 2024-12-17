@@ -2,10 +2,32 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using Microsoft.CodeAnalysis;
+
 namespace MicroUtils.Linq
 {
     public static class LinqExtensions
     {
+        public static T[] InitArray<T>(int length, Func<int, T> initFunc)
+        {
+            var array = new T[length];
+
+            for (var i = 0; i < length; i++)
+            {
+                array[i] = initFunc(i);
+            }
+
+            return array;
+        }
+
+        public static T[] InitArray<T>(int length, Optional<T> value = default)
+        {
+            if (value.HasValue)
+                return InitArray(length, _ => value.Value);
+
+            return new T[length];
+        }
+
         public static IEnumerable<(int index, T item)> Indexed<T>(this IEnumerable<T> source)
         {
             var index = 0;

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -27,6 +28,8 @@ public static class MicroPatchesDomainReloadHandler
         AssemblyReloadEvents.afterAssemblyReload += OnAfterAssemblyReload;
     }
 
+    public static event Action BeforeAssemblyReload;
+
     static void OnBeforeAssemblyReload()
     {
         if (Harmony != null)
@@ -35,7 +38,12 @@ public static class MicroPatchesDomainReloadHandler
             Harmony.UnpatchCategory(HaromnyPatchCategoryName);
             Harmony = null;
         }
+
+        BeforeAssemblyReload?.Invoke();
     }
+
+
+    public static event Action AfterAssemblyReload;
 
     static void OnAfterAssemblyReload()
     {
@@ -45,5 +53,7 @@ public static class MicroPatchesDomainReloadHandler
             Debug.Log("Patching");
             Harmony.PatchCategory(HaromnyPatchCategoryName);
         }
+
+        AfterAssemblyReload?.Invoke();
     }
 }

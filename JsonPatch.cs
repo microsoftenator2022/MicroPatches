@@ -13,6 +13,8 @@ using Kingmaker.ElementsSystem;
 
 using Microsoft.CodeAnalysis;
 
+using MicroUtils.Linq;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -158,52 +160,61 @@ public static class JsonPatch
         return element;
     }
 
-    static Optional<JArray> GetArrayPatch(JArray value, JArray originalArray)
+    /// <summary>
+    /// Count elements by identity
+    /// </summary>
+    static int GetElementCount(JArray array, JToken element, Func<JToken, JToken> identity) =>
+        array
+            .Select(identity)
+            .Where(e => JToken.DeepEquals(ElementIdentity(element), ElementIdentity(e)))
+            .Count();
+
+    static Optional<JArray> GetArrayPatch(JArray targetArray, JArray originalArray)
     {
         var identity = ElementIdentity;
+        
+        static bool equals(JToken a, JToken b) => JToken.DeepEquals(ElementIdentity(a), ElementIdentity(b));
 
-        var arrayPatch = new JArray();
+        var patches = new List<ArrayElementPatch>();
 
-        // Removed elements
-        for (var i = 0; i < originalArray.Count; i++)
+        var currentArray = (JArray)originalArray.DeepClone();
+
+        for (var i = 0; i < targetArray.Count; i++)
         {
-            if (!Contains(value, originalArray[i], identity))
+            if (i < currentArray.Count && equals(currentArray[i], targetArray[i]))
+                continue;
+
+            var elementCountDelta = GetElementCount(targetArray, targetArray[i], identity) - GetElementCount(currentArray, targetArray[i], identity);
+
+            if (elementCountDelta < 0)
             {
-                arrayPatch.Add(new ArrayElementPatch.Remove(identity(originalArray[i])).ToJson());
+                patches.Add(new ArrayElementPatch.Remove(identity(currentArray[i])));
+                i--;
             }
-        }
-
-        //var insertions = new List<ArrayElementPatch.Insert>();
-        //var relocations = new List<ArrayElementPatch.Relocate>();
-
-        for (var i = 0; i < value.Count; i++)
-        {
-            var element = value[i];
-            var originalElement = originalArray.FirstOrDefault(e => JToken.DeepEquals(identity(element), identity(e)));
-
-            if (originalElement is null)
+            else if (elementCountDelta > 0)
             {
                 if (i is 0)
-                    arrayPatch.Add(new ArrayElementPatch.Prepend(element).ToJson());
-                else if (i > originalArray.Count)
-                    arrayPatch.Add(new ArrayElementPatch.Append(element).ToJson());
+                    patches.Add(new ArrayElementPatch.Prepend(targetArray[i]));
                 else
-                {
-                    //insertions.Add(new ArrayElementPatch.Insert(element, identity(value[i - 1])));
-                    arrayPatch.Add(new ArrayElementPatch.Insert(element, identity(value[i - 1])).ToJson());
-                }
+                    patches.Add(new ArrayElementPatch.Insert(targetArray[i], identity(targetArray[i - 1])));
             }
-            else if (!JToken.DeepEquals(element, originalElement))
+            else
             {
-                var elementPatch = GetPatch(element, originalElement);
-
-                if (elementPatch.HasValue)
-                    arrayPatch.Add(new ArrayElementPatch.PatchElement(identity(originalElement), elementPatch.Value).ToJson());
+                patches.Add(new ArrayElementPatch.Relocate(targetArray[i], i > 0 ? currentArray[i - 1] : JValue.CreateNull()));
             }
+
+            currentArray = patches.LastOrDefault()?.Apply(currentArray) ?? currentArray;
         }
 
-        if (arrayPatch.Count > 0)
-            return arrayPatch;
+        if (patches.Count > 0)
+        {
+            var arrayPatches = new JArray();
+
+            foreach (var patch in patches.Select(p => p.ToJson()).ToArray())
+                arrayPatches.Add(patch);
+
+            return arrayPatches;
+        }
 
         return default;
     }
@@ -211,11 +222,11 @@ public static class JsonPatch
     private static bool Contains(JArray array, JToken value, Func<JToken, JToken> identity) =>
         IndexOf(array, value, identity) >= 0;
 
-    private static int IndexOf(JArray array, JToken value, Func<JToken, JToken> identity)
+    private static int IndexOf(JArray array, JToken value, Func<JToken, JToken> identity, int startFrom = 0)
     {
         var id = identity(value);
 
-        for (var i = 0; i < array.Count; i++)
+        for (var i = startFrom; i < array.Count; i++)
         {
             if (JToken.DeepEquals(identity(array[i]), id))
                 return i;
@@ -231,8 +242,6 @@ public static class JsonPatch
 
     internal static JToken PatchValue(JToken value, JToken patch)
     {
-        //value = value.DeepClone();
-
         if (value is JArray valueArray &&
             patch is JArray patchArray)
         {
@@ -315,6 +324,10 @@ public static class JsonPatch
                     obj.Add(nameof(PatchElement.Target), patchElement.Target);
                     obj.Add(nameof(PatchElement.ElementPatch), patchElement.ElementPatch);
                     break;
+                case Relocate relocate:
+                    obj.Add(nameof(Relocate.Target), relocate.Target);
+                    obj.Add(nameof(Relocate.InsertAfterTarget), relocate.InsertAfterTarget ?? JValue.CreateNull());
+                    break;
                 default:
                     throw new NotSupportedException();
             }
@@ -331,8 +344,7 @@ public static class JsonPatch
                 nameof(Insert) => new Insert(jObject[nameof(Insert.NewElement)]!, jObject[nameof(Insert.InsertAfterTarget)]!),
                 nameof(Remove) => new Remove(jObject[nameof(Remove.Target)]!),
                 nameof(PatchElement) => new PatchElement(jObject[nameof(PatchElement.Target)]!, jObject[nameof(PatchElement.ElementPatch)]!),
-                //nameof(NestedArray) => throw new NotSupportedException(),
-                nameof(Relocate) => throw new NotSupportedException(),
+                nameof(Relocate) => new Relocate(jObject[nameof(Relocate.Target)]!, jObject[nameof(Relocate.InsertAfterTarget)]!),
                 _ => throw new InvalidOperationException()
             };
         }
@@ -342,12 +354,12 @@ public static class JsonPatch
         public record class Insert(JToken NewElement, JToken InsertAfterTarget) : ArrayElementPatch(nameof(Insert));
         public record class Remove(JToken Target) : ArrayElementPatch(nameof(Remove));
         public record class PatchElement(JToken Target, JToken ElementPatch) : ArrayElementPatch(nameof(PatchElement));
-        //public record class NestedArray(ArrayElementPatch[] ArrayElementPatches, JToken Target) : ArrayElementPatch(nameof(NestedArray));
         public record class Relocate(JToken Target, JToken InsertAfterTarget) : ArrayElementPatch(nameof(Relocate));
 
         public JArray Apply(JArray array)
         {
             int targetIndex = -1;
+            var insertAfterIndex = -1;
 
             array = (JArray)array.DeepClone();
 
@@ -360,11 +372,11 @@ public static class JsonPatch
                     array.Add(append.NewElement);
                     break;
                 case Insert insert:
-                    targetIndex = IndexOf(array, insert.InsertAfterTarget, ElementIdentity);
-                    if (targetIndex < 0)
+                    insertAfterIndex = IndexOf(array, insert.InsertAfterTarget, ElementIdentity);
+                    if (insertAfterIndex < 0)
                         throw new KeyNotFoundException();
 
-                    array.Insert(targetIndex + 1, insert.NewElement);
+                    array.Insert(insertAfterIndex + 1, insert.NewElement);
                     break;
                 case Remove remove:
                     targetIndex = IndexOf(array, remove.Target, ElementIdentity);
@@ -381,10 +393,22 @@ public static class JsonPatch
 
                     array[targetIndex] = PatchValue(array[targetIndex], patchElement.ElementPatch);
                     break;
-                //case NestedArray nestedArray:
-                //    throw new NotSupportedException();
                 case Relocate relocate:
-                    throw new NotSupportedException();
+                    targetIndex = IndexOf(array, relocate.Target, ElementIdentity);
+                    if (targetIndex < 0)
+                        throw new KeyNotFoundException();
+
+                    if (relocate.InsertAfterTarget.Type is not JTokenType.Null)
+                    {
+                        insertAfterIndex = IndexOf(array, relocate.InsertAfterTarget, ElementIdentity);
+                        if (insertAfterIndex < 0)
+                            throw new KeyNotFoundException();
+                    }
+
+                    var value = array[targetIndex];
+                    array.RemoveAt(targetIndex);
+                    array.Insert(insertAfterIndex + 1, value);
+                    break;
                 default:
                     throw new InvalidOperationException();
             }
