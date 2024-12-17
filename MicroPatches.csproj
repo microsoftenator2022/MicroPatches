@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="GamePath.props" Condition="Exists('GamePath.props')" />
+  <Import Project="TemplatePath.props" Condition="Exists('TemplatePath.props')" />
 
   <PropertyGroup>
     <VersionPrefix>1.17.2</VersionPrefix>
@@ -55,22 +56,34 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Editor\*.*" CopyToOutputDirectory="Never" />
+    <!--<None Include="Editor\*.*" CopyToOutputDirectory="Never" />-->
+    <None Remove="**\Editor\**\*.*" />
     <Compile Remove="**\Editor\**\*.*" />
     <None Remove="Build\**\*.*" />
     <Compile Remove="Build\**\*.*" />
   </ItemGroup>
+
+  <Target Name="CopyEditorFilesToProject" Condition="$(TemplatePath) != ''" BeforeTargets="BeforeBuild">
+    <ItemGroup>
+      <EditorFiles Include="$(TemplatePath)\**\*.*" Exclude="$(TemplatePath)\**\*.meta" />
+      <EditorFiles Remove="$(TemplatePath)\**\MicroPatches.*" />
+    </ItemGroup>
+
+    <Copy SourceFiles="@(EditorFiles)" DestinationFiles="@(EditorFiles->'Editor\%(RecursiveDir)%(Filename)%(Extension)')" />
+  </Target>
 
   <Target Name="OutputDirectories" AfterTargets="Build">
     <ItemGroup>
       <Files Include="$(TargetDir)\**\*.*" />
       <EditorFilesExclude Include="$(TargetDir)\**\OwlcatModificationManifest.json;$(TargetDir)\**\Info.json" />
       <EditorFiles Include="@(Files)" Exclude="@(EditorFilesExclude)" />
-      <EditorFiles Include="Editor\**\*.*" />
+      <EditorFiles Include="Editor\**\*.*" Condition="$(TemplatePath) == ''" />
+      <EditorFiles Include="$(TemplatePath)\**\*.*" Condition="$(TemplatePath) != ''" />
     </ItemGroup>
 
     <Copy SourceFiles="@(Files)" DestinationFiles="@(Files->'$(IntermediateOutputDir)\Mod\$(MSBuildProjectName)\%(RecursiveDir)%(Filename)%(Extension)')" />
     <Copy SourceFiles="@(EditorFiles)" DestinationFiles="@(EditorFiles->'$(IntermediateOutputDir)\Editor\$(MSBuildProjectName)\%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy Condition="$(TemplatePath) != ''" SourceFiles="$(TargetDir)\MicroPatches.dll" DestinationFolder="$(TemplatePath)" />
     
     <ZipDirectory
       SourceDirectory="$(IntermediateOutputDir)\Mod\$(MSBuildProjectName)"

@@ -399,3 +399,4 @@ FodyWeavers.xsd
 *.sln.iml
 /GamePath.props
 /Build
+/TemplatePath.props
