@@ -18,7 +18,7 @@ using UnityEngine;
 [InitializeOnLoad]
 public static class MicroPatchesDomainReloadHandler
 {
-    public const string HaromnyPatchCategoryName = "MicroPatches.EditorPatches";
+    //public const string HarmonyPatchCategoryName = "MicroPatches.EditorPatches";
 
     public static Harmony Harmony { get; private set; }
 
@@ -32,16 +32,19 @@ public static class MicroPatchesDomainReloadHandler
 
     static void OnBeforeAssemblyReload()
     {
+        GameServices.Reset();
+
         if (Harmony != null)
         {
             Debug.Log("Unpatching");
-            Harmony.UnpatchCategory(HaromnyPatchCategoryName);
+            Harmony.UnpatchAll(Harmony.Id);
+            //Harmony.UnpatchCategory(HarmonyPatchCategoryName);
+            //Harmony.UnpatchCategory(typeof(GameServices).Assembly, HarmonyPatchCategoryName);
             Harmony = null;
         }
 
         BeforeAssemblyReload?.Invoke();
     }
-
 
     public static event Action AfterAssemblyReload;
 
@@ -51,7 +54,10 @@ public static class MicroPatchesDomainReloadHandler
         {
             Harmony = new(Assembly.GetExecutingAssembly().GetName().Name);
             Debug.Log("Patching");
-            Harmony.PatchCategory(HaromnyPatchCategoryName);
+            Harmony.PatchAll();
+            Harmony.PatchAll(typeof(GameServices).Assembly);
+            //Harmony.PatchCategory(HarmonyPatchCategoryName);
+            //Harmony.PatchCategory(typeof(GameServices).Assembly, HarmonyPatchCategoryName);
         }
 
         AfterAssemblyReload?.Invoke();

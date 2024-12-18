@@ -206,6 +206,15 @@ public static class JsonPatch
             currentArray = patches.LastOrDefault()?.Apply(currentArray) ?? currentArray;
         }
 
+        // Remove any excess items
+        if (currentArray.Count > targetArray.Count)
+        {
+            for (var i = targetArray.Count; i < currentArray.Count; i++)
+            {
+                patches.Add(new ArrayElementPatch.RemoveFromEnd(identity(currentArray[i])));
+            }
+        }
+
         if (patches.Count > 0)
         {
             var arrayPatches = new JArray();
@@ -227,6 +236,19 @@ public static class JsonPatch
         var id = identity(value);
 
         for (var i = startFrom; i < array.Count; i++)
+        {
+            if (JToken.DeepEquals(identity(array[i]), id))
+                return i;
+        }
+
+        return -1;
+    }
+
+    private static int LastIndexOf(JArray array, JToken value, Func<JToken, JToken> identity)
+    {
+        var id = identity(value);
+        
+        for (var i = array.Count - 1; i >= 0; i--)
         {
             if (JToken.DeepEquals(identity(array[i]), id))
                 return i;
@@ -320,6 +342,9 @@ public static class JsonPatch
                 case Remove remove:
                     obj.Add(nameof(Remove.Target), remove.Target);
                     break;
+                case RemoveFromEnd removeFromEnd:
+                    obj.Add(nameof(Remove.Target), removeFromEnd.Target);
+                    break;
                 case PatchElement patchElement:
                     obj.Add(nameof(PatchElement.Target), patchElement.Target);
                     obj.Add(nameof(PatchElement.ElementPatch), patchElement.ElementPatch);
@@ -343,6 +368,7 @@ public static class JsonPatch
                 nameof(Append) => new Append(jObject[nameof(Append.NewElement)]!),
                 nameof(Insert) => new Insert(jObject[nameof(Insert.NewElement)]!, jObject[nameof(Insert.InsertAfterTarget)]!),
                 nameof(Remove) => new Remove(jObject[nameof(Remove.Target)]!),
+                nameof(RemoveFromEnd) => new RemoveFromEnd(jObject[nameof(RemoveFromEnd.Target)]!),
                 nameof(PatchElement) => new PatchElement(jObject[nameof(PatchElement.Target)]!, jObject[nameof(PatchElement.ElementPatch)]!),
                 nameof(Relocate) => new Relocate(jObject[nameof(Relocate.Target)]!, jObject[nameof(Relocate.InsertAfterTarget)]!),
                 _ => throw new InvalidOperationException()
@@ -355,6 +381,7 @@ public static class JsonPatch
         public record class Remove(JToken Target) : ArrayElementPatch(nameof(Remove));
         public record class PatchElement(JToken Target, JToken ElementPatch) : ArrayElementPatch(nameof(PatchElement));
         public record class Relocate(JToken Target, JToken InsertAfterTarget) : ArrayElementPatch(nameof(Relocate));
+        public record class RemoveFromEnd(JToken Target) : ArrayElementPatch(nameof(RemoveFromEnd));
 
         public JArray Apply(JArray array)
         {
@@ -385,6 +412,13 @@ public static class JsonPatch
 
                     array.RemoveAt(targetIndex);
 
+                    break;
+                case RemoveFromEnd removeFromEnd:
+                    targetIndex = LastIndexOf(array, removeFromEnd.Target, ElementIdentity);
+                    if (targetIndex < 0)
+                        throw new KeyNotFoundException();
+
+                    array.RemoveAt(targetIndex);
                     break;
                 case PatchElement patchElement:
                     targetIndex = IndexOf(array, patchElement.Target, ElementIdentity);

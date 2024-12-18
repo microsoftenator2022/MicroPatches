@@ -28,7 +28,7 @@ using UnityEditor;
 
 using UnityEngine;
 
-[HarmonyPatchCategory(MicroPatchesDomainReloadHandler.HaromnyPatchCategoryName)]
+//[HarmonyPatchCategory(MicroPatchesDomainReloadHandler.HarmonyPatchCategoryName)]
 [HarmonyPatch]
 static class BlueprintPatchEditorPatches
 {

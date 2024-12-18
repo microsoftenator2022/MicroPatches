@@ -103,9 +103,11 @@ public static class BlueprintPatchExtension
             __instance.Logger.Warning($"Patch filename for {guid} does not have .patch extension. Using {patchFile}");
         }
 
-        if (!File.Exists(patchFile))
+        var patchFilePath = __instance.GetBlueprintPatchPath(patchFile);
+
+        if (!File.Exists(patchFilePath))
         {
-            __instance.Logger.Error($"Patch file {patchFile} does not exist");
+            __instance.Logger.Error($"Patch file {patchFilePath} does not exist");
             return __result;
         }
 
@@ -113,7 +115,7 @@ public static class BlueprintPatchExtension
 
         try
         {
-            var patch = JToken.Parse(File.ReadAllText(__instance.GetBlueprintPatchPath(patchFile)));
+            var patch = JToken.Parse(File.ReadAllText(patchFilePath));
 
             var blueprintJson = OwlcatModificationBlueprintPatcher.GetJObject(bp);
             var patchedData = JsonPatch.ApplyPatch(blueprintJson["Data"]!, patch);

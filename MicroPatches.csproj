@@ -3,7 +3,7 @@
   <Import Project="TemplatePath.props" Condition="Exists('TemplatePath.props')" />
 
   <PropertyGroup>
-    <VersionPrefix>1.17.2</VersionPrefix>
+    <VersionPrefix>1.17.3</VersionPrefix>
     <VersionSuffix Condition=" '$(Configuration)' == 'Debug' ">debug</VersionSuffix>
     <TargetFramework>net481</TargetFramework>
     <Nullable>enable</Nullable>
@@ -63,11 +63,17 @@
     <Compile Remove="Build\**\*.*" />
   </ItemGroup>
 
+  <ItemGroup Condition="$(TemplatePath) != ''">
+    <EditorFilesInclude Include="$(TemplatePath)\**\*.*" />
+    <EditorFilesExclude Include="$(TemplatePath)\**\MicroPatches.dll" />
+    <EditorFilesExclude Include="$(TemplatePath)\**\MicroPatches.pdb" />
+    <EditorFilesExclude Include="$(TemplatePath)\**\*.meta" />
+    <EditorFiles Include="@(EditorFilesInclude)" />
+    <EditorFiles Remove="@(EditorFilesExclude)" />
+  </ItemGroup>
+  
   <Target Name="CopyEditorFilesToProject" Condition="$(TemplatePath) != ''" BeforeTargets="BeforeBuild">
-    <ItemGroup>
-      <EditorFiles Include="$(TemplatePath)\**\*.*" Exclude="$(TemplatePath)\**\*.meta" />
-      <EditorFiles Remove="$(TemplatePath)\**\MicroPatches.*" />
-    </ItemGroup>
+
 
     <Copy SourceFiles="@(EditorFiles)" DestinationFiles="@(EditorFiles->'Editor\%(RecursiveDir)%(Filename)%(Extension)')" />
   </Target>
@@ -78,12 +84,12 @@
       <EditorFilesExclude Include="$(TargetDir)\**\OwlcatModificationManifest.json;$(TargetDir)\**\Info.json" />
       <EditorFiles Include="@(Files)" Exclude="@(EditorFilesExclude)" />
       <EditorFiles Include="Editor\**\*.*" Condition="$(TemplatePath) == ''" />
-      <EditorFiles Include="$(TemplatePath)\**\*.*" Condition="$(TemplatePath) != ''" />
+      <!--<EditorFiles Include="$(TemplatePath)\**\*.*" Condition="$(TemplatePath) != ''" />-->
     </ItemGroup>
 
     <Copy SourceFiles="@(Files)" DestinationFiles="@(Files->'$(IntermediateOutputDir)\Mod\$(MSBuildProjectName)\%(RecursiveDir)%(Filename)%(Extension)')" />
     <Copy SourceFiles="@(EditorFiles)" DestinationFiles="@(EditorFiles->'$(IntermediateOutputDir)\Editor\$(MSBuildProjectName)\%(RecursiveDir)%(Filename)%(Extension)')" />
-    <Copy Condition="$(TemplatePath) != ''" SourceFiles="$(TargetDir)\MicroPatches.dll" DestinationFolder="$(TemplatePath)" />
+    <Copy Condition="$(TemplatePath) != '' And '$(Configuration)' == 'Debug'" SourceFiles="$(TargetDir)\MicroPatches.dll" DestinationFolder="$(TemplatePath)" />
     
     <ZipDirectory
       SourceDirectory="$(IntermediateOutputDir)\Mod\$(MSBuildProjectName)"

@@ -1,0 +1,20 @@
+{
+    "name": "MicroPatches.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:c696cc4a4b0f0c3488cc2abfa6838498",
+        "GUID:7b358220a3884d23b418841b21c32544",
+        "GUID:e7d3612aca28a0f46940756d21507e18"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
