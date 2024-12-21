@@ -19,16 +19,13 @@ using MicroUtils.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+using Owlcat.Runtime.Core.Logging;
 using Owlcat.Runtime.Core.Utility;
 
 namespace MicroPatches;
 
 public static class JsonPatch
 {
-    public static Action<string>? Logger;
-
-    static void Log(string msg) => Logger?.Invoke(msg);
-
     public static Optional<JToken> GetPatch(JToken value, JToken original, string[][]? overridePaths = null)
     {
         if (value is JArray arrayValue &&
@@ -178,13 +175,16 @@ public static class JsonPatch
 
         if (o["name"]?.ToString() is { } name)
         {
-            PFLog.Mods.Warning("Patcher fallback");
-
             var t = GetType(o["$type"]?.ToString());
 
             if (typeof(BlueprintComponent).IsAssignableFrom(t) ||
                 typeof(Element).IsAssignableFrom(t))
+            {
+#if DEBUG
+                PFLog.Mods.Log($"Identifier for {t} fallback to old method. Check this.");
+#endif
                 return JValue.CreateString(name);
+            }
         }
 
         return element;
@@ -223,7 +223,7 @@ public static class JsonPatch
                     var op = new ArrayElementPatch.PatchElement(identity(currentArray[i]), elementPatch.Value);
                     patches.Add(op);
 
-                    currentArray = op.Apply(currentArray) ?? currentArray;
+                    currentArray = op.Apply(currentArray, PFLog.Mods) ?? currentArray;
                 }
 
                 continue;
@@ -246,9 +246,7 @@ public static class JsonPatch
                 }
                 if (elementCountDelta < 0)
                 {
-                    var remove = new ArrayElementPatch.Remove(identity(currentArray[i]));
-                    patches.Add(remove);
-                    currentArray = remove.Apply(currentArray) ?? currentArray;
+                    patches.Add(new ArrayElementPatch.Remove(identity(currentArray[i])));
                 }
 
                 i--;
@@ -256,7 +254,7 @@ public static class JsonPatch
             else
                 throw new IndexOutOfRangeException();
                 
-            currentArray = patches.LastOrDefault()?.Apply(currentArray) ?? currentArray;
+            currentArray = patches.LastOrDefault()?.Apply(currentArray, PFLog.Mods) ?? currentArray;
         }
 
         // Remove any excess items
@@ -310,27 +308,27 @@ public static class JsonPatch
         return -1;
     }
 
-    public static JToken ApplyPatch(JToken value, JToken patch)
+    public static JToken ApplyPatch(JToken value, JToken patch, LogChannel? logger = null)
     {
-        return PatchValue(value, patch);
+        return PatchValue(value, patch, logger ?? PFLog.Mods);
     }
 
-    internal static JToken PatchValue(JToken value, JToken patch)
+    internal static JToken PatchValue(JToken value, JToken patch, LogChannel logger)
     {
         if (value is JArray valueArray &&
             patch is JArray patchArray)
         {
-            return PatchArray(valueArray, patchArray);
+            return PatchArray(valueArray, patchArray, logger);
         }
 
         if (value is JObject objectValue &&
             patch is JObject patchObject)
-            return PatchObject(objectValue, patchObject);
+            return PatchObject(objectValue, patchObject, logger);
 
         return patch;
     }
 
-    internal static JObject PatchObject(JObject value, JObject patch)
+    internal static JObject PatchObject(JObject value, JObject patch, LogChannel logger)
     {
         value = (JObject)value.DeepClone();
 
@@ -338,7 +336,7 @@ public static class JsonPatch
         {
             if (value[patchProp.Name] is { } propValue)
             {
-                value[patchProp.Name] = PatchValue(propValue, patchProp.Value);
+                value[patchProp.Name] = PatchValue(propValue, patchProp.Value, logger);
             }
             else
             {
@@ -349,7 +347,7 @@ public static class JsonPatch
         return value;
     }
 
-    internal static JArray PatchArray(JArray value, JArray patch)
+    internal static JArray PatchArray(JArray value, JArray patch, LogChannel logger)
     {
         value = (JArray)value.DeepClone();
 
@@ -357,14 +355,14 @@ public static class JsonPatch
         {
 #if DEBUG
 
-            PFLog.Mods.Log($"Applying element patch:\n{elementPatch}");
-            PFLog.Mods.Log($"Before:\n{value}");
+            logger.Log($"Applying element patch:\n{elementPatch}");
+            logger.Log($"Before:\n{value}");
 #endif
 
-            value = elementPatch.Apply(value);
+            value = elementPatch.Apply(value, logger);
 
 #if DEBUG
-            PFLog.Mods.Log($"After:\n{value}");
+            logger.Log($"After:\n{value}");
 #endif
         }
 
@@ -436,7 +434,7 @@ public static class JsonPatch
         public record class Relocate(JToken Target, JToken InsertAfterTarget) : ArrayElementPatch(nameof(Relocate));
         public record class RemoveFromEnd(JToken Target) : ArrayElementPatch(nameof(RemoveFromEnd));
 
-        public JArray Apply(JArray array)
+        public JArray Apply(JArray array, LogChannel logger)
         {
             int targetIndex = -1;
             var insertAfterIndex = -1;
@@ -478,7 +476,7 @@ public static class JsonPatch
                     if (targetIndex < 0)
                         throw new KeyNotFoundException();
 
-                    array[targetIndex] = PatchValue(array[targetIndex], patchElement.ElementPatch);
+                    array[targetIndex] = PatchValue(array[targetIndex], patchElement.ElementPatch, logger);
                     break;
                 case Relocate relocate:
                     targetIndex = IndexOf(array, relocate.Target, ElementIdentity);

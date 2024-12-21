@@ -118,7 +118,7 @@ public static class BlueprintPatchExtension
             var patch = JToken.Parse(File.ReadAllText(patchFilePath));
 
             var blueprintJson = OwlcatModificationBlueprintPatcher.GetJObject(bp);
-            var patchedData = JsonPatch.ApplyPatch(blueprintJson["Data"]!, patch);
+            var patchedData = JsonPatch.ApplyPatch(blueprintJson["Data"]!, patch, __instance.Logger);
 
             blueprintJson["Data"] = patchedData;
             
