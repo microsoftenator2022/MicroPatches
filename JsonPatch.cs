@@ -47,8 +47,6 @@ public static class JsonPatch
         return property.Name == "PrototypeLink";
     }
 
-    static Dictionary<Type, string[]> MandatoryOverrides = [];
-
     internal static Optional<JObject> GetObjectPatch(JObject value, JObject original, string[][]? overridePaths = null)
     {
         var objectPatch = new JObject();
@@ -244,10 +242,12 @@ public static class JsonPatch
                 {
                     patches.Add(new ArrayElementPatch.Relocate(identity(targetArray[i]), i > 0 ? identity(currentArray[i - 1]) : JValue.CreateNull()));
                 }
-                if (elementCountDelta < 0)
+                else if (elementCountDelta < 0)
                 {
                     patches.Add(new ArrayElementPatch.Remove(identity(currentArray[i])));
                 }
+                else
+                    throw new InvalidOperationException();
 
                 i--;
             }
@@ -264,6 +264,11 @@ public static class JsonPatch
             {
                 patches.Add(new ArrayElementPatch.RemoveFromEnd(identity(currentArray[i])));
             }
+        }
+
+        if (!JToken.DeepEquals(currentArray, targetArray))
+        {
+            PFLog.Mods.Warning("Arrays do not match:\n" + currentArray + "\n" + targetArray);
         }
 
         if (patches.Count > 0)
@@ -436,7 +441,7 @@ public static class JsonPatch
 
         public JArray Apply(JArray array, LogChannel logger)
         {
-            int targetIndex = -1;
+            var targetIndex = -1;
             var insertAfterIndex = -1;
 
             array = (JArray)array.DeepClone();
@@ -459,7 +464,11 @@ public static class JsonPatch
                 case Remove remove:
                     targetIndex = IndexOf(array, remove.Target, ElementIdentity);
                     if (targetIndex < 0)
-                        throw new KeyNotFoundException();
+                    {
+                        //throw new KeyNotFoundException();
+                        logger.Warning($"Target element not found for array patch operation:\n{remove}");
+                        break;
+                    }
 
                     array.RemoveAt(targetIndex);
 
@@ -467,7 +476,11 @@ public static class JsonPatch
                 case RemoveFromEnd removeFromEnd:
                     targetIndex = LastIndexOf(array, removeFromEnd.Target, ElementIdentity);
                     if (targetIndex < 0)
-                        throw new KeyNotFoundException();
+                    {
+                        //throw new KeyNotFoundException();
+                        logger.Warning($"Target element not found for array patch operation:\n{removeFromEnd}");
+                        break;
+                    }
 
                     array.RemoveAt(targetIndex);
                     break;
