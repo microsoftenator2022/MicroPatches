@@ -169,7 +169,8 @@ public static class JsonPatch
         if (element is not JObject o)
             return element;
 
-        if (GetType(o["$type"]?.ToString()) is { } type &&
+        if (GetType(o["$type"]?.ToString()) is { } elementType &&
+            ElementIdentities.Keys.FirstOrDefault(t => t.IsAssignableFrom(elementType)) is { } type &&
             ElementIdentities.TryGetValue(type, out var identify))
         {
             return identify(element);
@@ -217,33 +218,44 @@ public static class JsonPatch
 
                 var elementPatch = GetPatch(targetArray[i], currentArray[i]);
 
-                if (!elementPatch.HasValue)
-                    continue;
+                if (elementPatch.HasValue)
+                {
+                    var op = new ArrayElementPatch.PatchElement(identity(currentArray[i]), elementPatch.Value);
+                    patches.Add(op);
 
-                patches.Add(new ArrayElementPatch.PatchElement(identity(currentArray[i]), elementPatch.Value));
+                    currentArray = op.Apply(currentArray) ?? currentArray;
+                }
 
                 continue;
             }
 
             var elementCountDelta = GetElementCount(targetArray, targetArray[i], identity) - GetElementCount(currentArray, targetArray[i], identity);
-
-            if (elementCountDelta < 0)
-            {
-                patches.Add(new ArrayElementPatch.Remove(identity(currentArray[i])));
-                i--;
-            }
-            else if (elementCountDelta > 0)
+            
+            if (elementCountDelta > 0)
             {
                 if (i is 0)
                     patches.Add(new ArrayElementPatch.Prepend(targetArray[i]));
                 else
                     patches.Add(new ArrayElementPatch.Insert(targetArray[i], identity(targetArray[i - 1])));
             }
-            else
+            else if (i < currentArray.Count && !equals(currentArray[i], targetArray[i]))
             {
-                patches.Add(new ArrayElementPatch.Relocate(identity(targetArray[i]), i > 0 ? identity(currentArray[i - 1]) : JValue.CreateNull()));
-            }
+                if (elementCountDelta == 0)
+                {
+                    patches.Add(new ArrayElementPatch.Relocate(identity(targetArray[i]), i > 0 ? identity(currentArray[i - 1]) : JValue.CreateNull()));
+                }
+                if (elementCountDelta < 0)
+                {
+                    var remove = new ArrayElementPatch.Remove(identity(currentArray[i]));
+                    patches.Add(remove);
+                    currentArray = remove.Apply(currentArray) ?? currentArray;
+                }
 
+                i--;
+            }
+            else
+                throw new IndexOutOfRangeException();
+                
             currentArray = patches.LastOrDefault()?.Apply(currentArray) ?? currentArray;
         }
 
