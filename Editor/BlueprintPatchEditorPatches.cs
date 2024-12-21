@@ -10,6 +10,7 @@ using Code.GameCore.Blueprints.BlueprintPatcher;
 
 using HarmonyLib;
 
+using Kingmaker;
 using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.JsonSystem;
 using Kingmaker.Blueprints.JsonSystem.EditorDatabase;
@@ -72,14 +73,14 @@ static class BlueprintPatchEditorPatches
         if (previousSerializer == Serializer)
             return;
 
-        Debug.Log("Replacing patch serializer");
+        PFLog.Mods.Log("Replacing patch serializer");
 
         serializerField.SetValue(null, Serializer);
 
         var newValue = serializerField.GetValue(null);
 
         if (newValue == previousSerializer || newValue != Serializer)
-            Debug.LogError("Serializer was not replaced");
+            PFLog.Mods.Error("Serializer was not replaced");
     }
 
     static void Prepare()
@@ -171,7 +172,7 @@ static class BlueprintPatchEditorPatches
         
         if (match.Length != 6)
         {
-            Debug.LogError($"{nameof(SavePatchInternal_Transpiler)} failed to find target instructions");
+            PFLog.Mods.Error($"{nameof(SavePatchInternal_Transpiler)} failed to find target instructions");
             return instructions;
         }
         
@@ -188,8 +189,6 @@ static class BlueprintPatchEditorPatches
         if (!MicroPatchesEditorPreferences.Instance.UseMicroPatchMode)
             return true;
 
-        JsonPatch.Logger = s => Debug.Log(s);
-
         var protoId = AccessTools.Field(typeof(BlueprintPatchEditorUtility), "s_ProtoId").GetValue(null) as string;
         
         var targetBlueprint = AccessTools.Field(typeof(BlueprintPatchEditorUtility), "s_Target").GetValue(null) as BlueprintScriptableObject;
@@ -198,14 +197,14 @@ static class BlueprintPatchEditorPatches
 
         if (protoId is null)
         {
-            Debug.LogError("Prototype id is null");
+            PFLog.Mods.Error("Prototype id is null");
 
             return false;
         }
 
         if (targetPath is null)
         {
-            Debug.LogError("Target blueprint is null");
+            PFLog.Mods.Error("Target blueprint is null");
 
             return false;
         }
@@ -227,13 +226,13 @@ static class BlueprintPatchEditorPatches
 
         if (!maybePatchJson.HasValue)
         {
-            Debug.LogWarning($"{targetBlueprint.name} has no patchable changes to {protoPath}");
+            PFLog.Mods.Warning($"{targetBlueprint.name} has no patchable changes to {protoPath}");
             return false;
         }
 
         var patchJson = maybePatchJson.Value;
         
-        Debug.Log("Patch:\n" + patchJson.ToString());
+        PFLog.Mods.Log("Patch:\n" + patchJson.ToString());
 
         var defaultDir = (new FileInfo(protoPath)).Directory.ToString();
 
