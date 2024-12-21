@@ -11,9 +11,10 @@ using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.JsonSystem;
 using Kingmaker.Blueprints.JsonSystem.EditorDatabase.ResourceReplacementProvider;
 using Kingmaker.BundlesLoading;
-using Kingmaker.Editor.Utility;
 using Kingmaker.Modding;
 using Kingmaker.Utility.UnityExtensions;
+
+using MicroPatches.Editor;
 
 using Owlcat.Runtime.Core.Utility.Locator;
 
@@ -87,15 +88,17 @@ public static class GameServices
         public AssetBundle TryLoadBundle(string bundleName) => null;
     }
 
+    public static bool Starting { get; private set; } = false;
+
     public static bool Started { get; private set; } = false;
 
     [MenuItem("Game services/Start BundlesLoadService")]
     public static void StartBundlesLoadService()
     {
-        if (Started)
+        if (Starting || Started)
             return;
 
-        Started = true;
+        Starting = true;
 
         Debug.Log("Starting default services");
 
@@ -137,6 +140,9 @@ public static class GameServices
                 Debug.LogException(e);
             }
         }
+
+        Started = true;
+        Starting = false;
     }
 
     static EditorCoroutine loadCommonBundles;
@@ -205,8 +211,10 @@ public static class GameServices
             progressId = 0;
         }
 
-        Services.ResetAllRegistrations();
         Started = false;
+        Starting = false;
+
+        Services.ResetAllRegistrations();
         AssetBundle.UnloadAllAssetBundles(false);
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using UnityEditor;
 
-namespace Kingmaker.Editor.Utility
+namespace MicroPatches.Editor
 {
 	public class EditorCoroutine
 	{

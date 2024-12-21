@@ -10,6 +10,7 @@ using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.JsonSystem;
 using Kingmaker.Blueprints.JsonSystem.Helpers;
 using Kingmaker.ElementsSystem;
+using Kingmaker.Globalmap.Blueprints.SectorMap;
 
 using Microsoft.CodeAnalysis;
 
@@ -48,6 +49,8 @@ public static class JsonPatch
     {
         return property.Name == "PrototypeLink";
     }
+
+    static Dictionary<Type, string[]> MandatoryOverrides = [];
 
     internal static Optional<JObject> GetObjectPatch(JObject value, JObject original, string[][]? overridePaths = null)
     {
@@ -143,13 +146,39 @@ public static class JsonPatch
         return null;
     }
 
+    static JToken IdentifyByName(JToken t)
+    {
+        if (t is not JObject o)
+            return t;
+
+        if (o["name"] is not { } name)
+            return t;
+
+        return JValue.CreateString(name.ToString());
+    }
+
+    static readonly Dictionary<Type, Func<JToken, JToken>> ElementIdentities = new()
+    {
+        { typeof(Element), IdentifyByName },
+        { typeof(BlueprintComponent), IdentifyByName },
+        { typeof(BlueprintWarpRoutesSettings.DifficultySettings), static t => t is JObject o ? o["Difficulty"] ?? t : t }
+    };
+
     static JToken ElementIdentity(JToken element)
     {
         if (element is not JObject o)
             return element;
 
+        if (GetType(o["$type"]?.ToString()) is { } type &&
+            ElementIdentities.TryGetValue(type, out var identify))
+        {
+            return identify(element);
+        }
+
         if (o["name"]?.ToString() is { } name)
         {
+            PFLog.Mods.Warning("Patcher fallback");
+
             var t = GetType(o["$type"]?.ToString());
 
             if (typeof(BlueprintComponent).IsAssignableFrom(t) ||
@@ -182,7 +211,19 @@ public static class JsonPatch
         for (var i = 0; i < targetArray.Count; i++)
         {
             if (i < currentArray.Count && equals(currentArray[i], targetArray[i]))
+            {
+                if (JToken.DeepEquals(currentArray[i], targetArray[i]))
+                    continue;
+
+                var elementPatch = GetPatch(targetArray[i], currentArray[i]);
+
+                if (!elementPatch.HasValue)
+                    continue;
+
+                patches.Add(new ArrayElementPatch.PatchElement(identity(currentArray[i]), elementPatch.Value));
+
                 continue;
+            }
 
             var elementCountDelta = GetElementCount(targetArray, targetArray[i], identity) - GetElementCount(currentArray, targetArray[i], identity);
 
@@ -200,7 +241,7 @@ public static class JsonPatch
             }
             else
             {
-                patches.Add(new ArrayElementPatch.Relocate(targetArray[i], i > 0 ? currentArray[i - 1] : JValue.CreateNull()));
+                patches.Add(new ArrayElementPatch.Relocate(identity(targetArray[i]), i > 0 ? identity(currentArray[i - 1]) : JValue.CreateNull()));
             }
 
             currentArray = patches.LastOrDefault()?.Apply(currentArray) ?? currentArray;

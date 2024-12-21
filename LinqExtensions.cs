@@ -63,7 +63,7 @@ namespace MicroUtils.Linq
             return source.Skip(1).FindSequence(length, predicate);
         }
 
-        public static (T, IEnumerable<T>) Pop<T>(this IEnumerable<T> source) => (source.First(), source.Skip(1));
+        //public static (T, IEnumerable<T>) Pop<T>(this IEnumerable<T> source) => (source.First(), source.Skip(1));
 
         /// <summary>
         /// Selects distinct elements from a sequence, first applying a selector function and using a provided equality comparer
@@ -108,5 +108,20 @@ namespace MicroUtils.Linq
         /// Selects distinct elements from a sequence, first applying a selector function and using the default equality comparer
         /// </summary>
         public static IEnumerable<T> DistinctBy<T, U>(this IEnumerable<T> seq, Func<T, U> selector) => DistinctBy(seq, selector, EqualityComparer<U>.Default);
+
+        public static IEnumerable<(T, T)> Pairwise<T>(this IEnumerable<T> source)
+        {
+            var enumerator = source.GetEnumerator();
+
+            if (!enumerator.MoveNext())
+                yield break;
+
+            var previous = enumerator.Current;
+            while (enumerator.MoveNext())
+            {
+                yield return (previous, enumerator.Current);
+                previous = enumerator.Current;
+            }
+        }
     }
 }

@@ -32,18 +32,26 @@ public static class MicroPatchesDomainReloadHandler
 
     static void OnBeforeAssemblyReload()
     {
-        GameServices.Reset();
-
-        if (Harmony != null)
+        try
         {
-            Debug.Log("Unpatching");
-            Harmony.UnpatchAll(Harmony.Id);
-            //Harmony.UnpatchCategory(HarmonyPatchCategoryName);
-            //Harmony.UnpatchCategory(typeof(GameServices).Assembly, HarmonyPatchCategoryName);
-            Harmony = null;
+            try
+            {
+                BeforeAssemblyReload?.Invoke();
+            }
+            finally
+            {
+                GameServices.Reset();
+            }
         }
-
-        BeforeAssemblyReload?.Invoke();
+        finally
+        {
+            if (Harmony != null)
+            {
+                //Debug.Log("Unpatching");
+                Harmony.UnpatchAll(Harmony.Id);
+                Harmony = null;
+            }
+        }
     }
 
     public static event Action AfterAssemblyReload;
@@ -53,11 +61,9 @@ public static class MicroPatchesDomainReloadHandler
         if (Harmony == null)
         {
             Harmony = new(Assembly.GetExecutingAssembly().GetName().Name);
-            Debug.Log("Patching");
+            //Debug.Log("Patching");
             Harmony.PatchAll();
             Harmony.PatchAll(typeof(GameServices).Assembly);
-            //Harmony.PatchCategory(HarmonyPatchCategoryName);
-            //Harmony.PatchCategory(typeof(GameServices).Assembly, HarmonyPatchCategoryName);
         }
 
         AfterAssemblyReload?.Invoke();
