@@ -191,7 +191,10 @@ static class BlueprintPatchEditorPatches
         JsonPatch.Logger = s => Debug.Log(s);
 
         var protoId = AccessTools.Field(typeof(BlueprintPatchEditorUtility), "s_ProtoId").GetValue(null) as string;
+        
         var targetBlueprint = AccessTools.Field(typeof(BlueprintPatchEditorUtility), "s_Target").GetValue(null) as BlueprintScriptableObject;
+        var targetId = targetBlueprint?.AssetGuid;
+        var targetPath = targetId is not null ? BlueprintsDatabase.IdToPath(targetId) : null;
 
         if (protoId is null)
         {
@@ -200,7 +203,7 @@ static class BlueprintPatchEditorPatches
             return false;
         }
 
-        if (targetBlueprint is null)
+        if (targetPath is null)
         {
             Debug.LogError("Target blueprint is null");
 
@@ -210,13 +213,15 @@ static class BlueprintPatchEditorPatches
         var protoPath = BlueprintsDatabase.IdToPath(protoId);
         var protoJson = JObject.Parse(File.ReadAllText(protoPath))["Data"];
 
-        var s = new StringWriter();
+        //var s = new StringWriter();
 
-        Json.Serializer.Serialize(s, new BlueprintJsonWrapper(targetBlueprint));
+        //Json.Serializer.Serialize(s, new BlueprintJsonWrapper(targetBlueprint));
 
-        s.Flush();
+        //s.Flush();
 
-        var targetJson = JObject.Parse(s.ToString())["Data"];
+        //var targetJson = JObject.Parse(s.ToString())["Data"];
+
+        var targetJson = JObject.Parse(File.ReadAllText(targetPath))["Data"];
 
         var maybePatchJson = JsonPatch.GetPatch(targetJson, protoJson);
 
