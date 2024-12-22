@@ -2,19 +2,27 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection.Emit;
 
 using HarmonyLib;
 
 using Kingmaker;
 using Kingmaker.Blueprints;
+using Kingmaker.Blueprints.Base;
 using Kingmaker.Blueprints.JsonSystem;
+using Kingmaker.Blueprints.JsonSystem.Converters;
 using Kingmaker.Blueprints.JsonSystem.EditorDatabase.ResourceReplacementProvider;
 using Kingmaker.BundlesLoading;
 using Kingmaker.Modding;
+using Kingmaker.Utility.EditorPreferences;
 using Kingmaker.Utility.UnityExtensions;
 
 using MicroPatches.Editor;
+
+using MicroUtils.Transpiler;
+
+using Newtonsoft.Json;
 
 using Owlcat.Runtime.Core.Utility.Locator;
 
@@ -24,55 +32,64 @@ using UnityEngine;
 
 public static class GameServices
 {
-    const string BundlesPath = @"D:\SteamLibrary\steamapps\common\Warhammer 40,000 Rogue Trader\Bundles";
-    const string GameDataPath = @"D:\SteamLibrary\steamapps\common\Warhammer 40,000 Rogue Trader\WH40KRT_Data";
-    //const string HarmonyPatchCategoryName = "MicroPatches.EditorPatches";
+    static string GamePath => EditorPreferences.Instance.ModsGameBuildPath;
+    static string AppDataPath => Path.Combine(GamePath, "WH40KRT_Data");
+    static string GetBundlesFolder() => "Bundles";
+    static string BundlesPath(string filename) => Path.Combine(AppDataPath, "..", "Bundles", filename);
+
     [HarmonyPatch]
-    //[HarmonyPatchCategory(HarmonyPatchCategoryName)]
     static class Patches
     {
-        //[HarmonyPatch(typeof(BundlesLoadService), nameof(BundlesLoadService.BundlesPath))]
-        //[HarmonyPostfix]
-        //static string BundlesPath_Postfix(string __result, string fileName)
-        //{
-        //    if (!string.IsNullOrEmpty(__result))
-        //        return __result;
-
-        //    Debug.Log(nameof(BundlesPath_Postfix));
-
-        //    var path = Path.Combine(BundlesPath, fileName);
-
-        //    Debug.Log(path);
-
-        //    if (File.Exists(path))
-        //        return path;
-
-        //    return __result;
-        //}
-
         [HarmonyPatch(typeof(BundlesLoadService), nameof(BundlesLoadService.BundlesPath))]
         [HarmonyTranspiler]
         static IEnumerable<CodeInstruction> BundlesPath_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            foreach (var i in instructions)
-            {
-                if (i.Calls(AccessTools.PropertyGetter(typeof(Application), nameof(Application.dataPath))))
-                {
-                    i.opcode = OpCodes.Ldstr;
-                    i.operand = GameDataPath;
-                }
+            //Debug.Log($"Patching {nameof(BundlesLoadService)}.{nameof(BundlesLoadService.BundlesPath)}");
 
-                yield return i;
-            }
+            var match = instructions.FindInstructionsIndexed(new Func<CodeInstruction, bool>[]
+            {
+                ci => ci.Calls(AccessTools.PropertyGetter(typeof(Application), nameof(Application.dataPath))),
+                ci => ci.opcode == OpCodes.Ldstr,
+                ci => ci.Calls(AccessTools.Method(typeof(AssetBundleNames), nameof(AssetBundleNames.GetBundlesFolder))),
+                ci => ci.opcode == OpCodes.Ldarg_0,
+                ci => ci.Calls(AccessTools.Method(typeof(Path), nameof(Path.Combine),
+                    new [] { typeof(string), typeof(string), typeof(string), typeof(string)}))
+            }).ToArray();
+
+            if (match.Length != 5)
+                throw new Exception("Could not find target instructions");
+
+            match[0].instruction.operand = AccessTools.PropertyGetter(typeof(GameServices), nameof(GameServices.AppDataPath));
+            match[2].instruction.operand = AccessTools.Method(typeof(GameServices), nameof(GameServices.GetBundlesFolder));
+
+            return instructions;
         }
 
-        [HarmonyPatch(typeof(AssetBundleNames), nameof(AssetBundleNames.GetBundlesFolder))]
+        [HarmonyPatch(typeof(BundlesUsageProvider), nameof(BundlesUsageProvider.UseBundles), MethodType.Getter)]
         [HarmonyPostfix]
-        static string GetBundlesFolder_Postfix(string _) => "Bundles";
+        static bool BundlesUsageProvider_UseBundles_Postfix(bool _) => EditorPreferences.Instance.LoadAssetsFromBundles;
 
-        [HarmonyPatch(typeof(ResourcesLibrary), nameof(ResourcesLibrary.UseBundles), MethodType.Getter)]
-        [HarmonyPostfix]
-        static bool UseBundles_Postfix(bool _) => true;
+        [HarmonyPatch(typeof(UnityObjectConverter), nameof(UnityObjectConverter.WriteJson))]
+        [HarmonyPrefix]
+        static bool UnityObjectConverter_WriteJson_Prefix(JsonWriter writer, object value)
+        {
+            var @object = value as UnityEngine.Object;
+
+            if (@object == null || UnityObjectConverter.AssetList == null)
+                return true;
+
+            if (UnityObjectConverter.AssetList.GetAssetId(@object) is not (string guid, long fileid))
+                return true;
+
+            writer.WriteStartObject();
+            writer.WritePropertyName("guid");
+            writer.WriteValue(guid);
+            writer.WritePropertyName("fileid");
+            writer.WriteValue(fileid);
+            writer.WriteEndObject();
+
+            return false;
+        }
     }
 
     public static LocationList LocationList =>
@@ -87,7 +104,7 @@ public static class GameServices
         public object OnResourceLoaded(object resource, string guid) => null;
         public AssetBundle TryLoadBundle(string bundleName) => null;
     }
-
+    
     public static bool Starting { get; private set; } = false;
 
     public static bool Started { get; private set; } = false;
@@ -95,16 +112,37 @@ public static class GameServices
     [MenuItem("Game services/Start BundlesLoadService")]
     public static void StartBundlesLoadService()
     {
+        if (loadCommonBundles != null)
+        {
+            Reset();
+        }
+
         if (Starting || Started)
             return;
 
         Starting = true;
 
+        Debug.Log($"Bundles path: {BundlesPath("")}");
+
+        if (!EditorPreferences.Instance.LoadAssetsFromBundles || !EditorPreferences.Instance.LoadBlueprintsAsInBuild)
+        {
+            Debug.LogWarning("Setting editor preferences to load from bundles");
+            EditorPreferences.Instance.LoadAssetsFromBundles = true;
+            EditorPreferences.Instance.LoadBlueprintsAsInBuild = true;
+            EditorPreferences.Instance.Save();
+        }
+
+        if (!ResourcesLibrary.UseBundles)
+        {
+            Debug.LogError("UseBundles is false");
+            return;
+        }
+
         Debug.Log("Starting default services");
 
         Services.RegisterDefaultServices();
 
-        Debug.Log("Starting OwlcatModificationsManager service");
+        //Debug.Log("Starting OwlcatModificationsManager service");
 
         Debug.Log("Starting BundlesLoadService");
 
@@ -124,11 +162,6 @@ public static class GameServices
             Debug.Log($"Path: {BundlesLoadService.BundlesPath("locationlist.json")}");
         }
 
-        if (loadCommonBundles != null)
-        {
-            Reset();
-        }
-
         if (progressId == 0)
         {
             try
@@ -140,9 +173,6 @@ public static class GameServices
                 Debug.LogException(e);
             }
         }
-
-        Started = true;
-        Starting = false;
     }
 
     static EditorCoroutine loadCommonBundles;
@@ -194,6 +224,13 @@ public static class GameServices
             Progress.Finish(progressId);
             progressId = 0;
         }
+
+        Debug.Log("Load Direct References List");
+
+        StartGameLoader.LoadDirectReferencesList();
+
+        Started = true;
+        Starting = false;
     }
 
     [MenuItem("Game services/Reset")]
@@ -215,6 +252,6 @@ public static class GameServices
         Starting = false;
 
         Services.ResetAllRegistrations();
-        AssetBundle.UnloadAllAssetBundles(false);
+        AssetBundle.UnloadAllAssetBundles(true);
     }
 }

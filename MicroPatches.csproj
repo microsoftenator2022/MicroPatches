@@ -73,9 +73,11 @@
   </ItemGroup>
   
   <Target Name="CopyEditorFilesToProject" Condition="$(TemplatePath) != ''" BeforeTargets="BeforeBuild">
-
-
-    <Copy SourceFiles="@(EditorFiles)" DestinationFiles="@(EditorFiles->'Editor\%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy
+      SourceFiles="@(EditorFiles)"
+      DestinationFiles="@(EditorFiles->'Editor\%(RecursiveDir)%(Filename)%(Extension)')"
+      OverwriteReadOnlyFiles="true"
+      SkipUnchangedFiles="false" />
   </Target>
 
   <Target Name="OutputDirectories" AfterTargets="Build">
