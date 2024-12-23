@@ -91,7 +91,7 @@
 
     <Copy SourceFiles="@(Files)" DestinationFiles="@(Files->'$(IntermediateOutputDir)\Mod\$(MSBuildProjectName)\%(RecursiveDir)%(Filename)%(Extension)')" />
     <Copy SourceFiles="@(EditorFiles)" DestinationFiles="@(EditorFiles->'$(IntermediateOutputDir)\Editor\$(MSBuildProjectName)\%(RecursiveDir)%(Filename)%(Extension)')" />
-    <Copy Condition="$(TemplatePath) != '' And '$(Configuration)' == 'Debug'" SourceFiles="$(TargetDir)\MicroPatches.dll" DestinationFolder="$(TemplatePath)" />
+    <Copy Condition="$(TemplatePath) != '' And '$(Configuration)' == 'Debug'" SourceFiles="$(TargetDir)\MicroPatches.dll;$(TargetDir)\MicroPatches.pdb" DestinationFolder="$(TemplatePath)" SkipUnchangedFiles="true" />
     
     <ZipDirectory
       SourceDirectory="$(IntermediateOutputDir)\Mod\$(MSBuildProjectName)"

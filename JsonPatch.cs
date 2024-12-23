@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+
+using HarmonyLib;
 
 using Kingmaker;
 using Kingmaker.Blueprints;
@@ -21,6 +24,8 @@ using Newtonsoft.Json.Linq;
 
 using Owlcat.Runtime.Core.Logging;
 using Owlcat.Runtime.Core.Utility;
+
+using UnityEngine;
 
 namespace MicroPatches;
 
@@ -47,6 +52,23 @@ public static class JsonPatch
         return property.Name == "PrototypeLink";
     }
 
+    private static IEnumerable<(string Name, string PropertyName)> GetPropertyMap(Type type)
+    {
+        foreach (var m in type.GetMembers(AccessTools.all).Where(m =>
+            m.Name is not null &&
+            m.MemberType is MemberTypes.Field or MemberTypes.Property))
+        {
+            var attr = m.GetAttribute<JsonPropertyAttribute>();
+
+            yield return (m.Name, attr?.PropertyName ?? m.Name);
+        }
+
+        //return type.GetMembers()
+        //    .Choose(m => m.GetAttribute<JsonPropertyAttribute>() is { } attribute ?
+        //        Optional.Some((m.Name, PropertyName: attribute.PropertyName ?? default)) :
+        //        default);
+    }
+
     internal static Optional<JObject> GetObjectPatch(JObject value, JObject original, string[][]? overridePaths = null)
     {
         var objectPatch = new JObject();
@@ -62,12 +84,12 @@ public static class JsonPatch
 
         if (value["m_Overrides"] is JArray overrideProps)
         {
-            IEnumerable<(string Name, string? PropertyName)> propertyNameMap = [];
+            IEnumerable<(string Name, string PropertyName)> propertyNameMap = [];
 
-            if (GetType(value["$type"]?.ToString()) is Type type)
+            //if (GetType(value["$type"]?.ToString()) is Type type)
+            if (GetObjectTypeFromAttribute(value) is Type type)
             {
-                propertyNameMap = type.GetMembers()
-                    .Choose(m => m.GetAttribute<JsonPropertyAttribute>() is { } attribute ? Optional.Some((m.Name, attribute.PropertyName)) : default);
+                propertyNameMap = GetPropertyMap(type);
 
                 if (typeof(BlueprintScriptableObject).IsAssignableFrom(type))
                 {
@@ -82,7 +104,7 @@ public static class JsonPatch
                 {
                     var nameMap = propertyNameMap.TryFind(m => m.Name == path[0]);
 
-                    if (nameMap.HasValue && nameMap.Value.PropertyName is not null)
+                    if (nameMap.HasValue && nameMap.Value.Name != nameMap.Value.PropertyName)
                         return [nameMap.Value.PropertyName, .. path.Skip(1)];
 
                     return path;
@@ -141,6 +163,71 @@ public static class JsonPatch
         return null;
     }
 
+    static Type? GetObjectTypeFromAttribute(JObject o) =>
+        GetType(o["$type"]?.ToString());
+
+    public static Type? GetObjecType(JObject o)
+    {
+        Type? objectType = null;
+        if ((objectType = GetObjectTypeFromAttribute(o)) is null)
+        {
+            Type? parentType = null;
+
+            if (o.Parent is JProperty prop && prop.Parent is JObject parentObject)
+            {
+                parentType = GetFieldType(parentObject, prop.Name);
+            }
+            else if (o.Parent is JArray parentArray)
+            {
+                parentType = GetArrayElementType(parentArray);
+            }
+
+            if (parentType is null)
+                return null;
+        }
+
+        return objectType;
+    }
+
+    static Type? GetArrayElementType(JArray a)
+    {
+        Type? arrayType = null;
+
+        if (a.Parent is JProperty prop && prop.Parent is JObject parentObject)
+        {
+            arrayType = GetFieldType(parentObject, prop.Name);
+        }
+        else if (a.Parent is JArray parentArray)
+        {
+            arrayType = GetArrayElementType(parentArray);
+        }
+
+        if (arrayType is null || Util.GetListTypeElementType(arrayType) is not { } elementType)
+        {
+            PFLog.Mods.Error($"Could not get type for array:\n{a}");
+            return null;
+        }
+
+        return elementType;
+    }
+
+    public static Type? GetFieldType(JObject o, string propertyName)
+    {
+        if (GetObjecType(o) is not Type objectType)
+        {
+            PFLog.Mods.Error($"Could not get object type for object:\n{o}");
+            return null;
+        }
+
+        var propertyMap = GetPropertyMap(objectType);
+
+        if (objectType.GetFields(AccessTools.all).FirstOrDefault(f => propertyMap.Any(n => n.PropertyName == propertyName))
+            is not FieldInfo field)
+            return null;
+
+        return field.FieldType;
+    }
+
     static JToken IdentifyByName(JToken t)
     {
         if (t is not JObject o)
@@ -159,12 +246,15 @@ public static class JsonPatch
         { typeof(BlueprintWarpRoutesSettings.DifficultySettings), static t => t is JObject o ? o["Difficulty"] ?? t : t }
     };
 
-    static JToken ElementIdentity(JToken element)
+    static JToken ElementIdentity(JToken element, Type? elementType)
     {
         if (element is not JObject o)
             return element;
+        
+        elementType ??= GetObjectTypeFromAttribute(o);
 
-        if (GetType(o["$type"]?.ToString()) is { } elementType &&
+        if (elementType is not null &&
+            //(elementType = GetType(o["$type"]?.ToString())) is not null &&
             ElementIdentities.Keys.FirstOrDefault(t => t.IsAssignableFrom(elementType)) is { } type &&
             ElementIdentities.TryGetValue(type, out var identify))
         {
@@ -173,19 +263,24 @@ public static class JsonPatch
 
         if (o["name"]?.ToString() is { } name)
         {
-            var t = GetType(o["$type"]?.ToString());
+            //var t = GetType(o["$type"]?.ToString());
 
-            if (typeof(BlueprintComponent).IsAssignableFrom(t) ||
-                typeof(Element).IsAssignableFrom(t))
+            if (typeof(BlueprintComponent).IsAssignableFrom(elementType) ||
+                typeof(Element).IsAssignableFrom(elementType))
             {
 #if DEBUG
-                PFLog.Mods.Log($"Identifier for {t} fallback to old method. Check this.");
+                PFLog.Mods.Log($"Identifier for {elementType} fallback to old method. Check this.");
 #endif
                 return JValue.CreateString(name);
             }
         }
 
         return element;
+    }
+
+    static JToken ElementIdentity(JToken element)
+    {
+        return ElementIdentity(element, null);
     }
 
     /// <summary>
@@ -199,12 +294,12 @@ public static class JsonPatch
 
     static Optional<JArray> GetArrayPatch(JArray targetArray, JArray originalArray)
     {
-        var identity = ElementIdentity;
+        var elementType = GetArrayElementType(targetArray);
         
-        static bool equals(JToken a, JToken b) => JToken.DeepEquals(ElementIdentity(a), ElementIdentity(b));
+        JToken id(JToken e) => ElementIdentity(e, elementType);
+        bool equals(JToken a, JToken b) => JToken.DeepEquals(id(a), id(b));
 
         var patches = new List<ArrayElementPatch>();
-
         var currentArray = (JArray)originalArray.DeepClone();
 
         for (var i = 0; i < targetArray.Count; i++)
@@ -218,33 +313,33 @@ public static class JsonPatch
 
                 if (elementPatch.HasValue)
                 {
-                    var op = new ArrayElementPatch.PatchElement(identity(currentArray[i]), elementPatch.Value);
+                    var op = new ArrayElementPatch.PatchElement(id(currentArray[i]), elementPatch.Value);
                     patches.Add(op);
 
-                    currentArray = op.Apply(currentArray, PFLog.Mods) ?? currentArray;
+                    currentArray = op.Apply(currentArray, elementType, PFLog.Mods) ?? currentArray;
                 }
 
                 continue;
             }
 
-            var elementCountDelta = GetElementCount(targetArray, targetArray[i], identity) - GetElementCount(currentArray, targetArray[i], identity);
+            var elementCountDelta = GetElementCount(targetArray, targetArray[i], id) - GetElementCount(currentArray, targetArray[i], id);
             
             if (elementCountDelta > 0)
             {
                 if (i is 0)
                     patches.Add(new ArrayElementPatch.Prepend(targetArray[i]));
                 else
-                    patches.Add(new ArrayElementPatch.Insert(targetArray[i], identity(targetArray[i - 1])));
+                    patches.Add(new ArrayElementPatch.Insert(targetArray[i], id(targetArray[i - 1])));
             }
             else if (i < currentArray.Count && !equals(currentArray[i], targetArray[i]))
             {
                 if (elementCountDelta == 0)
                 {
-                    patches.Add(new ArrayElementPatch.Relocate(identity(targetArray[i]), i > 0 ? identity(currentArray[i - 1]) : JValue.CreateNull()));
+                    patches.Add(new ArrayElementPatch.Relocate(id(targetArray[i]), i > 0 ? id(currentArray[i - 1]) : JValue.CreateNull()));
                 }
                 else if (elementCountDelta < 0)
                 {
-                    patches.Add(new ArrayElementPatch.Remove(identity(currentArray[i])));
+                    patches.Add(new ArrayElementPatch.Remove(id(currentArray[i])));
                 }
                 else
                     throw new InvalidOperationException();
@@ -254,7 +349,7 @@ public static class JsonPatch
             else
                 throw new IndexOutOfRangeException();
                 
-            currentArray = patches.LastOrDefault()?.Apply(currentArray, PFLog.Mods) ?? currentArray;
+            currentArray = patches.LastOrDefault()?.Apply(currentArray, elementType, PFLog.Mods) ?? currentArray;
         }
 
         // Remove any excess items
@@ -262,7 +357,7 @@ public static class JsonPatch
         {
             for (var i = targetArray.Count; i < currentArray.Count; i++)
             {
-                patches.Add(new ArrayElementPatch.RemoveFromEnd(identity(currentArray[i])));
+                patches.Add(new ArrayElementPatch.RemoveFromEnd(id(currentArray[i])));
             }
         }
 
@@ -354,6 +449,13 @@ public static class JsonPatch
 
     internal static JArray PatchArray(JArray value, JArray patch, LogChannel logger)
     {
+        var elementType = GetArrayElementType(value);
+
+#if DEBUG
+        if (elementType is null)
+            PFLog.Mods.Error("Could not get array element type for array:\n{value}");
+#endif
+
         value = (JArray)value.DeepClone();
 
         foreach (var elementPatch in patch.OfType<JObject>().Select(ArrayElementPatch.FromJObject))
@@ -364,7 +466,7 @@ public static class JsonPatch
             logger.Log($"Before:\n{value}");
 #endif
 
-            value = elementPatch.Apply(value, logger);
+            value = elementPatch.Apply(value, elementType, logger);
 
 #if DEBUG
             logger.Log($"After:\n{value}");
@@ -439,11 +541,13 @@ public static class JsonPatch
         public record class Relocate(JToken Target, JToken InsertAfterTarget) : ArrayElementPatch(nameof(Relocate));
         public record class RemoveFromEnd(JToken Target) : ArrayElementPatch(nameof(RemoveFromEnd));
 
-        public JArray Apply(JArray array, LogChannel logger)
+        public JArray Apply(JArray array, Type? arrayElementType, LogChannel logger)
         {
+            JToken id(JToken e) => ElementIdentity(e, arrayElementType);
+
             var targetIndex = -1;
             var insertAfterIndex = -1;
-
+            
             array = (JArray)array.DeepClone();
 
             switch (this)
@@ -455,14 +559,14 @@ public static class JsonPatch
                     array.Add(append.NewElement);
                     break;
                 case Insert insert:
-                    insertAfterIndex = IndexOf(array, insert.InsertAfterTarget, ElementIdentity);
+                    insertAfterIndex = IndexOf(array, insert.InsertAfterTarget, id);
                     if (insertAfterIndex < 0)
-                        throw new KeyNotFoundException();
+                        throw new KeyNotFoundException($"Could not find {nameof(Insert.InsertAfterTarget)} for patch operation:\n{insert}\nin array:\narray");
 
                     array.Insert(insertAfterIndex + 1, insert.NewElement);
                     break;
                 case Remove remove:
-                    targetIndex = IndexOf(array, remove.Target, ElementIdentity);
+                    targetIndex = IndexOf(array, remove.Target, id);
                     if (targetIndex < 0)
                     {
                         //throw new KeyNotFoundException();
@@ -474,7 +578,7 @@ public static class JsonPatch
 
                     break;
                 case RemoveFromEnd removeFromEnd:
-                    targetIndex = LastIndexOf(array, removeFromEnd.Target, ElementIdentity);
+                    targetIndex = LastIndexOf(array, removeFromEnd.Target, id);
                     if (targetIndex < 0)
                     {
                         //throw new KeyNotFoundException();
@@ -485,22 +589,22 @@ public static class JsonPatch
                     array.RemoveAt(targetIndex);
                     break;
                 case PatchElement patchElement:
-                    targetIndex = IndexOf(array, patchElement.Target, ElementIdentity);
+                    targetIndex = IndexOf(array, patchElement.Target, id);
                     if (targetIndex < 0)
-                        throw new KeyNotFoundException();
+                        throw new KeyNotFoundException($"Could not find {nameof(PatchElement.Target)} for patch operation:\n{patchElement}\nin array:\n{array}");
 
                     array[targetIndex] = PatchValue(array[targetIndex], patchElement.ElementPatch, logger);
                     break;
                 case Relocate relocate:
-                    targetIndex = IndexOf(array, relocate.Target, ElementIdentity);
+                    targetIndex = IndexOf(array, relocate.Target, id);
                     if (targetIndex < 0)
-                        throw new KeyNotFoundException();
+                        throw new KeyNotFoundException($"Could not find {nameof(Relocate.Target)} for patch operation:\n{relocate}\nin array:\n{array}");
 
                     if (relocate.InsertAfterTarget.Type is not JTokenType.Null)
                     {
-                        insertAfterIndex = IndexOf(array, relocate.InsertAfterTarget, ElementIdentity);
+                        insertAfterIndex = IndexOf(array, relocate.InsertAfterTarget, id);
                         if (insertAfterIndex < 0)
-                            throw new KeyNotFoundException();
+                            throw new KeyNotFoundException($"Could not find {nameof(Relocate.InsertAfterTarget)} for patch operation:\n{relocate}\nin array:\n{array}");
                     }
 
                     var value = array[targetIndex];
