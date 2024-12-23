@@ -6,6 +6,8 @@ using System.Reflection;
 
 using HarmonyLib;
 
+using Kingmaker.Blueprints.JsonSystem.EditorDatabase;
+
 using MicroPatches;
 
 using Newtonsoft.Json;
@@ -37,6 +39,8 @@ public static class MicroPatchesDomainReloadHandler
             try
             {
                 BeforeAssemblyReload?.Invoke();
+
+                BlueprintsDatabase.InvalidateAllCache();
             }
             finally
             {
@@ -65,6 +69,9 @@ public static class MicroPatchesDomainReloadHandler
             Harmony.PatchAll();
             Harmony.PatchAll(typeof(GameServices).Assembly);
         }
+
+        //if (!GameServices.Started && !GameServices.Starting)
+        //    GameServices.StartGameServices();
 
         AfterAssemblyReload?.Invoke();
     }
