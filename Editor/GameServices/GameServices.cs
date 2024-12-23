@@ -109,18 +109,20 @@ public static class GameServices
 
     public static bool Started { get; private set; } = false;
 
-    [MenuItem("Game services/Start BundlesLoadService")]
-    public static void StartBundlesLoadService()
+    [MenuItem("MicroPatches/Game services/Start")]
+    public static void StartGameServices()
     {
-        if (loadCommonBundles != null)
+        //if (loadCommonBundles != null)
+        if (Started)
+            return;
+
+        if (Starting)
         {
             Reset();
         }
 
-        if (Starting || Started)
-            return;
-
         Starting = true;
+        Canceled = false;
 
         Debug.Log($"Bundles path: {BundlesPath("")}");
 
@@ -138,6 +140,9 @@ public static class GameServices
             return;
         }
 
+        Debug.Log("Init paths");
+        ApplicationPaths.Init();
+
         Debug.Log("Starting default services");
 
         Services.RegisterDefaultServices();
@@ -151,43 +156,48 @@ public static class GameServices
             Services.RegisterServiceInstance<BundlesLoadService>(new BundlesLoadService(new ResourceReplacementProviderStub()));
         }
 
-        BundlesLoadService.Instance.ReadListsForEditor();
+        var p = Progress.Start("Loading bundles", options: Progress.Options.Indefinite);
 
-        var ll = LocationList;
+        var c = EditorCoroutine.Start(LoadCommonBundlesCoroutine(() => Progress.Finish(p, Canceled ? Progress.Status.Failed : Progress.Status.Succeeded)));
 
-        if (ll == null)
-        {
-            Debug.LogError("locationlist is null");
+        //BundlesLoadService.Instance.ReadListsForEditor();
 
-            Debug.Log($"Path: {BundlesLoadService.BundlesPath("locationlist.json")}");
-        }
+        //var ll = LocationList;
 
-        if (progressId == 0)
-        {
-            try
-            {
-                loadCommonBundles = EditorCoroutine.Start(LoadCommonBundlesCoroutine());
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
-        }
+        //if (ll == null)
+        //{
+        //    Debug.LogError("locationlist is null");
+
+        //    Debug.Log($"Path: {BundlesLoadService.BundlesPath("locationlist.json")}");
+        //}
+
+        //if (progressId == 0)
+        //{
+        //    try
+        //    {
+        //        loadCommonBundles = EditorCoroutine.Start(LoadCommonBundlesCoroutine());
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        Debug.LogException(e);
+        //    }
+        //}
     }
 
-    static EditorCoroutine loadCommonBundles;
+    
+    //static EditorCoroutine loadCommonBundles;
 
-    static int progressId = 0;
-
-    static IEnumerator LoadCommonBundlesCoroutine()
+    //static int progressId = 0;
+    static bool Canceled = false;
+    static IEnumerator LoadCommonBundlesCoroutine(Action onFinish)
     {
-        if (progressId == 0)
-        {
-            progressId = Progress.Start("Loading common bundles");
-        }
+        //if (progressId == 0)
+        //{
+        //    progressId = Progress.Start("Loading common bundles");
+        //}
         try
         {
-            IEnumerator coroutine;
+            IEnumerator coroutine = null;
             try
             {
                 coroutine = BundlesLoadService.Instance.RequestCommonBundlesCoroutine();
@@ -195,14 +205,17 @@ public static class GameServices
             catch (Exception e)
             {
                 Debug.LogException(e);
-                yield break;
+                Canceled = true;
             }
+
+            if (Canceled)
+                yield break;
 
             yield return null;
 
             var running = true;
-
-            while(running)
+            
+            while (running && !Canceled)
             {
                 try
                 {
@@ -211,47 +224,54 @@ public static class GameServices
                 catch (Exception e)
                 {
                     Debug.LogException(e);
+                    Canceled = true;
                     yield break;
                 }
 
                 yield return null;
             }
-    
-            Debug.Log("Loaded common bundles");
+
+            if (!Canceled)
+            {
+                Debug.Log("Loaded common bundles");
+        
+                Debug.Log("Load Direct References List");
+
+                StartGameLoader.LoadDirectReferencesList();
+            }
         }
         finally
         {
-            Progress.Finish(progressId);
-            progressId = 0;
+            //Progress.Finish(progressId);
+            //progressId = 0;
+            
+            Starting = false;
+            Started = !Canceled;
+
+            onFinish();
         }
-
-        Debug.Log("Load Direct References List");
-
-        StartGameLoader.LoadDirectReferencesList();
-
-        Started = true;
-        Starting = false;
     }
 
-    [MenuItem("Game services/Reset")]
+    [MenuItem("MicroPatches/Game services/Reset")]
     public static void Reset()
     {
-        if (loadCommonBundles != null)
-        {
-            loadCommonBundles.Stop();
-            loadCommonBundles = null;
-        }
+        Canceled = true;
+        //if (loadCommonBundles != null)
+        //{
+        //    loadCommonBundles.Stop();
+        //    loadCommonBundles = null;
+        //}
 
-        if (progressId > 0)
-        {
-            Progress.Finish(progressId);
-            progressId = 0;
-        }
-
-        Started = false;
-        Starting = false;
+        //if (progressId > 0)
+        //{
+        //    Progress.Finish(progressId);
+        //    progressId = 0;
+        //}
 
         Services.ResetAllRegistrations();
         AssetBundle.UnloadAllAssetBundles(true);
+
+        Started = false;
+        Starting = false;
     }
 }
