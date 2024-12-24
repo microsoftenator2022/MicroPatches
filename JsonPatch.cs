@@ -135,11 +135,11 @@ public static class JsonPatch
                 var propPatch = GetPatch(prop.Value, originalValue, propertyOverrides);
 
                 if (propPatch.HasValue)
-                    objectPatch.Add(prop.Name, propPatch.Value);
+                    objectPatch.Add(prop.Name, propPatch.Value.DeepClone());
             }
             else
             {
-                objectPatch.Add(prop.Name, prop.Value);
+                objectPatch.Add(prop.Name, prop.Value.DeepClone());
             }
         }
 
@@ -166,7 +166,7 @@ public static class JsonPatch
     static Type? GetObjectTypeFromAttribute(JObject o) =>
         GetType(o["$type"]?.ToString());
 
-    public static Type? GetObjecType(JObject o)
+    public static Type? GetObjectType(JObject o)
     {
         Type? objectType = null;
         if ((objectType = GetObjectTypeFromAttribute(o)) is null)
@@ -213,7 +213,7 @@ public static class JsonPatch
 
     public static Type? GetFieldType(JObject o, string propertyName)
     {
-        if (GetObjecType(o) is not Type objectType)
+        if (GetObjectType(o) is not Type objectType)
         {
             PFLog.Mods.Error($"Could not get object type for object:\n{o}");
             return null;
