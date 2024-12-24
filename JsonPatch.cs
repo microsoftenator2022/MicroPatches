@@ -268,9 +268,7 @@ public static class JsonPatch
             if (typeof(BlueprintComponent).IsAssignableFrom(elementType) ||
                 typeof(Element).IsAssignableFrom(elementType))
             {
-#if DEBUG
-                PFLog.Mods.Log($"Identifier for {elementType} fallback to old method. Check this.");
-#endif
+                PFLog.Mods.DebugLog($"Identifier for {elementType} fallback to old method. Check this.");
                 return JValue.CreateString(name);
             }
         }
@@ -451,26 +449,18 @@ public static class JsonPatch
     {
         var elementType = GetArrayElementType(value);
 
-#if DEBUG
-        if (elementType is null)
-            PFLog.Mods.Error("Could not get array element type for array:\n{value}");
-#endif
+        logger.DebugLog(() => elementType is null, "Could not get array element type for array:\n{value}", LogSeverity.Error);
 
         value = (JArray)value.DeepClone();
 
         foreach (var elementPatch in patch.OfType<JObject>().Select(ArrayElementPatch.FromJObject))
         {
-#if DEBUG
-
-            logger.Log($"Applying element patch:\n{elementPatch}");
-            logger.Log($"Before:\n{value}");
-#endif
+            logger.DebugLog($"Applying element patch:\n{elementPatch}");
+            logger.DebugLog($"Before:\n{value}");
 
             value = elementPatch.Apply(value, elementType, logger);
 
-#if DEBUG
-            logger.Log($"After:\n{value}");
-#endif
+            logger.DebugLog($"After:\n{value}");
         }
 
         return value;

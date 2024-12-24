@@ -5,6 +5,10 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
+using Kingmaker;
+
+using Owlcat.Runtime.Core.Logging;
+
 namespace MicroPatches;
 public static class Util
 {
@@ -29,5 +33,55 @@ public static class Util
             return null;
 
         return interfaceType.GetGenericArguments()?[0];
+    }
+
+//    public static void DebugLog(string message, LogSeverity severity = LogSeverity.Message)
+//    {
+//#if DEBUG
+//        PFLog.Mods.DebugLog(message, severity);
+//#endif
+//    }
+
+//    public static void DebugLog(Func<bool> predicate, string message, LogSeverity severity = LogSeverity.Message)
+//    {
+//#if DEBUG
+//        PFLog.Mods.DebugLog(predicate, message, severity);
+//#endif
+//    }
+
+//    public static void DebugLogException(Exception e)
+//    {
+//#if DEBUG
+//        PFLog.Mods.DebugLogException(e);
+//#endif
+//    }
+
+    public static void DebugLog(this LogChannel channel, string message, LogSeverity severity = LogSeverity.Message)
+    {
+#if DEBUG
+        Action<string> logF = severity switch
+        {
+            LogSeverity.Message => channel.Log,
+            LogSeverity.Warning => channel.Warning,
+            LogSeverity.Error => channel.Error,
+            _ => _ => { }
+        };
+
+        logF(message);
+#endif
+    }
+
+    public static void DebugLog(this LogChannel channel, Func<bool> predicate, string message, LogSeverity severity = LogSeverity.Message)
+    {
+#if DEBUG
+        if (predicate()) channel.DebugLog(message, severity);
+#endif
+    }
+
+    public static void DebugLogException(this LogChannel channel, Exception e)
+    {
+#if DEBUG
+        channel.Exception(e);
+#endif
     }
 }
