@@ -12,6 +12,7 @@ using Kingmaker;
 using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.JsonSystem;
 using Kingmaker.Blueprints.JsonSystem.Helpers;
+using Kingmaker.Designers.EventConditionActionSystem.Actions;
 using Kingmaker.ElementsSystem;
 using Kingmaker.Globalmap.Blueprints.SectorMap;
 
@@ -44,6 +45,8 @@ public static class JsonPatch
                 .Upcast<JObject, JToken>();
         
         //return !JToken.DeepEquals(value, original) ? Optional.Some(value.DeepClone()) : default;
+
+        PFLog.Mods.DebugLog("value.DeepClone();");
         return value.DeepClone();
     }
 
@@ -135,10 +138,14 @@ public static class JsonPatch
                 var propPatch = GetPatch(prop.Value, originalValue, propertyOverrides);
 
                 if (propPatch.HasValue)
+                {
+                    PFLog.Mods.DebugLog("objectPatch.Add(prop.Name, propPatch.Value.DeepClone());");
                     objectPatch.Add(prop.Name, propPatch.Value.DeepClone());
+                }
             }
             else
             {
+                PFLog.Mods.DebugLog("objectPatch.Add(prop.Name, prop.Value.DeepClone());");
                 objectPatch.Add(prop.Name, prop.Value.DeepClone());
             }
         }
@@ -171,20 +178,25 @@ public static class JsonPatch
         Type? objectType = null;
         if ((objectType = GetObjectTypeFromAttribute(o)) is null)
         {
-            Type? parentType = null;
-
             if (o.Parent is JProperty prop && prop.Parent is JObject parentObject)
             {
-                parentType = GetFieldType(parentObject, prop.Name);
+                //var parentType = GetObjectType(parentObject);
+
+                objectType = GetFieldType(parentObject, prop.Name);
             }
             else if (o.Parent is JArray parentArray)
             {
-                parentType = GetArrayElementType(parentArray);
+                objectType = GetArrayElementType(parentArray);
             }
 
-            if (parentType is null)
+            if (objectType is null)
+            {
+                PFLog.Mods.DebugLog($"Could not get parent for JObject:\n{o}");
                 return null;
+            }
         }
+
+        PFLog.Mods.DebugLog($"Object type = {objectType}");
 
         return objectType;
     }
@@ -208,20 +220,25 @@ public static class JsonPatch
             return null;
         }
 
+        PFLog.Mods.DebugLog($"Array element type = {elementType}");
+
         return elementType;
     }
 
-    public static Type? GetFieldType(JObject o, string propertyName)
+    public static Type? GetFieldType(JObject o, string propertyName, Type? objectType = null)
     {
-        if (GetObjectType(o) is not Type objectType)
+        if ((objectType ??= GetObjectType(o)) is null)
         {
             PFLog.Mods.Error($"Could not get object type for object:\n{o}");
             return null;
         }
 
-        var propertyMap = GetPropertyMap(objectType);
+        var propertyMap = GetPropertyMap(objectType!);
 
-        if (objectType.GetFields(AccessTools.all).FirstOrDefault(f => propertyMap.Any(n => n.PropertyName == propertyName))
+        var fieldName = propertyMap.FirstOrDefault(n => n.PropertyName == propertyName).Name;
+
+        if (fieldName is null ||
+            objectType!.GetFields(AccessTools.all).FirstOrDefault(f => f.Name == fieldName)
             is not FieldInfo field)
             return null;
 
@@ -251,7 +268,7 @@ public static class JsonPatch
         if (element is not JObject o)
             return element;
         
-        elementType ??= GetObjectTypeFromAttribute(o);
+        elementType ??= GetObjectType(o);
 
         if (elementType is not null &&
             //(elementType = GetType(o["$type"]?.ToString())) is not null &&
@@ -276,30 +293,27 @@ public static class JsonPatch
         return element;
     }
 
-    static JToken ElementIdentity(JToken element)
-    {
-        return ElementIdentity(element, null);
-    }
-
     /// <summary>
     /// Count elements by identity
     /// </summary>
     static int GetElementCount(JArray array, JToken element, Func<JToken, JToken> identity) =>
         array
             .Select(identity)
-            .Where(e => JToken.DeepEquals(ElementIdentity(element), ElementIdentity(e)))
+            .Where(e => JToken.DeepEquals(identity(element), identity(e)))
             .Count();
 
     static Optional<JArray> GetArrayPatch(JArray targetArray, JArray originalArray)
     {
         var elementType = GetArrayElementType(targetArray);
-        
+
         JToken id(JToken e) => ElementIdentity(e, elementType);
         bool equals(JToken a, JToken b) => JToken.DeepEquals(id(a), id(b));
 
         var patches = new List<ArrayElementPatch>();
-        var currentArray = (JArray)originalArray.DeepClone();
 
+        PFLog.Mods.DebugLog("var currentArray = (JArray)originalArray.DeepClone();");
+        var currentArray = (JArray)originalArray.DeepClone();
+        
         for (var i = 0; i < targetArray.Count; i++)
         {
             if (i < currentArray.Count && equals(currentArray[i], targetArray[i]))
@@ -408,33 +422,49 @@ public static class JsonPatch
 
     public static JToken ApplyPatch(JToken value, JToken patch, LogChannel? logger = null)
     {
-        return PatchValue(value, patch, logger ?? PFLog.Mods);
+        return PatchValue(value, patch, logger ?? PFLog.Mods, null);
     }
 
-    internal static JToken PatchValue(JToken value, JToken patch, LogChannel logger)
+    internal static JToken PatchValue(JToken value, JToken patch, LogChannel logger, Type? type)
     {
+        PFLog.Mods.DebugLog($"Applying patch:\n{patch}\nto{value}");
+
         if (value is JArray valueArray &&
             patch is JArray patchArray)
         {
-            return PatchArray(valueArray, patchArray, logger);
+            var arrayElementType = type != null ? Util.GetListTypeElementType(type) : null;
+            var arrayPatchResult = PatchArray(valueArray, patchArray, logger, arrayElementType);
+
+            PFLog.Mods.DebugLog($"Array patch result:\n{arrayPatchResult}");
+
+            return arrayPatchResult;
         }
 
         if (value is JObject objectValue &&
             patch is JObject patchObject)
-            return PatchObject(objectValue, patchObject, logger);
+        {
+            var objectPatchResult = PatchObject(objectValue, patchObject, logger, type ?? GetObjectType(objectValue));
+
+            PFLog.Mods.DebugLog($"Object patch result:\n{objectPatchResult}");
+
+            return objectPatchResult;
+        }
 
         return patch;
     }
 
-    internal static JObject PatchObject(JObject value, JObject patch, LogChannel logger)
+    internal static JObject PatchObject(JObject original, JObject patch, LogChannel logger, Type? objectType)
     {
-        value = (JObject)value.DeepClone();
+        PFLog.Mods.DebugLog("var value = (JObject)original.DeepClone();");
+        var value = (JObject)original.DeepClone();
+
+        objectType ??= GetObjectType(original);
 
         foreach (var patchProp in patch.Properties())
         {
-            if (value[patchProp.Name] is { } propValue)
+            if (original[patchProp.Name] is { } originalValue)
             {
-                value[patchProp.Name] = PatchValue(propValue, patchProp.Value, logger);
+                value[patchProp.Name] = PatchValue(originalValue, patchProp.Value, logger, GetFieldType(original, patchProp.Name, objectType));
             }
             else
             {
@@ -445,13 +475,14 @@ public static class JsonPatch
         return value;
     }
 
-    internal static JArray PatchArray(JArray value, JArray patch, LogChannel logger)
+    internal static JArray PatchArray(JArray original, JArray patch, LogChannel logger, Type? elementType)
     {
-        var elementType = GetArrayElementType(value);
+        elementType ??= GetArrayElementType(original);
 
-        logger.DebugLog(() => elementType is null, "Could not get array element type for array:\n{value}", LogSeverity.Error);
+        logger.DebugLog(() => elementType is null, $"Could not get array element type for array:\n{original}", LogSeverity.Error);
 
-        value = (JArray)value.DeepClone();
+        PFLog.Mods.DebugLog("var value = (JArray)original.DeepClone();");
+        var value = (JArray)original.DeepClone();
 
         foreach (var elementPatch in patch.OfType<JObject>().Select(ArrayElementPatch.FromJObject))
         {
@@ -533,11 +564,14 @@ public static class JsonPatch
 
         public JArray Apply(JArray array, Type? arrayElementType, LogChannel logger)
         {
+            arrayElementType ??= GetArrayElementType(array);
+
             JToken id(JToken e) => ElementIdentity(e, arrayElementType);
 
             var targetIndex = -1;
             var insertAfterIndex = -1;
             
+            PFLog.Mods.DebugLog("array = (JArray)array.DeepClone();");
             array = (JArray)array.DeepClone();
 
             switch (this)
@@ -583,7 +617,7 @@ public static class JsonPatch
                     if (targetIndex < 0)
                         throw new KeyNotFoundException($"Could not find {nameof(PatchElement.Target)} for patch operation:\n{patchElement}\nin array:\n{array}");
 
-                    array[targetIndex] = PatchValue(array[targetIndex], patchElement.ElementPatch, logger);
+                    array[targetIndex] = PatchValue(array[targetIndex], patchElement.ElementPatch, logger, arrayElementType);
                     break;
                 case Relocate relocate:
                     targetIndex = IndexOf(array, relocate.Target, id);
