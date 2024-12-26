@@ -10,11 +10,14 @@ If you encounter any issues with an experimental patch, let me know in the issue
 
 ## Mod Developers: Editor Template Extension Installation
 
-1. Add `RogueTrader.Blueprints.Editor` to the Assembly Definition References of `Mods.Editor` ![image](https://github.com/user-attachments/assets/571d3be0-c059-4e6d-97be-7c363d596c86)
-2. Extract the contents of `MicroPatches-Editor-x.y.z.zip` to `Assets/Editor` ![image](https://github.com/user-attachments/assets/ce7cab93-5d8b-45e1-b37b-12340e0cb46e)
+1. Ensure you do not have the project open in the editor.
+2. Replace the contents of `Assets/UnityModManager` with the contents of [this zip](https://github.com/microsoftenator2022/MicroPatches/releases/download/umm-stub/UnityModManager.zip)
+3. Delete `Assets/Libs/dnlib.dll`
+4. Delete `Library\APIUpdater\project-dependencies.graph`
+5. Extract the contents of `MicroPatches-Editor-x.y.z.zip` to the editor folder, overwriting existing files
+6. Open the project in the editor select `Modifiction Tools` -> `Repair SharedString configs`
+7. Optional: `MicroPatches` -> `Refresh blueprints`
 
 ### If the editor gets stuck importing assets
 
-1. Replace the contents of `Assets/UnityModManager` with the contents of [this zip](https://github.com/microsoftenator2022/MicroPatches/releases/download/umm-stub/UnityModManager.zip)
-2. Delete `Assets/Libs/dnlib.dll`
-3. **With the editor closed**, delete `Library\APIUpdater\project-dependencies.graph`
+Close the editor and repeat step 4
