@@ -3,7 +3,7 @@
   <Import Project="TemplatePath.props" Condition="Exists('TemplatePath.props')" />
 
   <PropertyGroup>
-    <VersionPrefix>1.17.3</VersionPrefix>
+    <VersionPrefix>1.17.4</VersionPrefix>
     <VersionSuffix Condition=" '$(Configuration)' == 'Debug' ">debug</VersionSuffix>
     <TargetFramework>net481</TargetFramework>
     <Nullable>enable</Nullable>

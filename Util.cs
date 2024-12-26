@@ -35,27 +35,6 @@ public static class Util
         return interfaceType.GetGenericArguments()?[0];
     }
 
-//    public static void DebugLog(string message, LogSeverity severity = LogSeverity.Message)
-//    {
-//#if DEBUG
-//        PFLog.Mods.DebugLog(message, severity);
-//#endif
-//    }
-
-//    public static void DebugLog(Func<bool> predicate, string message, LogSeverity severity = LogSeverity.Message)
-//    {
-//#if DEBUG
-//        PFLog.Mods.DebugLog(predicate, message, severity);
-//#endif
-//    }
-
-//    public static void DebugLogException(Exception e)
-//    {
-//#if DEBUG
-//        PFLog.Mods.DebugLogException(e);
-//#endif
-//    }
-
     public static void DebugLog(this LogChannel channel, string message, LogSeverity severity = LogSeverity.Message)
     {
 #if DEBUG
