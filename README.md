@@ -14,7 +14,7 @@ If you encounter any issues with an experimental patch, let me know in the issue
 2. Replace the contents of `Assets/UnityModManager` with the contents of [this zip](https://github.com/microsoftenator2022/MicroPatches/releases/download/umm-stub/UnityModManager.zip)
 3. Delete `Assets/Libs/dnlib.dll`
 4. Delete `Library/APIUpdater/project-dependencies.graph`
-5. Extract the contents of `MicroPatches-Editor-x.y.z.zip` to the editor folder, overwriting existing files
+5. Extract the contents of `MicroPatches-Editor-x.y.z.zip` to the template folder, overwriting existing files
 6. Open the project in the editor select `Modifiction Tools` -> `Repair SharedString configs`
 7. Optional: `MicroPatches` -> `Refresh blueprints`
 
