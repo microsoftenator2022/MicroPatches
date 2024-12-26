@@ -44,9 +44,7 @@ public static class JsonPatch
             return GetObjectPatch(objectValue, originalObjectValue, overridePaths)
                 .Upcast<JObject, JToken>();
         
-        //return !JToken.DeepEquals(value, original) ? Optional.Some(value.DeepClone()) : default;
-
-        PFLog.Mods.DebugLog("value.DeepClone();");
+        //PFLog.Mods.DebugLog("value.DeepClone();");
         return value.DeepClone();
     }
 
@@ -65,11 +63,6 @@ public static class JsonPatch
 
             yield return (m.Name, attr?.PropertyName ?? m.Name);
         }
-
-        //return type.GetMembers()
-        //    .Choose(m => m.GetAttribute<JsonPropertyAttribute>() is { } attribute ?
-        //        Optional.Some((m.Name, PropertyName: attribute.PropertyName ?? default)) :
-        //        default);
     }
 
     internal static Optional<JObject> GetObjectPatch(JObject value, JObject original, string[][]? overridePaths = null)
@@ -89,7 +82,6 @@ public static class JsonPatch
         {
             IEnumerable<(string Name, string PropertyName)> propertyNameMap = [];
 
-            //if (GetType(value["$type"]?.ToString()) is Type type)
             if (GetObjectTypeFromAttribute(value) is Type type)
             {
                 propertyNameMap = GetPropertyMap(type);
@@ -139,13 +131,13 @@ public static class JsonPatch
 
                 if (propPatch.HasValue)
                 {
-                    PFLog.Mods.DebugLog("objectPatch.Add(prop.Name, propPatch.Value.DeepClone());");
+                    //PFLog.Mods.DebugLog("objectPatch.Add(prop.Name, propPatch.Value.DeepClone());");
                     objectPatch.Add(prop.Name, propPatch.Value.DeepClone());
                 }
             }
             else
             {
-                PFLog.Mods.DebugLog("objectPatch.Add(prop.Name, prop.Value.DeepClone());");
+                //PFLog.Mods.DebugLog("objectPatch.Add(prop.Name, prop.Value.DeepClone());");
                 objectPatch.Add(prop.Name, prop.Value.DeepClone());
             }
         }
@@ -191,7 +183,7 @@ public static class JsonPatch
 
             if (objectType is null)
             {
-                PFLog.Mods.DebugLog($"Could not get parent for JObject:\n{o}");
+                PFLog.Mods.DebugLog($"Could not get parent for JObject:\n{o}", LogSeverity.Warning);
                 return null;
             }
         }
@@ -216,7 +208,7 @@ public static class JsonPatch
 
         if (arrayType is null || Util.GetListTypeElementType(arrayType) is not { } elementType)
         {
-            PFLog.Mods.Error($"Could not get type for array:\n{a}");
+            PFLog.Mods.Error($"Could not get type for array:\n{a}", LogSeverity.Warning);
             return null;
         }
 
@@ -285,7 +277,7 @@ public static class JsonPatch
             if (typeof(BlueprintComponent).IsAssignableFrom(elementType) ||
                 typeof(Element).IsAssignableFrom(elementType))
             {
-                PFLog.Mods.DebugLog($"Identifier for {elementType} fallback to old method. Check this.");
+                PFLog.Mods.DebugLog($"Identifier for {elementType} fallback to old method. Check this.", LogSeverity.Warning);
                 return JValue.CreateString(name);
             }
         }
@@ -311,7 +303,7 @@ public static class JsonPatch
 
         var patches = new List<ArrayElementPatch>();
 
-        PFLog.Mods.DebugLog("var currentArray = (JArray)originalArray.DeepClone();");
+        //PFLog.Mods.DebugLog("var currentArray = (JArray)originalArray.DeepClone();");
         var currentArray = (JArray)originalArray.DeepClone();
         
         for (var i = 0; i < targetArray.Count; i++)
@@ -455,7 +447,7 @@ public static class JsonPatch
 
     internal static JObject PatchObject(JObject original, JObject patch, LogChannel logger, Type? objectType)
     {
-        PFLog.Mods.DebugLog("var value = (JObject)original.DeepClone();");
+        //PFLog.Mods.DebugLog("var value = (JObject)original.DeepClone();");
         var value = (JObject)original.DeepClone();
 
         objectType ??= GetObjectType(original);
@@ -481,17 +473,17 @@ public static class JsonPatch
 
         logger.DebugLog(() => elementType is null, $"Could not get array element type for array:\n{original}", LogSeverity.Error);
 
-        PFLog.Mods.DebugLog("var value = (JArray)original.DeepClone();");
+        //PFLog.Mods.DebugLog("var value = (JArray)original.DeepClone();");
         var value = (JArray)original.DeepClone();
 
         foreach (var elementPatch in patch.OfType<JObject>().Select(ArrayElementPatch.FromJObject))
         {
-            logger.DebugLog($"Applying element patch:\n{elementPatch}");
-            logger.DebugLog($"Before:\n{value}");
+            //logger.DebugLog($"Applying element patch:\n{elementPatch}");
+            //logger.DebugLog($"Before:\n{value}");
 
             value = elementPatch.Apply(value, elementType, logger);
 
-            logger.DebugLog($"After:\n{value}");
+            //logger.DebugLog($"After:\n{value}");
         }
 
         return value;
@@ -571,7 +563,7 @@ public static class JsonPatch
             var targetIndex = -1;
             var insertAfterIndex = -1;
             
-            PFLog.Mods.DebugLog("array = (JArray)array.DeepClone();");
+            //PFLog.Mods.DebugLog("array = (JArray)array.DeepClone();");
             array = (JArray)array.DeepClone();
 
             switch (this)
