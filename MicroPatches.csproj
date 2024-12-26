@@ -53,45 +53,63 @@
   <ItemGroup>
     <None Include="ModDetails\Info.json" CopyToOutputDirectory="PreserveNewest" Link="%(Filename)%(Extension)" />
     <None Include="ModDetails\OwlcatModificationManifest.json" CopyToOutputDirectory="PreserveNewest" Link="%(Filename)%(Extension)" />
+    <None Include="CopyFiles.fsx" />
   </ItemGroup>
 
   <ItemGroup>
     <!--<None Include="Editor\*.*" CopyToOutputDirectory="Never" />-->
-    <None Remove="**\Editor\**\*.*" />
-    <Compile Remove="**\Editor\**\*.*" />
+    <None Remove="Editor\**\*.*" />
+    <Compile Remove="Editor\**\*.*" />
     <None Remove="Build\**\*.*" />
     <Compile Remove="Build\**\*.*" />
+    <None Remove="CopyTemplateFilesTask\**\*.*" />
+    <Compile Remove="CopyTemplateFilesTask\**\*.*" />
   </ItemGroup>
 
-  <ItemGroup Condition="$(TemplatePath) != ''">
-    <EditorFilesInclude Include="$(TemplatePath)\**\*.*" />
-    <EditorFilesExclude Include="$(TemplatePath)\**\MicroPatches.dll" />
-    <EditorFilesExclude Include="$(TemplatePath)\**\MicroPatches.pdb" />
-    <EditorFilesExclude Include="$(TemplatePath)\**\*.meta" />
-    <EditorFiles Include="@(EditorFilesInclude)" />
-    <EditorFiles Remove="@(EditorFilesExclude)" />
-  </ItemGroup>
-  
   <Target Name="CopyEditorFilesToProject" Condition="$(TemplatePath) != ''" BeforeTargets="BeforeBuild">
-    <Copy
+    <ItemGroup>
+      <TemplateFilesInclude Include="$(TemplatePath)\Assets\Editor\MicroPatches\**\*.*" />
+      <TemplateFilesExclude Include="$(TemplatePath)\Assets\Editor\MicroPatches\MicroPatches.dll" />
+      <TemplateFilesExclude Include="$(TemplatePath)\Assets\Editor\MicroPatches\MicroPatches.pdb" />
+      <TemplateFilesExclude Include="$(TemplatePath)\Assets\Editor\MicroPatches\**\*.meta" />
+      <TemplateFiles Include="@(TemplateFilesInclude)" />
+      <TemplateFiles Remove="@(TemplateFilesExclude)" />
+    </ItemGroup>
+
+    <Exec Command="dotnet fsi CopyFiles.fsx --baseDir $(TemplatePath) --outDir Editor @(TemplateFiles)" />
+    
+    <!--<Copy
       SourceFiles="@(EditorFiles)"
       DestinationFiles="@(EditorFiles->'Editor\%(RecursiveDir)%(Filename)%(Extension)')"
       OverwriteReadOnlyFiles="true"
-      SkipUnchangedFiles="false" />
+      SkipUnchangedFiles="false" />-->
   </Target>
 
   <Target Name="OutputDirectories" AfterTargets="Build">
     <ItemGroup>
       <Files Include="$(TargetDir)\**\*.*" />
-      <EditorFilesExclude Include="$(TargetDir)\**\OwlcatModificationManifest.json;$(TargetDir)\**\Info.json" />
-      <EditorFiles Include="@(Files)" Exclude="@(EditorFilesExclude)" />
-      <EditorFiles Include="Editor\**\*.*" Condition="$(TemplatePath) == ''" />
-      <!--<EditorFiles Include="$(TemplatePath)\**\*.*" Condition="$(TemplatePath) != ''" />-->
+      <!--<EditorFilesExclude Include="$(TargetDir)\**\OwlcatModificationManifest.json;$(TargetDir)\**\Info.json" />
+      <EditorFiles Include="@(Files)" Exclude="@(EditorFilesExclude)" />-->
+      <EditorFiles Include="Editor\**\*.*" />
     </ItemGroup>
 
-    <Copy SourceFiles="@(Files)" DestinationFiles="@(Files->'$(IntermediateOutputDir)\Mod\$(MSBuildProjectName)\%(RecursiveDir)%(Filename)%(Extension)')" />
-    <Copy SourceFiles="@(EditorFiles)" DestinationFiles="@(EditorFiles->'$(IntermediateOutputDir)\Editor\$(MSBuildProjectName)\%(RecursiveDir)%(Filename)%(Extension)')" />
-    <Copy Condition="$(TemplatePath) != '' And '$(Configuration)' == 'Debug'" SourceFiles="$(TargetDir)\MicroPatches.dll;$(TargetDir)\MicroPatches.pdb" DestinationFolder="$(TemplatePath)" SkipUnchangedFiles="true" />
+    <Copy 
+      SourceFiles="@(Files)" 
+      DestinationFiles="@(Files->'$(IntermediateOutputDir)\Mod\$(MSBuildProjectName)\%(RecursiveDir)%(Filename)%(Extension)')" 
+      SkipUnchangedFiles="false" />
+    <Copy 
+      SourceFiles="@(EditorFiles)" 
+      DestinationFiles="@(EditorFiles->'$(IntermediateOutputDir)\Editor\%(RecursiveDir)%(Filename)%(Extension)')" 
+      SkipUnchangedFiles="false" />
+    <Copy
+      SourceFiles="$(TargetDir)\MicroPatches.dll;$(TargetDir)\MicroPatches.pdb"
+      DestinationFolder="$(IntermediateOutputDir)\Editor\Assets\Editor\MicroPatches"
+      SkipUnchangedFiles="true" />
+    <Copy 
+      Condition="$(TemplatePath) != '' And '$(Configuration)' == 'Debug'" 
+      SourceFiles="$(TargetDir)\MicroPatches.dll;$(TargetDir)\MicroPatches.pdb" 
+      DestinationFolder="$(TemplatePath)\Assets\Editor\MicroPatches" 
+      SkipUnchangedFiles="true" />
     
     <ZipDirectory
       SourceDirectory="$(IntermediateOutputDir)\Mod\$(MSBuildProjectName)"
@@ -107,7 +125,9 @@
       <Files Include="$(TargetDir)\**\*.*" />
     </ItemGroup>
 
-    <Copy SourceFiles="@(Files)" DestinationFiles="@(Files->'$(RogueTraderData)\UnityModManager\$(AssemblyName)\%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy 
+      SourceFiles="@(Files)" 
+      DestinationFiles="@(Files->'$(RogueTraderData)\UnityModManager\$(AssemblyName)\%(RecursiveDir)%(Filename)%(Extension)')" />
   </Target>
 
   <Target Name="PublishToSteamWorkshop" AfterTargets="Publish">

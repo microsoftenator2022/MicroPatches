@@ -159,42 +159,11 @@ public static class GameServices
         var p = Progress.Start("Loading bundles", options: Progress.Options.Indefinite);
 
         var c = EditorCoroutine.Start(LoadCommonBundlesCoroutine(() => Progress.Finish(p, Canceled ? Progress.Status.Failed : Progress.Status.Succeeded)));
-
-        //BundlesLoadService.Instance.ReadListsForEditor();
-
-        //var ll = LocationList;
-
-        //if (ll == null)
-        //{
-        //    Debug.LogError("locationlist is null");
-
-        //    Debug.Log($"Path: {BundlesLoadService.BundlesPath("locationlist.json")}");
-        //}
-
-        //if (progressId == 0)
-        //{
-        //    try
-        //    {
-        //        loadCommonBundles = EditorCoroutine.Start(LoadCommonBundlesCoroutine());
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        Debug.LogException(e);
-        //    }
-        //}
     }
 
-    
-    //static EditorCoroutine loadCommonBundles;
-
-    //static int progressId = 0;
-    static bool Canceled = false;
+    public static bool Canceled = false;
     static IEnumerator LoadCommonBundlesCoroutine(Action onFinish)
     {
-        //if (progressId == 0)
-        //{
-        //    progressId = Progress.Start("Loading common bundles");
-        //}
         try
         {
             IEnumerator coroutine = null;
@@ -219,6 +188,8 @@ public static class GameServices
             {
                 try
                 {
+                    EditorUtility.DisplayProgressBar("Loading bundles", "Loading common bundles", 0);
+
                     running = coroutine.MoveNext();
                 }
                 catch (Exception e)
@@ -233,20 +204,19 @@ public static class GameServices
 
             if (!Canceled)
             {
-                Debug.Log("Loaded common bundles");
-        
-                Debug.Log("Load Direct References List");
-
+                EditorUtility.ClearProgressBar();
+                yield return null;
+                EditorUtility.DisplayProgressBar("Loading bundles", "Loading direct references", 0.5f);
+                yield return null;
                 StartGameLoader.LoadDirectReferencesList();
             }
         }
         finally
         {
-            //Progress.Finish(progressId);
-            //progressId = 0;
-            
             Starting = false;
             Started = !Canceled;
+
+            EditorUtility.ClearProgressBar();
 
             onFinish();
         }
@@ -256,18 +226,7 @@ public static class GameServices
     public static void Reset()
     {
         Canceled = true;
-        //if (loadCommonBundles != null)
-        //{
-        //    loadCommonBundles.Stop();
-        //    loadCommonBundles = null;
-        //}
-
-        //if (progressId > 0)
-        //{
-        //    Progress.Finish(progressId);
-        //    progressId = 0;
-        //}
-
+        
         Services.ResetAllRegistrations();
         AssetBundle.UnloadAllAssetBundles(true);
 

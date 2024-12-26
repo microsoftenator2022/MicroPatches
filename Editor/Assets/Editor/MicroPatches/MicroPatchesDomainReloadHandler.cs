@@ -70,8 +70,9 @@ public static class MicroPatchesDomainReloadHandler
             Harmony.PatchAll(typeof(GameServices).Assembly);
         }
 
-        //if (!GameServices.Started && !GameServices.Starting)
-        //    GameServices.StartGameServices();
+        if (MicroPatchesEditorPreferences.Instance.GameServicesAutoStart &&
+            !GameServices.Started && !GameServices.Starting && !GameServices.Canceled)
+            GameServices.StartGameServices();
 
         AfterAssemblyReload?.Invoke();
     }
