@@ -71,7 +71,10 @@
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Editor\MicroPatches\**\*.*" />
       <TemplateFilesExclude Include="$(TemplatePath)\Assets\Editor\MicroPatches\MicroPatches.dll" />
       <TemplateFilesExclude Include="$(TemplatePath)\Assets\Editor\MicroPatches\MicroPatches.pdb" />
-      <TemplateFilesExclude Include="$(TemplatePath)\Assets\Editor\MicroPatches\**\*.meta" />
+      <TemplateFilesInclude Include="$(TemplatePath)\Assets\Code\GameCore\Editor\Blueprints\ProjectView\BlueprintProjectView.cs" />
+      <TemplateFilesInclude Include="$(TemplatePath)\Assets\Code\GameCore\Editor\Blueprints\WeakLinkDrawer.cs" />
+      <TemplateFilesInclude Include="$(TemplatePath)\Assets\Code\GameCore\Editor\Validation\ReferenceGraph.cs" />
+      <TemplateFilesInclude Include="$(TemplatePath)\Assets\Code\GameCore\Editor\Mods\SharedStringAssetRepair.cs" />
       <TemplateFiles Include="@(TemplateFilesInclude)" />
       <TemplateFiles Remove="@(TemplateFilesExclude)" />
     </ItemGroup>
