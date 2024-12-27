@@ -208,7 +208,7 @@ public static class JsonPatch
 
         if (arrayType is null || Util.GetListTypeElementType(arrayType) is not { } elementType)
         {
-            PFLog.Mods.Error($"Could not get type for array:\n{a}", LogSeverity.Warning);
+            PFLog.Mods.DebugLog($"Could not get type for array:\n{a}", LogSeverity.Warning);
             return null;
         }
 
