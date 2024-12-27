@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,6 +13,9 @@ using Owlcat.Runtime.Core.Logging;
 namespace MicroPatches;
 public static class Util
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T Id<T>(T value) => value;
+
     public static bool IsAssignableTo<T>(this Type type) => typeof(T).IsAssignableFrom(type);
 
     public static MethodInfo? GetInterfaceMethodImplementation(this Type declaringType, MethodInfo interfaceMethod)
