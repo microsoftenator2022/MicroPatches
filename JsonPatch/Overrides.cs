@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 using Kingmaker.Blueprints;
 using Kingmaker.ElementsSystem;
 using Kingmaker.Globalmap.Blueprints.SectorMap;
+using Kingmaker.UnitLogic.Progression.Paths;
+
+using Microsoft.CodeAnalysis;
 
 using MicroUtils.Linq;
 
@@ -36,11 +39,17 @@ public static partial class JsonPatch
             return JValue.CreateString(name.ToString());
         }
 
+        public static bool IdentifyByIndex(Type t) => t switch
+        {
+            _ when t == typeof(BlueprintPath.RankEntry) => true,
+            _ => false
+        };
+
         public static readonly Dictionary<Type, Func<JToken, JToken>> ElementIdentities = new()
         {
             { typeof(Element), IdentifyByName },
             { typeof(BlueprintComponent), IdentifyByName },
-            { typeof(BlueprintWarpRoutesSettings.DifficultySettings), static t => t is JObject o ? o["Difficulty"] ?? t : t }
+            { typeof(BlueprintWarpRoutesSettings.DifficultySettings), static t => t is JObject o ? o["Difficulty"] ?? t : t },
         };
 
     }

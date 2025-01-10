@@ -1,56 +1,45 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 using HarmonyLib;
 
 using Kingmaker;
 using Kingmaker.Blueprints;
-using Kingmaker.Blueprints.JsonSystem;
-using Kingmaker.Blueprints.JsonSystem.Helpers;
-using Kingmaker.Designers.EventConditionActionSystem.Actions;
-using Kingmaker.ElementsSystem;
-using Kingmaker.Globalmap.Blueprints.SectorMap;
 
 using Microsoft.CodeAnalysis;
 
-using MicroUtils.Linq;
-
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using Owlcat.Runtime.Core.Logging;
-using Owlcat.Runtime.Core.Utility;
-
-using UnityEngine;
 
 namespace MicroPatches;
 
 public static partial class JsonPatch
 {
-    public static Optional<JToken> GetPatch(JToken value, JToken original, string[][]? overridePaths = null)
+    public static Optional<JToken> GetPatch(JToken value, JToken original, Type? type = null, string[][]? overridePaths = null)
     {
         if (value is JArray arrayValue &&
             original is JArray originalArrayValue)
-            return GetArrayPatch(arrayValue, originalArrayValue)
+        {
+            return GetArrayPatch(arrayValue, originalArrayValue, type is not null ? Util.GetListTypeElementType(type) : null)
                 .Upcast<JArray, JToken>();
+        }
 
         if (value is JObject objectValue &&
             original is JObject originalObjectValue)
-            return GetObjectPatch(objectValue, originalObjectValue, overridePaths)
+            return GetObjectPatch(objectValue, originalObjectValue, type, overridePaths)
                 .Upcast<JObject, JToken>();
 
         //PFLog.Mods.DebugLog("value.DeepClone();");
         return value.DeepClone();
     }
 
-    internal static Optional<JObject> GetObjectPatch(JObject value, JObject original, string[][]? overridePaths = null)
+    internal static Optional<JObject> GetObjectPatch(JObject value, JObject original, Type? objectType, string[][]? overridePaths = null)
     {
         var objectPatch = new JObject();
+
+        objectType ??= Parser.GetObjectType(original) ?? Parser.GetObjectType(value);
 
         var props = value.Properties();
 
@@ -110,7 +99,26 @@ public static partial class JsonPatch
                 if (JToken.DeepEquals(originalValue, prop.Value))
                     continue;
 
-                var propPatch = GetPatch(prop.Value, originalValue, propertyOverrides);
+                var fieldType = Parser.GetFieldType(original, prop.Name, objectType) ??
+                    Parser.GetFieldType(value, prop.Name, objectType);
+
+                Optional<JToken> propPatch = default;
+
+                if (prop.Value is JArray array && originalValue is JArray originalArray)
+                {
+                    var elementType =
+                        fieldType is not null ?
+                            Util.GetListTypeElementType(fieldType) :
+                            null;
+                    
+                    propPatch = GetArrayPatch(
+                        array,
+                        originalArray,
+                        elementType)
+                        .Upcast<JArray, JToken>();
+                }
+
+                propPatch = propPatch.OrElseWith(() => GetPatch(prop.Value, originalValue, fieldType, propertyOverrides));
 
                 if (propPatch.HasValue)
                     //PFLog.Mods.DebugLog("objectPatch.Add(prop.Name, propPatch.Value.DeepClone());");
@@ -129,12 +137,19 @@ public static partial class JsonPatch
         return default;
     }
 
-    static Optional<JArray> GetArrayPatch(JArray targetArray, JArray originalArray)
+    static Optional<JArray> GetArrayPatch(JArray targetArray, JArray originalArray, Type? elementType)
     {
-        var elementType = Parser.GetArrayElementType(targetArray);
+        elementType = Parser.GetArrayElementType(targetArray);
 
-        JToken id(JToken e) => Parser.ElementIdentity(e, elementType);
-        bool equals(JToken a, JToken b) => JToken.DeepEquals(id(a), id(b));
+        JToken id(JToken e, int index)
+        {
+            if (elementType is not null && !Overrides.IdentifyByIndex(elementType))
+                return Parser.ElementIdentity(e, elementType);
+
+            return index;
+        }
+
+        bool equals(JToken a, JToken b, int index) => JToken.DeepEquals(id(a, index), id(b, index));
 
         var patches = new List<ArrayElementPatch>();
 
@@ -143,16 +158,16 @@ public static partial class JsonPatch
 
         for (var i = 0; i < targetArray.Count; i++)
         {
-            if (i < currentArray.Count && equals(currentArray[i], targetArray[i]))
+            if (i < currentArray.Count && equals(currentArray[i], targetArray[i], i))
             {
                 if (JToken.DeepEquals(currentArray[i], targetArray[i]))
                     continue;
 
-                var elementPatch = GetPatch(targetArray[i], currentArray[i]);
+                var elementPatch = GetPatch(targetArray[i], currentArray[i], elementType);
 
                 if (elementPatch.HasValue)
                 {
-                    var op = new ArrayElementPatch.PatchElement(id(currentArray[i]), elementPatch.Value);
+                    var op = new ArrayElementPatch.PatchElement(id(currentArray[i], i), elementPatch.Value);
                     patches.Add(op);
 
                     currentArray = op.Apply(currentArray, elementType, PFLog.Mods) ?? currentArray;
@@ -161,22 +176,22 @@ public static partial class JsonPatch
                 continue;
             }
 
-            var elementCountDelta = Parser.GetElementCount(targetArray, targetArray[i], id) - Parser.GetElementCount(currentArray, targetArray[i], id);
+            var elementCountDelta = Parser.GetElementCount(targetArray, targetArray[i], t => id(t, i)) - Parser.GetElementCount(currentArray, targetArray[i], t => id(t, i));
 
             if (elementCountDelta > 0)
             {
                 if (i is 0)
                     patches.Add(new ArrayElementPatch.Prepend(targetArray[i]));
                 else
-                    patches.Add(new ArrayElementPatch.Insert(targetArray[i], id(targetArray[i - 1])));
+                    patches.Add(new ArrayElementPatch.Insert(targetArray[i], id(targetArray[i - 1], i - 1)));
             }
-            else if (i < currentArray.Count && !equals(currentArray[i], targetArray[i]))
+            else if (i < currentArray.Count && !equals(currentArray[i], targetArray[i], i))
             {
                 if (elementCountDelta == 0)
-                    patches.Add(new ArrayElementPatch.Relocate(id(targetArray[i]), i > 0 ? id(currentArray[i - 1]) : JValue.CreateNull()));
+                    patches.Add(new ArrayElementPatch.Relocate(id(targetArray[i], i), i > 0 ? id(currentArray[i - 1], i - 1) : JValue.CreateNull()));
                 else if (elementCountDelta < 0)
                 {
-                    patches.Add(new ArrayElementPatch.Remove(id(currentArray[i])));
+                    patches.Add(new ArrayElementPatch.Remove(id(currentArray[i], i)));
                 }
                 else
                     throw new InvalidOperationException();
@@ -194,7 +209,9 @@ public static partial class JsonPatch
         {
             for (var i = targetArray.Count; i < currentArray.Count; i++)
             {
-                patches.Add(new ArrayElementPatch.RemoveFromEnd(id(currentArray[i])));
+                var remove = new ArrayElementPatch.RemoveFromEnd(id(currentArray[i], i));
+                patches.Add(remove);
+                currentArray = remove.Apply(currentArray, elementType, PFLog.Mods);
             }
         }
 
@@ -360,6 +377,26 @@ public static partial class JsonPatch
 
             JToken id(JToken e) => Parser.ElementIdentity(e, arrayElementType);
 
+            int indexOf(JToken t)
+            {
+                if (arrayElementType is not null &&
+                    Overrides.IdentifyByIndex(arrayElementType) &&
+                    t.Type is JTokenType.Integer)
+                    return (int)t;
+
+                return Parser.IndexOf(array, t, id);
+            }
+
+            int lastIndexOf(JToken t)
+            {
+                if (arrayElementType is not null &&
+                    Overrides.IdentifyByIndex(arrayElementType) &&
+                    t.Type is JTokenType.Integer)
+                    return (int)t;
+
+                return Parser.LastIndexOf(array, t, id);
+            }
+
             var targetIndex = -1;
             var insertAfterIndex = -1;
 
@@ -375,14 +412,15 @@ public static partial class JsonPatch
                     array.Add(append.NewElement);
                     break;
                 case Insert insert:
-                    insertAfterIndex = Parser.IndexOf(array, insert.InsertAfterTarget, id);
+                    insertAfterIndex = indexOf(insert.InsertAfterTarget);
+
                     if (insertAfterIndex < 0)
-                        throw new KeyNotFoundException($"Could not find {nameof(Insert.InsertAfterTarget)} for patch operation:\n{insert}\nin array:\narray");
+                        throw new KeyNotFoundException($"Could not find {nameof(Insert.InsertAfterTarget)} for patch operation:\n{insert}\nin array:\n{array}");
 
                     array.Insert(insertAfterIndex + 1, insert.NewElement);
                     break;
                 case Remove remove:
-                    targetIndex = Parser.IndexOf(array, remove.Target, id);
+                    targetIndex = indexOf(remove.Target);
                     if (targetIndex < 0)
                     {
                         //throw new KeyNotFoundException();
@@ -394,7 +432,7 @@ public static partial class JsonPatch
 
                     break;
                 case RemoveFromEnd removeFromEnd:
-                    targetIndex = Parser.LastIndexOf(array, removeFromEnd.Target, id);
+                    targetIndex = lastIndexOf(removeFromEnd.Target);
                     if (targetIndex < 0)
                     {
                         //throw new KeyNotFoundException();
@@ -405,20 +443,20 @@ public static partial class JsonPatch
                     array.RemoveAt(targetIndex);
                     break;
                 case PatchElement patchElement:
-                    targetIndex = Parser.IndexOf(array, patchElement.Target, id);
+                    targetIndex = indexOf(patchElement.Target);
                     if (targetIndex < 0)
                         throw new KeyNotFoundException($"Could not find {nameof(PatchElement.Target)} for patch operation:\n{patchElement}\nin array:\n{array}");
 
                     array[targetIndex] = PatchValue(array[targetIndex], patchElement.ElementPatch, logger, arrayElementType);
                     break;
                 case Relocate relocate:
-                    targetIndex = Parser.IndexOf(array, relocate.Target, id);
+                    targetIndex = indexOf(relocate.Target);
                     if (targetIndex < 0)
                         throw new KeyNotFoundException($"Could not find {nameof(Relocate.Target)} for patch operation:\n{relocate}\nin array:\n{array}");
 
                     if (relocate.InsertAfterTarget.Type is not JTokenType.Null)
                     {
-                        insertAfterIndex = Parser.IndexOf(array, relocate.InsertAfterTarget, id);
+                        insertAfterIndex = indexOf(relocate.InsertAfterTarget);
                         if (insertAfterIndex < 0)
                             throw new KeyNotFoundException($"Could not find {nameof(Relocate.InsertAfterTarget)} for patch operation:\n{relocate}\nin array:\n{array}");
                     }

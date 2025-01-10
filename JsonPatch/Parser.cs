@@ -26,7 +26,7 @@ public static partial class JsonPatch
     {
         internal static IEnumerable<(string Name, string PropertyName)> GetPropertyMap(Type type)
         {
-            foreach (var m in type.GetMembers(AccessTools.all).Where(m =>
+            foreach (var m in type.GetAllMembers().Where(m =>
                 m.Name is not null &&
                 m.MemberType is MemberTypes.Field or MemberTypes.Property))
             {
@@ -113,8 +113,10 @@ public static partial class JsonPatch
 
             var fieldName = propertyMap.FirstOrDefault(n => n.PropertyName == propertyName).Name;
 
+            PFLog.Mods.DebugLog(() => fieldName is null, $"fieldName is null. propertyName is '{propertyName}'", severity: LogSeverity.Error);
+
             if (fieldName is null ||
-                objectType!.GetFields(AccessTools.all).FirstOrDefault(f => f.Name == fieldName)
+                objectType!.GetAllFields().FirstOrDefault(f => f.Name == fieldName)
                 is not FieldInfo field)
                 return null;
 

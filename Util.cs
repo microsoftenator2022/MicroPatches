@@ -6,6 +6,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
+using HarmonyLib;
+
 using Kingmaker;
 
 using Owlcat.Runtime.Core.Logging;
@@ -37,6 +39,36 @@ public static class Util
             return null;
 
         return interfaceType.GetGenericArguments()?[0];
+    }
+
+    public static IEnumerable<FieldInfo> GetAllFields(this Type type)
+    {
+        foreach (var f in type.GetFields(AccessTools.allDeclared))
+            yield return f;
+
+        if (type.BaseType is not null)
+            foreach (var f in type.BaseType.GetAllFields())
+                yield return f;
+    }
+
+    public static IEnumerable<MemberInfo> GetAllMembers(this Type type)
+    {
+        foreach (var m in type.GetMembers(AccessTools.allDeclared))
+            yield return m;
+
+        if (type.BaseType is not null)
+            foreach (var m in type.BaseType.GetAllMembers())
+                yield return m;
+    }
+
+    public static IEnumerable<PropertyInfo> GetAllProperties(this Type type)
+    {
+        foreach (var m in type.GetProperties(AccessTools.allDeclared))
+            yield return m;
+
+        if (type.BaseType is not null)
+            foreach (var m in type.BaseType.GetAllProperties())
+                yield return m;
     }
 
     public static void DebugLog(this LogChannel channel, string message, LogSeverity severity = LogSeverity.Message)
