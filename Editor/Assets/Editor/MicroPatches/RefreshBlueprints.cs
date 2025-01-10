@@ -40,9 +40,19 @@ public static class RefreshBlueprints
 
         var blueprintEntries = tarFile.Entries
             .Select(entry => (entry, path: EntryPathRegex.Match(entry.Key).Groups[1].Value))
-            .Where(e => e.path.StartsWith("Blueprints"))
-            //.Select(e => (e.entry, $"Test{e.path}"))
+            .Where(e => e.path.StartsWith("Blueprints") || e.path.StartsWith("Strings"))
             .ToArray();
+
+        static void writeFile(TarArchiveEntry entry, string path)
+        {
+            var length = (int)entry.Size;
+            using var s = entry.OpenEntryStream();
+            var arr = System.Buffers.ArrayPool<byte>.Shared.Rent(length);
+            var buffer = new Span<byte>(arr, 0, length);
+            s.Read(buffer);
+
+            File.WriteAllBytes(path, buffer.ToArray());
+        }
 
         for (var i = 0; i < blueprintEntries.Length; i++)
         {
@@ -60,18 +70,20 @@ public static class RefreshBlueprints
             //if (Path.GetExtension(path) != ".jbp")
             //    continue;
 
-            if (EditorUtility.DisplayCancelableProgressBar("Refreshing blueprints", $"({i}/{blueprintEntries.Length}) {entry.Key.Remove(0, "WhRtModificationTemplate/Blueprints/".Length)}", ((float)i) / ((float)blueprintEntries.Length)))
+            if (EditorUtility.DisplayCancelableProgressBar("Refreshing blueprints", $"({i}/{blueprintEntries.Length}) {entry.Key.Remove(0, "WhRtModificationTemplate/".Length)}", ((float)i) / ((float)blueprintEntries.Length)))
             {
                 break;
             }
 
-            var length = (int)entry.Size;
-            using var s = entry.OpenEntryStream();
-            var arr = System.Buffers.ArrayPool<byte>.Shared.Rent(length);
-            var buffer = new Span<byte>(arr, 0, length);
-            s.Read(buffer);
+            writeFile(entry, path);
 
-            File.WriteAllBytes(path, buffer.ToArray());
+            //var length = (int)entry.Size;
+            //using var s = entry.OpenEntryStream();
+            //var arr = System.Buffers.ArrayPool<byte>.Shared.Rent(length);
+            //var buffer = new Span<byte>(arr, 0, length);
+            //s.Read(buffer);
+
+            //File.WriteAllBytes(path, buffer.ToArray());
         }
 
         BlueprintsDatabase.InvalidateAllCache();
