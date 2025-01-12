@@ -3,7 +3,7 @@
   <Import Project="TemplatePath.props" Condition="Exists('TemplatePath.props')" />
 
   <PropertyGroup>
-    <VersionPrefix>1.17.4</VersionPrefix>
+    <VersionPrefix>1.17.5</VersionPrefix>
     <VersionSuffix Condition=" '$(Configuration)' == 'Debug' ">debug</VersionSuffix>
     <TargetFramework>net481</TargetFramework>
     <Nullable>enable</Nullable>
@@ -75,6 +75,7 @@
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Code\GameCore\Editor\Blueprints\WeakLinkDrawer.cs" />
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Code\GameCore\Editor\Validation\ReferenceGraph.cs" />
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Code\GameCore\Editor\Mods\SharedStringAssetRepair.cs" />
+      <TemplateFilesInclude Include="$(TemplatePath)\Assets\Editor\Build\Tasks\PrepareLocalization.cs" />
       <TemplateFiles Include="@(TemplateFilesInclude)" />
       <TemplateFiles Remove="@(TemplateFilesExclude)" />
     </ItemGroup>

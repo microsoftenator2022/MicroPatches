@@ -97,21 +97,24 @@ public static class BlueprintPatchExtension
         if (obj is not SimpleBlueprint bp)
             return __result;
 
-        if (Path.GetExtension(patchFile) is not ".patch")
-        {
-            patchFile = $"{patchFile}.patch";
-            __instance.Logger.Warning($"Patch filename for {guid} does not have .patch extension. Using {patchFile}");
-        }
-
         var patchFilePath = __instance.GetBlueprintPatchPath(patchFile);
 
-        if (!File.Exists(patchFilePath))
+        if (!File.Exists(patchFilePath) && Path.GetExtension(patchFilePath) is not ".patch")
         {
-            __instance.Logger.Error($"Patch file {patchFilePath} does not exist");
-            return __result;
+            var pathWithPatchExtension = $"{patchFilePath}.patch";
+
+            if (!File.Exists(pathWithPatchExtension))
+            {
+                __instance.Logger.Error($"Patch file {patchFilePath} does not exist");
+                return __result;
+            }
+
+            __instance.Logger.Warning($"Patch filename for {guid} does not have .patch extension. Using {pathWithPatchExtension}");
+
+            patchFilePath = pathWithPatchExtension;
         }
 
-        __instance.Logger.Log($"Applying patch {patchFile} to {bp}");
+        __instance.Logger.Log($"Applying patch {patchFilePath} to {bp}");
 
         try
         {

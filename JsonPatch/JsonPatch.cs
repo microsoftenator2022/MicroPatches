@@ -102,23 +102,25 @@ public static partial class JsonPatch
                 var fieldType = Parser.GetFieldType(original, prop.Name, objectType) ??
                     Parser.GetFieldType(value, prop.Name, objectType);
 
-                Optional<JToken> propPatch = default;
+                //Optional<JToken> propPatch = default;
 
-                if (prop.Value is JArray array && originalValue is JArray originalArray)
-                {
-                    var elementType =
-                        fieldType is not null ?
-                            Util.GetListTypeElementType(fieldType) :
-                            null;
+                //if (prop.Value is JArray array && originalValue is JArray originalArray)
+                //{
+                //    var elementType =
+                //        fieldType is not null ?
+                //            Util.GetListTypeElementType(fieldType) :
+                //            null;
                     
-                    propPatch = GetArrayPatch(
-                        array,
-                        originalArray,
-                        elementType)
-                        .Upcast<JArray, JToken>();
-                }
+                //    propPatch = GetArrayPatch(
+                //        array,
+                //        originalArray,
+                //        elementType)
+                //        .Upcast<JArray, JToken>();
+                //}
 
-                propPatch = propPatch.OrElseWith(() => GetPatch(prop.Value, originalValue, fieldType, propertyOverrides));
+                //propPatch = propPatch.OrElseWith(() => GetPatch(prop.Value, originalValue, fieldType, propertyOverrides));
+
+                var propPatch = GetPatch(prop.Value, originalValue, fieldType, propertyOverrides);
 
                 if (propPatch.HasValue)
                     //PFLog.Mods.DebugLog("objectPatch.Add(prop.Name, propPatch.Value.DeepClone());");
