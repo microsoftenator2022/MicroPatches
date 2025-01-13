@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 
 using Kingmaker;
+using Kingmaker.Modding;
 
 using OwlcatModification.Editor.Build.Context;
 
@@ -43,11 +44,8 @@ namespace OwlcatModification.Editor.Build.Tasks
                         continue;
 
                     // CreateManifestAndSettings task may fix patches in nested folders
-                    if (Path.GetExtension(entry.Filename) == ".jbp_patch")
-                    {
-                        PFLog.Build.Warning($"Patch file {entry.Filename} was not found");
+                    if (entry.PatchType is OwlcatModificationSettings.BlueprintPatchType.Edit)
                         continue;
-                    }
 
                     missingPatchFiles.Add(entry.Filename);
                 }
@@ -62,7 +60,7 @@ namespace OwlcatModification.Editor.Build.Tasks
             var missingBpPatchFiles = MissingBlueprintPatchFiles();
             if (missingBpPatchFiles.Any())
             {
-                string errorMessage = "Missing patch files:\n" + string.Join("\n", missingBpPatchFiles);
+                var errorMessage = "Missing patch files:\n" + string.Join("\n", missingBpPatchFiles);
 
                 //PFLog.Build.Error(errorMessage);
                 Debug.LogError(errorMessage);
