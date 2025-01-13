@@ -76,6 +76,7 @@
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Code\GameCore\Editor\Validation\ReferenceGraph.cs" />
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Code\GameCore\Editor\Mods\SharedStringAssetRepair.cs" />
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Editor\Build\Tasks\PrepareLocalization.cs" />
+      <TemplateFilesInclude Include="$(TemplatePath)\Assets\Editor\Build\Tasks\CheckAssetsValidity.cs" />
       <TemplateFiles Include="@(TemplateFilesInclude)" />
       <TemplateFiles Remove="@(TemplateFilesExclude)" />
     </ItemGroup>

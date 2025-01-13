@@ -59,9 +59,8 @@ public static partial class JsonPatch
             if ((objectType = GetObjectTypeFromAttribute(o)) is null)
             {
                 if (o.Parent is JProperty prop && prop.Parent is JObject parentObject)
-                    //var parentType = GetObjectType(parentObject);
-
                     objectType = GetFieldType(parentObject, prop.Name);
+
                 else if (o.Parent is JArray parentArray)
                 {
                     objectType = GetArrayElementType(parentArray);
@@ -140,8 +139,6 @@ public static partial class JsonPatch
 
             if (o["name"]?.ToString() is { } name)
             {
-                //var t = GetType(o["$type"]?.ToString());
-
                 if (typeof(BlueprintComponent).IsAssignableFrom(elementType) ||
                     typeof(Element).IsAssignableFrom(elementType))
                 {

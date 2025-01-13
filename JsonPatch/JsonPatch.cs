@@ -102,24 +102,6 @@ public static partial class JsonPatch
                 var fieldType = Parser.GetFieldType(original, prop.Name, objectType) ??
                     Parser.GetFieldType(value, prop.Name, objectType);
 
-                //Optional<JToken> propPatch = default;
-
-                //if (prop.Value is JArray array && originalValue is JArray originalArray)
-                //{
-                //    var elementType =
-                //        fieldType is not null ?
-                //            Util.GetListTypeElementType(fieldType) :
-                //            null;
-                    
-                //    propPatch = GetArrayPatch(
-                //        array,
-                //        originalArray,
-                //        elementType)
-                //        .Upcast<JArray, JToken>();
-                //}
-
-                //propPatch = propPatch.OrElseWith(() => GetPatch(prop.Value, originalValue, fieldType, propertyOverrides));
-
                 var propPatch = GetPatch(prop.Value, originalValue, fieldType, propertyOverrides);
 
                 if (propPatch.HasValue)
@@ -145,10 +127,10 @@ public static partial class JsonPatch
 
         JToken id(JToken e, int index)
         {
-            if (elementType is not null && !Overrides.IdentifyByIndex(elementType))
-                return Parser.ElementIdentity(e, elementType);
+            if (elementType is not null && Overrides.IdentifyByIndex(elementType))
+                return index;
 
-            return index;
+            return Parser.ElementIdentity(e, elementType);
         }
 
         bool equals(JToken a, JToken b, int index) => JToken.DeepEquals(id(a, index), id(b, index));
@@ -292,17 +274,11 @@ public static partial class JsonPatch
 
         logger.DebugLog(() => elementType is null, $"Could not get array element type for array:\n{original}", LogSeverity.Error);
 
-        //PFLog.Mods.DebugLog("var value = (JArray)original.DeepClone();");
         var value = (JArray)original.DeepClone();
 
         foreach (var elementPatch in patch.OfType<JObject>().Select(ArrayElementPatch.FromJObject))
         {
-            //logger.DebugLog($"Applying element patch:\n{elementPatch}");
-            //logger.DebugLog($"Before:\n{value}");
-
             value = elementPatch.Apply(value, elementType, logger);
-
-            //logger.DebugLog($"After:\n{value}");
         }
 
         return value;
@@ -402,7 +378,6 @@ public static partial class JsonPatch
             var targetIndex = -1;
             var insertAfterIndex = -1;
 
-            //PFLog.Mods.DebugLog("array = (JArray)array.DeepClone();");
             array = (JArray)array.DeepClone();
 
             switch (this)
