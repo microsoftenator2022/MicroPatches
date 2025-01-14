@@ -32,8 +32,7 @@ namespace OwlcatModification.Editor.Build.Tasks
 		
 		public int Version
 			=> 1;
-
-        void AddLocalizedStringsFromBlueprints()
+		void AddLocalizedStringsFromBlueprints()
 		{
 			var strings = new List<LocalizedStringData>();
 
@@ -56,8 +55,10 @@ namespace OwlcatModification.Editor.Build.Tasks
 				}
             }
 
+            var serializer = JsonSerializer.Create(new JsonSerializerSettings((JsonConvert.DefaultSettings ?? (() => new JsonSerializerSettings()))())
+				{ Formatting = Formatting.Indented });
+
             PFLog.Build.Log($"{strings.Count} strings");
-            var serializer = new JsonSerializer();
 
 			foreach (var locale in Enum.GetValues(typeof(Locale)).Cast<Locale>())
 			{
@@ -74,7 +75,7 @@ namespace OwlcatModification.Editor.Build.Tasks
 					pack.PutString(s.Key, text);
 				}
 
-                var path = Path.Combine(m_ModificationParameters.LocalizationPath, Enum.GetName(typeof(Locale), locale) + ".json");
+                var path = Path.Combine(m_BuildParameters.GetOutputFilePathForIdentifier(BuilderConsts.OutputLocalization), Enum.GetName(typeof(Locale), locale) + ".json");
 
 				if (File.Exists(path))
 				{
@@ -87,20 +88,21 @@ namespace OwlcatModification.Editor.Build.Tasks
 		
 		public ReturnCode Run()
 		{
-            AddLocalizedStringsFromBlueprints();
-
             string[] localeFiles = Enum.GetNames(typeof(Locale)).Select(i => i + ".json").ToArray();
 
             string originDirectory = m_ModificationParameters.LocalizationPath;
 			string destinationDirectory = m_BuildParameters.GetOutputFilePathForIdentifier(BuilderConsts.OutputLocalization);
+			
 			BuilderUtils.CopyFilesWithFoldersStructure(
 				originDirectory, destinationDirectory, SearchOption.TopDirectoryOnly, i =>
 				{
 					string filename = Path.GetFileName(i);
 					return localeFiles.Contains(filename);
 				});
-			
-			return ReturnCode.Success;
+
+            AddLocalizedStringsFromBlueprints();
+
+            return ReturnCode.Success;
 		}
 	}
 }
