@@ -127,7 +127,7 @@ public static partial class JsonPatch
 
         JToken id(JToken e, int index)
         {
-            if (elementType is not null && Overrides.IdentifyByIndex(elementType))
+            if (elementType is not null && Overrides.IdentifiedByIndex(elementType))
                 return index;
 
             return Parser.ElementIdentity(e, elementType);
@@ -358,7 +358,7 @@ public static partial class JsonPatch
             int indexOf(JToken t)
             {
                 if (arrayElementType is not null &&
-                    Overrides.IdentifyByIndex(arrayElementType) &&
+                    Overrides.IdentifiedByIndex(arrayElementType) &&
                     t.Type is JTokenType.Integer)
                     return (int)t;
 
@@ -368,7 +368,7 @@ public static partial class JsonPatch
             int lastIndexOf(JToken t)
             {
                 if (arrayElementType is not null &&
-                    Overrides.IdentifyByIndex(arrayElementType) &&
+                    Overrides.IdentifiedByIndex(arrayElementType) &&
                     t.Type is JTokenType.Integer)
                     return (int)t;
 

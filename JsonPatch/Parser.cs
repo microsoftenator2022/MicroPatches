@@ -102,7 +102,7 @@ public static partial class JsonPatch
 
         public static Type? GetFieldType(JObject o, string propertyName, Type? objectType = null)
         {
-            if ((objectType ??= GetObjectType(o)) is null)
+            if ((GetObjectType(o) ?? objectType) is null)
             {
                 PFLog.Mods.Error($"Could not get object type for object:\n{o}");
                 return null;
@@ -112,7 +112,9 @@ public static partial class JsonPatch
 
             var fieldName = propertyMap.FirstOrDefault(n => n.PropertyName == propertyName).Name;
 
-            PFLog.Mods.DebugLog(() => fieldName is null, $"fieldName is null. propertyName is '{propertyName}'", severity: LogSeverity.Error);
+            PFLog.Mods.DebugLog(() =>
+                fieldName is null, $"fieldName is null. propertyName is '{propertyName}'.\nType is {objectType}\nPropertyMap:\n{string.Join("\n", propertyMap)}",
+                severity: LogSeverity.Error);
 
             if (fieldName is null ||
                 objectType!.GetAllFields().FirstOrDefault(f => f.Name == fieldName)
