@@ -1,15 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using Kingmaker.Blueprints;
-using Kingmaker.ElementsSystem;
-using Kingmaker.Globalmap.Blueprints.SectorMap;
-using Kingmaker.UnitLogic.Progression.Paths;
-
-using Microsoft.CodeAnalysis;
 
 using MicroUtils.Linq;
 
@@ -19,7 +12,15 @@ namespace MicroPatches;
 
 public static partial class JsonPatch
 {
-    public static class Overrides
+    //static JToken? MaybeProperty(this JToken token, string name)
+    //{
+    //    if (token is not JObject o)
+    //        return null;
+
+    //    return o[name];
+    //}
+
+    public static partial class Overrides
     {
         public static readonly List<Func<JProperty, bool>> IgnoreProperties =
         [
@@ -39,18 +40,31 @@ public static partial class JsonPatch
             return JValue.CreateString(name.ToString());
         }
 
-        public static bool IdentifyByIndex(Type t) => t switch
-        {
-            _ when t == typeof(BlueprintPath.RankEntry) => true,
-            _ => false
-        };
+        public static bool IdentifiedByIndex(Type t) =>
+            IndexIdentifiedTypes.Any(type => type.IsAssignableFrom(t));
 
-        public static readonly Dictionary<Type, Func<JToken, JToken>> ElementIdentities = new()
+        static JToken IdentifyByProperties(JToken obj, params string[] propertyNames)
         {
-            { typeof(Element), IdentifyByName },
-            { typeof(BlueprintComponent), IdentifyByName },
-            { typeof(BlueprintWarpRoutesSettings.DifficultySettings), static t => t is JObject o ? o["Difficulty"] ?? t : t },
-        };
+            if (obj is not JObject o)
+                return obj;
 
+            var identityObject = new JObject();
+
+            foreach (var n in propertyNames)
+            {
+                if (o[n] is not { } t)
+                    continue;
+
+                identityObject[n] = t.DeepClone();
+            }
+
+            if (identityObject.Properties().Count() < 2)
+                return identityObject[0]!;
+
+            if (identityObject.Properties().Count() < 1)
+                return obj;
+
+            return identityObject;
+        }
     }
 }
