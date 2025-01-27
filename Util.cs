@@ -43,7 +43,7 @@ public static class Util
 
     public static IEnumerable<FieldInfo> GetAllFields(this Type type)
     {
-        foreach (var f in type.GetFields(AccessTools.allDeclared))
+        foreach (var f in type.GetFields(AccessTools.allDeclared)?.Where(m => m is not null) ?? [])
             yield return f;
 
         if (type.BaseType is not null)
@@ -53,7 +53,13 @@ public static class Util
 
     public static IEnumerable<MemberInfo> GetAllMembers(this Type type)
     {
-        foreach (var m in type.GetMembers(AccessTools.allDeclared))
+        if (type is null)
+        {
+            PFLog.Mods.Error("Type is null :owlcat_suspecting:");
+            yield break;
+        }
+
+        foreach (var m in type.GetMembers(AccessTools.allDeclared)?.Where(m => m is not null) ?? [])
             yield return m;
 
         if (type.BaseType is not null)
@@ -63,7 +69,7 @@ public static class Util
 
     public static IEnumerable<PropertyInfo> GetAllProperties(this Type type)
     {
-        foreach (var m in type.GetProperties(AccessTools.allDeclared))
+        foreach (var m in type.GetProperties(AccessTools.allDeclared)?.Where(m => m is not null) ?? [])
             yield return m;
 
         if (type.BaseType is not null)
