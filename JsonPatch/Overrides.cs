@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using Kingmaker;
 using Kingmaker.Blueprints;
 
 using MicroUtils.Linq;
@@ -58,11 +59,15 @@ public static partial class JsonPatch
                 identityObject[n] = t.DeepClone();
             }
 
+            if (identityObject.Properties().Count() < 1)
+            {
+                // Maybe should throw here
+                PFLog.Mods.Warning($"Identity has no values for JObject:\n{obj}");
+                return obj;
+            }
+
             if (identityObject.Properties().Count() < 2)
                 return identityObject.Properties().First().Value!;
-
-            if (identityObject.Properties().Count() < 1)
-                return obj;
 
             return identityObject;
         }
