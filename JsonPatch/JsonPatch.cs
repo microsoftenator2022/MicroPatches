@@ -189,14 +189,13 @@ public static partial class JsonPatch
         }
 
         // Remove any excess items
-        if (currentArray.Count > targetArray.Count)
+        while (currentArray.Count > targetArray.Count)
         {
-            for (var i = targetArray.Count; i < currentArray.Count; i++)
-            {
-                var remove = new ArrayElementPatch.RemoveFromEnd(id(currentArray[i], i));
-                patches.Add(remove);
-                currentArray = remove.Apply(currentArray, elementType, PFLog.Mods);
-            }
+            var i = currentArray.Count - 1;
+
+            var remove = new ArrayElementPatch.RemoveFromEnd(id(currentArray[i], i));
+            patches.Add(remove);
+            currentArray = remove.Apply(currentArray, elementType, PFLog.Mods);
         }
 
         if (!JToken.DeepEquals(currentArray, targetArray))
