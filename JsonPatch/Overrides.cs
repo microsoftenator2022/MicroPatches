@@ -59,7 +59,7 @@ public static partial class JsonPatch
             }
 
             if (identityObject.Properties().Count() < 2)
-                return identityObject[0]!;
+                return identityObject.Properties().First().Value!;
 
             if (identityObject.Properties().Count() < 1)
                 return obj;
