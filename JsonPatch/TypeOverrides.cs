@@ -173,6 +173,12 @@ public static partial class JsonPatch
             { typeof(Kingmaker.Visual.Sound.UnitAsksComponent.AnimationBark), 
                 static t => IdentifyByProperties(t,
                     nameof(Kingmaker.Visual.Sound.UnitAsksComponent.AnimationBark.AnimationEvent)) },
+            { typeof(Kingmaker.Blueprints.BlueprintComponent),
+                static t => IdentifyByProperties(t,
+                    nameof(Kingmaker.Blueprints.BlueprintComponent.name)) },
+            { typeof(Kingmaker.ElementsSystem.Element),
+                static t => IdentifyByProperties(t,
+                    nameof(Kingmaker.ElementsSystem.Element.name)) }
         };
 
         static readonly Type[] IndexIdentifiedTypes =
