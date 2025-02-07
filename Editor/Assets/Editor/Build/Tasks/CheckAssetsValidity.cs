@@ -47,6 +47,12 @@ namespace OwlcatModification.Editor.Build.Tasks
                     if (entry.PatchType is OwlcatModificationSettings.BlueprintPatchType.Edit)
                         continue;
 
+                    else if (blueprintFiles.Contains($"{entry.Filename}.patch"))
+                    {
+                        Debug.LogWarning($"{entry.Filename} is missing .patch extension");
+                        continue;
+                    }
+
                     missingPatchFiles.Add(entry.Filename);
                 }
             }
