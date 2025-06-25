@@ -34,6 +34,7 @@ using Kingmaker.EntitySystem.Entities.Base;
 using Kingmaker.Localization;
 using Kingmaker.Modding;
 using Kingmaker.UI.Canvases;
+using Kingmaker.UI.Selection;
 using Kingmaker.UnitLogic.Abilities.Blueprints;
 using Kingmaker.UnitLogic.Commands;
 using Kingmaker.UnitLogic.Mechanics;
@@ -178,7 +179,31 @@ namespace MicroPatches
         }
 
 #if DEBUG
+        [HarmonyPatch(typeof(KingmakerInputModule), nameof(KingmakerInputModule.CheckEventSystem), methodType: MethodType.Enumerator)]
+        static class SilenceAwaitXMessages
+        {
+            static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            {
+                var matches = instructions
+                    .Pairwise()
+                    .Where(pair =>
+                        pair.Item1.opcode == OpCodes.Ldstr &&
+                        pair.Item2.Calls(AccessTools.Method(typeof(LogChannel), nameof(LogChannel.Log), [typeof(string)])));
 
+                foreach (var (ldstr, callLog) in matches)
+                {
+                    Main.Logger.Log($"Silencing '{ldstr.operand}'");
+
+                    ldstr.opcode = OpCodes.Nop;
+                    ldstr.operand = null;
+
+                    callLog.opcode = OpCodes.Pop;
+                    callLog.operand = null;
+                }
+
+                return instructions;
+            }
+        }
 #endif
     }
 }

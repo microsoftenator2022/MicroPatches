@@ -234,6 +234,8 @@ static class BlueprintPatchEditorPatches
         
         PFLog.Mods.Log("Patch:\n" + patchJson.ToString());
 
+        PFLog.Mods.Log($"Testing patch\nBefore:\n{protoJson}\nAfter:\n{JsonPatch.ApplyPatch(protoJson, patchJson)}");
+
         var defaultDir = (new FileInfo(protoPath)).Directory.ToString();
 
         var selectedPath = EditorUtility.

@@ -3,7 +3,7 @@
   <Import Project="TemplatePath.props" Condition="Exists('TemplatePath.props')" />
 
   <PropertyGroup>
-    <VersionPrefix>1.17.6</VersionPrefix>
+    <VersionPrefix>1.18</VersionPrefix>
     <VersionSuffix Condition=" '$(Configuration)' == 'Debug' ">debug</VersionSuffix>
     <TargetFramework>net481</TargetFramework>
     <Nullable>enable</Nullable>
@@ -104,6 +104,7 @@
       DestinationFiles="@(Files->'$(IntermediateOutputDir)\Mod\$(MSBuildProjectName)\%(RecursiveDir)%(Filename)%(Extension)')" 
       SkipUnchangedFiles="false" />
     <Copy 
+      Condition="$(TemplatePath) != ''"
       SourceFiles="@(EditorFiles)" 
       DestinationFiles="@(EditorFiles->'$(IntermediateOutputDir)\Editor\%(RecursiveDir)%(Filename)%(Extension)')" 
       SkipUnchangedFiles="false" />
@@ -121,7 +122,7 @@
       SourceDirectory="$(IntermediateOutputDir)\Mod\$(MSBuildProjectName)"
       DestinationFile="$(IntermediateOutputDir)\$(SolutionName)-Mod-$(Version).zip" Overwrite="true" />
     <ZipDirectory
-      Condition=" '$(Configuration)' == 'Debug' "
+      Condition=" '$(Configuration)' == 'Debug' And $(TemplatePath) != ''"
       SourceDirectory="$(IntermediateOutputDir)\Editor"
       DestinationFile="$(IntermediateOutputDir)\$(SolutionName)-Editor-$(VersionPrefix).zip" Overwrite="true" />
   </Target>

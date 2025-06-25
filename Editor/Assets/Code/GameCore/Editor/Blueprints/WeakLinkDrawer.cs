@@ -1,9 +1,10 @@
 ﻿using System;
 using JetBrains.Annotations;
-
-using Kingmaker.Code.Editor.Utility;
 using Kingmaker.Editor.Utility;
 using Kingmaker.ResourceLinks;
+#region MicroPatches
+using Kingmaker.Code.Editor.Utility;
+#endregion
 using Owlcat.Editor.Core.Utility;
 using UnityEditor;
 using UnityEngine;
@@ -21,6 +22,7 @@ namespace Kingmaker.Editor.Blueprints
 			var idPropertySafe = new RobustSerializedProperty(idProperty);
 			var currentValue = GetAsset(idProperty.hasMultipleDifferentValues?null:idProperty.stringValue);
 
+            #region MicroPatches
             if (currentValue == null)
             {
                 var link = property.GetTargetObjectOfProperty() as WeakResourceLink<TAsset>;
@@ -30,6 +32,7 @@ namespace Kingmaker.Editor.Blueprints
                     currentValue = link.Load();
                 }
             }
+			#endregion
 
             Action<Object> pickCallback =
 				o =>

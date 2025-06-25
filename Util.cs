@@ -9,8 +9,13 @@ using System.Threading.Tasks;
 using HarmonyLib;
 
 using Kingmaker;
+using Kingmaker.BundlesLoading;
 
 using Owlcat.Runtime.Core.Logging;
+
+using RogueTrader.SharedTypes;
+
+using UnityEngine;
 
 namespace MicroPatches;
 public static class Util
@@ -104,5 +109,35 @@ public static class Util
 #if DEBUG
         channel.Exception(e);
 #endif
+    }
+
+    public static (string guid, long fileid)? GetAssetId(this BlueprintReferencedAssets @this, UnityEngine.Object asset)
+    {
+        foreach (var entry in @this.m_Entries)
+        {
+            if (entry.Asset == asset)
+                return (entry.AssetId, entry.FileId);
+        }
+
+        return null;
+    }
+
+    public static (string name, AssetBundle bundle, int requestCount)[] GetLoadedBundles()
+        => BundlesLoadService.Instance.m_Bundles
+            .Select(entry => (entry.Key, entry.Value.Bundle, entry.Value.RequestCount))
+            .ToArray();
+
+    public static void AddToBundlesLoadService(string name, AssetBundle bundle, int requestCount = 0)
+    {
+        if (BundlesLoadService.Instance.m_Bundles.ContainsKey(name))
+            return;
+
+        BundlesLoadService.Instance.m_Bundles[name] = new() { Bundle = bundle, RequestCount = requestCount };
+    }
+
+    public static void ReloadBundlesLoadServiceLists()
+    {
+        BundlesLoadService.Instance.ReadDependencyList();
+        BundlesLoadService.Instance.ReadAssetLocationList();
     }
 }

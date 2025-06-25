@@ -10,6 +10,7 @@ public static partial class JsonPatch
 {
     public static partial class Overrides
     {
+        // TODO: Maybe default to ignoring array properties instead of doing that manually
         public static readonly Dictionary<Type, Func<JToken, JToken>> ElementIdentities = new()
         {
             { typeof(Kingmaker.BarkBanters.BlueprintBarkBanter.BanterResponseEntry), 
@@ -178,9 +179,13 @@ public static partial class JsonPatch
                     nameof(Kingmaker.Blueprints.BlueprintComponent.name)) },
             { typeof(Kingmaker.ElementsSystem.Element),
                 static t => IdentifyByProperties(t,
-                    nameof(Kingmaker.ElementsSystem.Element.name)) }
+                    nameof(Kingmaker.ElementsSystem.Element.name)) },
+            //{ typeof(Kingmaker.UnitLogic.Levelup.Selections.AddFeaturesToLevelUp),
+            //    static t => IdentifyByProperties(t,
+            //        nameof(Kingmaker.UnitLogic.Levelup.Selections.AddFeaturesToLevelUp.Group)) },
         };
 
+        // TODO: check that these actually make sense to do by index
         static readonly Type[] IndexIdentifiedTypes =
         [
             typeof(Kingmaker.Blueprints.Area.ConditionAction),

@@ -1,0 +1,4 @@
+﻿[*.cs]
+
+# MHI000: Harmony Patch Method Info
+dotnet_diagnostic.MHI000.severity = suggestion

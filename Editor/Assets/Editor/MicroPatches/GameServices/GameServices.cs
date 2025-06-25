@@ -18,6 +18,7 @@ using Kingmaker.Modding;
 using Kingmaker.Utility.EditorPreferences;
 using Kingmaker.Utility.UnityExtensions;
 
+using MicroPatches;
 using MicroPatches.Editor;
 
 using MicroUtils.Transpiler;
@@ -25,6 +26,8 @@ using MicroUtils.Transpiler;
 using Newtonsoft.Json;
 
 using Owlcat.Runtime.Core.Utility.Locator;
+
+using RogueTrader.SharedTypes;
 
 using UnityEditor;
 
@@ -158,7 +161,23 @@ public static class GameServices
 
         var p = Progress.Start("Loading bundles", options: Progress.Options.Indefinite);
 
-        var c = EditorCoroutine.Start(LoadCommonBundlesCoroutine(() => Progress.Finish(p, Canceled ? Progress.Status.Failed : Progress.Status.Succeeded)));
+        //var loadedBundlesGameObject = GameObject.Find(LoadedBundlesGameObjectName);
+
+        //if (loadedBundlesGameObject == null)
+            EditorCoroutine.Start(LoadCommonBundlesCoroutine(() => Progress.Finish(p, Canceled ? Progress.Status.Failed : Progress.Status.Succeeded)));
+        //else
+        //{
+        //    try
+        //    {
+        //        RestoreLoadedBundles(loadedBundlesGameObject.GetComponent<LoadedBundlesList>());
+        //        UnityEngine.Object.Destroy(loadedBundlesGameObject);
+        //        StartGameLoader.LoadDirectReferencesList();
+        //    }
+        //    finally
+        //    {
+        //        Progress.Finish(p);
+        //    }
+        //}
     }
 
     public static bool Canceled = false;
@@ -222,15 +241,65 @@ public static class GameServices
         }
     }
 
-    [MenuItem("MicroPatches/Game services/Reset")]
-    public static void Reset()
+    //class LoadedBundlesList : MonoBehaviour
+    //{
+    //    public string[] bundleNames;
+        
+    //    [SerializeReference]
+    //    public AssetBundle[] bundles;
+        
+    //    public int[] requestCounts;
+    //}
+
+    //const string LoadedBundlesGameObjectName = "MicroPatches_LoadedBundles";
+
+    //static void SaveLoadedBundles()
+    //{
+    //    var go = new GameObject(LoadedBundlesGameObjectName, typeof(LoadedBundlesList));
+
+    //    var loadedBundles = Util.GetLoadedBundles();
+
+    //    var lbl = go.GetComponent<LoadedBundlesList>();
+    //    lbl.bundleNames = new string[loadedBundles.Length];
+    //    lbl.bundles = new AssetBundle[loadedBundles.Length];
+    //    lbl.requestCounts = new int[loadedBundles.Length];
+
+    //    for (var i = 0; i < loadedBundles.Length; i++)
+    //    {
+    //        lbl.bundleNames[i] = loadedBundles[i].name;
+    //        lbl.bundles[i] = loadedBundles[i].bundle;
+    //        lbl.requestCounts[i] = loadedBundles[i].requestCount;
+    //    }
+    //}
+
+    //static void RestoreLoadedBundles(LoadedBundlesList lbl)
+    //{
+    //    Util.ReloadBundlesLoadServiceLists();
+
+    //    foreach (var (name, bundle, requestCount) in lbl.bundleNames
+    //        .Zip(lbl.bundles, (name, bundle) => (name, bundle))
+    //        .Zip(lbl.requestCounts, (nb, requestCount) => (nb.name, nb.bundle, requestCount)))
+    //    {
+    //        Debug.Log($"Restoring {name} ({requestCount})");
+    //        Util.AddToBundlesLoadService(name, bundle, requestCount);
+    //    }
+    //}
+
+    public static void Reset(bool unloadBundles)
     {
         Canceled = true;
-        
+
         Services.ResetAllRegistrations();
-        AssetBundle.UnloadAllAssetBundles(true);
+
+        //if (unloadBundles)
+            AssetBundle.UnloadAllAssetBundles(true);
+        //else
+        //    SaveLoadedBundles();
 
         Started = false;
         Starting = false;
     }
+
+    [MenuItem("MicroPatches/Game services/Reset")]
+    public static void Reset() => Reset(true);
 }

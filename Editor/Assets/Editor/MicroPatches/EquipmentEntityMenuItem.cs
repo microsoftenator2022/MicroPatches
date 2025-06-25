@@ -9,7 +9,7 @@ using UnityEngine;
 
 static class EquipmentEntityMenuItem
 {
-    [MenuItem("Assets/Create/EquipmentEntity")]
+    [MenuItem("Assets/Create/Character System/EquipmentEntity")]
     static void CreateEquipmentEntity()
     {
         var args = new object[1];

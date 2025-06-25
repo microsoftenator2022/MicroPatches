@@ -14,6 +14,7 @@ using Kingmaker.Blueprints.JsonSystem.PropertyUtility;
 using Kingmaker.Blueprints.Quests;
 using Owlcat.QA.Validation;
 using Kingmaker.DialogSystem.Blueprints;
+using Kingmaker.Utility.EditorPreferences;
 using Owlcat.Runtime.Core.Utility;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -80,7 +81,7 @@ namespace Kingmaker.Editor.Validation
 
         public readonly List<Entry> Entries = new List<Entry>();
         public readonly List<SceneEntity> SceneEntitys = new List<SceneEntity>();
-        public bool IsReferenceTrackingSuppressed { get; set; }
+        public static bool IsReferenceTrackingSuppressed { get; set; }
         private List<string> m_ReferencingBlueprintPaths;
         private List<string> m_ReferencingScenesPaths;
         private Dictionary<string, Entry> m_EntriesByGuid;
@@ -157,11 +158,19 @@ namespace Kingmaker.Editor.Validation
 
         static ReferenceGraph m_ReferenceGraph;
 
+        #region MicroPatches
+        //static ReferenceGraph()
+        //{
+        //    BlueprintsDatabase.OnPreSave += id => Graph?.CleanReferencesInBlueprintWithId(id);
+        //    BlueprintsDatabase.OnSavedId += id => Graph?.ParseFileWithId(id);
+        //    IsReferenceTrackingSuppressed = EditorPreferences.Instance.SuppressReferenceTracking;
+        //}
 
         static ReferenceGraph()
         {
-            BlueprintsDatabase.OnPreSave += id => Graph?.CleanReferencesInBlueprintWithId(id);
-            BlueprintsDatabase.OnSavedId += id => Graph?.ParseFileWithId(id);
+	        BlueprintsDatabase.OnPreSave += id => Graph?.CleanReferencesInBlueprintWithId(id);
+	        BlueprintsDatabase.OnSavedId += id => Graph?.ParseFileWithId(id);
+            IsReferenceTrackingSuppressed = EditorPreferences.Instance.SuppressReferenceTracking;
         }
 
         [InitializeOnLoadMethod]
@@ -173,6 +182,7 @@ namespace Kingmaker.Editor.Validation
                 CollectMenu();
             }
         }
+        #endregion
 
         public static ReferenceGraph Graph
         {

@@ -1,20 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Kingmaker.AreaLogic.Cutscenes;
+using Kingmaker.AreaLogic.Etudes;
+using Kingmaker.Assets.Code.Editor.EtudesViewer;
 using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.JsonSystem.EditorDatabase;
+using Kingmaker.Blueprints.Quests;
+using Kingmaker.DialogSystem.Blueprints;
 using Kingmaker.Editor;
 using Kingmaker.Editor.Blueprints;
 using Kingmaker.Editor.Blueprints.ProjectView;
+using Kingmaker.Editor.Cutscenes;
+using Kingmaker.Editor.NodeEditor.Window;
 using Owlcat.Editor.Core.Utility;
 using Owlcat.Editor.Utility;
-using Owlcat.Runtime.Core.Utility;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using Kingmaker.Utility.DotNetExtensions;
 using RogueTrader.Editor.Blueprints.ProjectView;
-using System.Linq;
 using Kingmaker.Utility.EditorPreferences;
 
 namespace Assets.Editor
@@ -107,10 +112,12 @@ namespace Assets.Editor
 
         public static void Ping(SimpleBlueprint bp)
         {
-            if(bp == null || Event.current == null)
+            #region MicroPatches
+            if (bp==null || Event.current == null)
                 return;
 
             if (Event.current.control)
+            #endregion
             {
                 Selection.activeObject = BlueprintEditorWrapper.Wrap(bp);
             }
@@ -210,12 +217,47 @@ namespace Assets.Editor
 
             ResizeSplit();
 
+            GUILayout.BeginVertical();
             var rightRect = GUILayoutUtility.GetRect(0, position.width - m_SplitWidth - 4, 0, 10000);
             m_FilesView?.OnGUI(rightRect);
 
+            GUILayout.FlexibleSpace();
+            ShowAssetAddressBar();
+            GUILayout.EndVertical();
+            
             ShowContextMenu(leftRect, rightRect);
+            HandleDoubleClick(rightRect);
 
             GUILayout.EndHorizontal();
+        }
+
+        private void ShowAssetAddressBar()
+        {
+            try
+            {
+                if (m_FilesView == null)
+                    return;
+	            
+                string displayingAssetAddress = string.Empty;
+                
+                var selections = m_FilesView.GetSelection();
+                if (selections != null && selections.Count == 1)
+                {
+					
+                    var selection = m_FilesView.GetItemBySelectionId(selections[0]);
+                    if (selection != null && selection.IsBlueprint)
+                    {
+                        displayingAssetAddress = BlueprintsDatabase.IdToPath(selection.Id);
+                    }
+                }
+                
+                EditorGUILayout.LabelField(displayingAssetAddress);
+            }
+            catch (Exception e)
+            {
+                // case - we have selection, but also we start searching
+                // m_FilesView?.GetSelection() can give you selected index for hidden element
+            }
         }
 
         private void ShowContextMenu(Rect leftRect, Rect rightRect)
@@ -235,6 +277,50 @@ namespace Assets.Editor
                     {
                         ReloadAll();
                     };
+                }
+            }
+        }
+
+        private void HandleDoubleClick(Rect filesRect)
+        {
+            if (Event.current.type == EventType.Used
+                && Event.current.button == 0
+                && Event.current.clickCount == 2
+                && filesRect.Contains(Event.current.mousePosition))
+            {
+                var selection = m_FilesView.GetSelection();
+                if (selection.Count != 1)
+                {
+                    return;
+                }
+
+                var item = m_FilesView.GetItemBySelectionId(selection[0]);
+                var bp = BlueprintsDatabase.LoadById<SimpleBlueprint>(item.Id);
+
+                switch (bp)
+                {
+                    case Gate:
+                    case CommandBase:
+                        CutsceneEditorWindow.OpenAssetInCutsceneEditor(bp);
+                        break;
+
+                    case BlueprintDialog:
+                    case BlueprintCueBase:
+                    case BlueprintAnswerBase:
+                        DialogEditor.OpenAssetInDialogEditor(bp);
+                        break;
+
+                    case BlueprintQuest quest:
+                        QuestEditor.OpenAssetInQuestEditor(quest);
+                        break;
+#if UNITY_EDITOR && EDITOR_FIELDS
+                    case BlueprintEtude etude:
+                        EtudesViewer.OpenAssetInEtudeViewer(etude);
+                        break;
+#endif
+                    default:
+                        BlueprintInspectorWindow.OpenFor(bp);
+                        break;
                 }
             }
         }
@@ -377,6 +463,7 @@ namespace Assets.Editor
             if (bp is BlueprintScriptableObject bpScriptable)
             {
                 bpScriptable.Author = EditorPreferences.Instance.NewBlueprintAuthor;
+                bpScriptable.Reset();
                 bpScriptable.SetDirty();
                 BlueprintsDatabase.Save(bpScriptable.AssetGuid);
             }

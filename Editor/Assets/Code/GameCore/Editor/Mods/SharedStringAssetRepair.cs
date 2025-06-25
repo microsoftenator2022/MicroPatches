@@ -1,9 +1,7 @@
 ﻿using Kingmaker;
 using Kingmaker.Localization;
 using Kingmaker.Utility.Serialization;
-
 using Newtonsoft.Json;
-
 using OwlcatModification.Editor.Utility;
 
 using System.Collections.Concurrent;
@@ -13,12 +11,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-
 using UnityEditor;
-
 using UnityEngine;
-using UnityEngine.UIElements;
-
 using Debug = UnityEngine.Debug;
 
 namespace Code.GameCore.Editor.Mods
@@ -27,11 +21,11 @@ namespace Code.GameCore.Editor.Mods
     {
         private static string OldSharedStringScriptGuid;
         private static long OldSharedStringScriptFileId;
-
+        
         [MenuItem("Modification Tools/Repair SharedString configs")]
         public static void Repair()
         {
-#if OWLCAT_MODS
+            #if OWLCAT_MODS
             ReadScriptData();
             
             if(string.IsNullOrEmpty(OldSharedStringScriptGuid))
@@ -40,7 +34,7 @@ namespace Code.GameCore.Editor.Mods
             RepairInternal();
             AssetDatabase.Refresh();
 
-#endif
+            #endif 
         }
 
         private static void ReadScriptData()
@@ -52,7 +46,7 @@ namespace Code.GameCore.Editor.Mods
                 Debug.Log($"Error while trying to repair so configs. Couldn't find cache file {cacheFileName}.json");
                 return;
             }
-
+            
             var cacheFileGuid = guids[0];
             var cacheFilePath = AssetDatabase.GUIDToAssetPath(cacheFileGuid);
             PFLog.Mods.Log($"{cacheFilePath}");
@@ -62,7 +56,7 @@ namespace Code.GameCore.Editor.Mods
                 PFLog.Mods.Log($"Cache file not found at path: {cacheFilePath};");
                 return;
             }
-
+            
             var cacheFileContent = File.ReadAllText(cacheFilePath);
 
             if (string.IsNullOrEmpty(cacheFileContent))
@@ -70,10 +64,10 @@ namespace Code.GameCore.Editor.Mods
                 PFLog.Mods.Log($"Error while reading data from {cacheFilePath}");
                 return;
             }
-
+            
             JsonSerializer serializer = JsonSerializer.Create
             (new JsonSerializerSettings
-            {Formatting = Formatting.Indented}
+                {Formatting = Formatting.Indented}
             );
 
             var scriptData = serializer.DeserializeObject<ScriptableObjectScriptData>(cacheFileContent);
@@ -84,7 +78,7 @@ namespace Code.GameCore.Editor.Mods
         private static void RepairInternal()
         {
             var sharedStringAssetsFolder = Path.Combine(Application.dataPath, "Mechanics", "Blueprints");
-
+            
             var files = Directory.EnumerateFiles(sharedStringAssetsFolder, "*.asset", SearchOption.AllDirectories)
                 .ToList();
 
@@ -93,16 +87,17 @@ namespace Code.GameCore.Editor.Mods
             var newGuid = ScriptsGuidUtil.GetScriptGuid(typeof(SharedStringAsset));
             var newFileId = FileIDUtil.Compute(typeof(SharedStringAsset));
 
+            #region MicroPatches
             //var oldMetaString = $"fileID: {OldSharedStringScriptFileId}, guid: {OldSharedStringScriptGuid}";
             //var newMetaString = $"fileID: {newFileId}, guid: {newGuid}";
 
-            //PFLog.Mods.Log($"Old SharedStringAssets guid {OldSharedStringScriptGuid}, fileId {OldSharedStringScriptFileId}");
             PFLog.Mods.Log($"New SharedStringAssets guid {newGuid}, fileId {newFileId}");
 
             AssetDatabase.ReleaseCachedFileHandles();
             AssetDatabase.StartAssetEditing();
 
             var progressid = Progress.Start("Repairing SharedStringAssets");
+
             try
             {
                 var count = 0;
@@ -115,17 +110,9 @@ namespace Code.GameCore.Editor.Mods
                         Interlocked.Increment(ref count);
                         Progress.Report(progressid, ((float)count) / ((float)files.Count));
                     });
-
-                //for (var i = 0; i < files.Count; i++)
-                //{
-                //    var file = files[i];
-                //    EditorUtility.DisplayProgressBar("Repairing strings", file, ((float)i) / ((float)files.Count));
-                //    RepairConfig(file, oldMetaString, newMetaString);
-                //}
             }
             finally
             {
-                //EditorUtility.ClearProgressBar();
                 AssetDatabase.StopAssetEditing();
                 Progress.Finish(progressid);
             }
@@ -144,8 +131,9 @@ namespace Code.GameCore.Editor.Mods
 
                 File.WriteAllText("Assets/Mechanics/Blueprints/UnknownGUIDs.json", JsonConvert.SerializeObject(dict, Formatting.Indented));
             }
+            #endregion
         }
-
+        #region MicroPatches
         static ConcurrentBag<(string, string)> UnknownGuids = new();
 
         //private static void RepairConfig(string filePath, string oldMeta, string newMeta)
@@ -155,16 +143,6 @@ namespace Code.GameCore.Editor.Mods
         //    {
         //        PFLog.Mods.Error($"Error while reading contents of {filePath}");
         //        return;
-        //    }
-
-        //    if (!contents.Contains(oldMeta) && !contents.Contains(newMeta))
-        //    {
-        //        var match = MonoScriptPropertyString.Match(contents);
-
-        //        if (match.Groups["fileID"].Value != "11500000")
-        //            PFLog.Mods.Error($"'{filePath}' - fileID: {match.Groups["fileID"]}, guid: {match.Groups["guid"]}");
-
-        //        UnknownGuids.Add(match.Groups["guid"].Value);
         //    }
 
         //    contents = contents.Replace(oldMeta, newMeta);
@@ -181,6 +159,11 @@ namespace Code.GameCore.Editor.Mods
 
         private static void RepairConfig(string filePath, string newFileID, string newGuid)
         {
+            filePath = Path.GetFullPath(filePath);
+
+            if (filePath.Length > 260 && !filePath.StartsWith(@"\\?\"))
+                filePath = $@"\\?\{filePath}";
+
             var contents = File.ReadAllText(filePath);
             if (string.IsNullOrEmpty(contents))
             {
@@ -224,5 +207,6 @@ namespace Code.GameCore.Editor.Mods
 
             File.WriteAllText(filePath, contents);
         }
+        #endregion
     }
 }

@@ -8,10 +8,10 @@ using System.Text.RegularExpressions;
 using Kingmaker.Blueprints.JsonSystem.EditorDatabase;
 using Kingmaker.Utility.EditorPreferences;
 
-using Owlcat.Runtime.Core.Utility.Buffers;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 using SharpCompress.Archives.Tar;
-using SharpCompress.Readers;
 
 using UnityEditor;
 
@@ -43,6 +43,24 @@ public static class RefreshBlueprints
             .Where(e => e.path.StartsWith("Blueprints") || e.path.StartsWith("Strings"))
             .ToArray();
 
+        static void deleteExisting(TarArchiveEntry entry)
+        {
+            using var s = entry.OpenEntryStream();
+
+            using var tr = new StreamReader(s);
+            using var jr = new JsonTextReader(tr);
+            
+            var assetId = JToken.ReadFrom(jr)["AssetId"].ToString();
+
+            if (assetId is null)
+                return;
+
+            var path = BlueprintsDatabase.IdToPath(assetId);
+            
+            if (!string.IsNullOrEmpty(path))
+                File.Delete(path);
+        }
+
         static void writeFile(TarArchiveEntry entry, string path)
         {
             var length = (int)entry.Size;
@@ -51,7 +69,10 @@ public static class RefreshBlueprints
             var buffer = new Span<byte>(arr, 0, length);
             s.Read(buffer);
 
-            File.WriteAllBytes(path, buffer.ToArray());
+            using var f = File.Create(path);
+            f.Write(buffer);
+
+            System.Buffers.ArrayPool<byte>.Shared.Return(arr);
         }
 
         for (var i = 0; i < blueprintEntries.Length; i++)
@@ -66,24 +87,16 @@ public static class RefreshBlueprints
                 Directory.CreateDirectory(path);
                 continue;
             }
-            
-            //if (Path.GetExtension(path) != ".jbp")
-            //    continue;
 
             if (EditorUtility.DisplayCancelableProgressBar("Refreshing blueprints", $"({i}/{blueprintEntries.Length}) {entry.Key.Remove(0, "WhRtModificationTemplate/".Length)}", ((float)i) / ((float)blueprintEntries.Length)))
             {
                 break;
             }
+            
+            if (Path.GetExtension(path) == ".jpb")
+                deleteExisting(entry);
 
             writeFile(entry, path);
-
-            //var length = (int)entry.Size;
-            //using var s = entry.OpenEntryStream();
-            //var arr = System.Buffers.ArrayPool<byte>.Shared.Rent(length);
-            //var buffer = new Span<byte>(arr, 0, length);
-            //s.Read(buffer);
-
-            //File.WriteAllBytes(path, buffer.ToArray());
         }
 
         BlueprintsDatabase.InvalidateAllCache();

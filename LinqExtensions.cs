@@ -127,4 +127,27 @@ public static class LinqExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IEnumerable<U> Apply<T, U>(this IEnumerable<Func<T, U>> seq, T value) => seq.Select(f => f(value));
+
+    public static Dictionary<TKey, IEnumerable<TValue>> ToDictionary<TKey, TValue>(
+        this IEnumerable<IGrouping<TKey, TValue>> groups,
+        IEqualityComparer<TKey>? keyEqualityComparer = null)
+    {
+        var dict = keyEqualityComparer is not null ? new Dictionary<TKey, IEnumerable<TValue>>(keyEqualityComparer) : new();
+
+        foreach (var group  in groups)
+            dict.Add(group.Key, group);
+
+        return dict;
+    }
+
+    public static IEnumerable<(T1, T2)> Zip<T1, T2>(this IEnumerable<T1> source1, IEnumerable<T2> source2)
+    {
+        var enumerator1 = source1.GetEnumerator();
+        var enumerator2 = source2.GetEnumerator();
+
+        while (enumerator1.MoveNext() && enumerator2.MoveNext())
+        {
+            yield return (enumerator1.Current, enumerator2.Current);
+        }
+    }
 }

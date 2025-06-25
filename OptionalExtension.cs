@@ -109,4 +109,7 @@ public static class Optional
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T DefaultValue<T>(this Optional<T> optional, T defaultValue) =>
         optional.HasValue ? optional.Value : defaultValue;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T? ValueOrDefault<T>(this Optional<T> optional) where T : class => optional.HasValue ? optional.Value : null;
 }

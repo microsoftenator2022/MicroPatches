@@ -16,14 +16,15 @@ using UnityEngine;
 
 namespace OwlcatModification.Editor.Build.Tasks
 {
-	public class CheckAssetsValidity : IBuildTask
-	{
+    public class CheckAssetsValidity : IBuildTask
+    {
         [InjectContext(ContextUsage.In)]
         private IModificationParameters m_ModificationParameters;
 
         public int Version
-			=> 1;
+            => 1;
 
+        #region MicroPatches
         IEnumerable<string> MissingBlueprintPatchFiles()
         {
             List<string> missingPatchFiles = new();
@@ -59,10 +60,10 @@ namespace OwlcatModification.Editor.Build.Tasks
 
             return missingPatchFiles;
         }
-		
-		public ReturnCode Run()
-		{
-            
+
+        public ReturnCode Run()
+        {
+
             var missingBpPatchFiles = MissingBlueprintPatchFiles();
             if (missingBpPatchFiles.Any())
             {
@@ -73,8 +74,9 @@ namespace OwlcatModification.Editor.Build.Tasks
 
                 return ReturnCode.Error;
             }
-            
+
             return ReturnCode.Success;
-		}
-	}
+        }
+        #endregion
+    }
 }

@@ -84,6 +84,7 @@ public static partial class JsonPatch
 
             if (a.Parent is JProperty prop && prop.Parent is JObject parentObject)
                 arrayType = GetFieldType(parentObject, prop.Name);
+
             else if (a.Parent is JArray parentArray)
             {
                 arrayType = GetArrayElementType(parentArray);
@@ -164,7 +165,7 @@ public static partial class JsonPatch
                 .Count();
 
         public static bool Contains(JArray array, JToken value, Func<JToken, JToken> identity) =>
-        IndexOf(array, value, identity) >= 0;
+            IndexOf(array, value, identity) >= 0;
 
         public static int IndexOf(JArray array, JToken value, Func<JToken, JToken> identity, int startFrom = 0)
         {

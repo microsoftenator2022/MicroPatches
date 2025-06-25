@@ -44,7 +44,7 @@ public static class MicroPatchesDomainReloadHandler
             }
             finally
             {
-                GameServices.Reset();
+                GameServices.Reset(true);
             }
         }
         finally
@@ -71,7 +71,9 @@ public static class MicroPatchesDomainReloadHandler
         }
 
         if (MicroPatchesEditorPreferences.Instance.GameServicesAutoStart &&
-            !GameServices.Started && !GameServices.Starting && !GameServices.Canceled)
+            !GameServices.Started &&
+            !GameServices.Starting &&
+            !GameServices.Canceled)
             GameServices.StartGameServices();
 
         AfterAssemblyReload?.Invoke();
