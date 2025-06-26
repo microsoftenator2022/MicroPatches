@@ -88,6 +88,11 @@ let install templatePath =
             printfn "extracting %s"p
             e.ExtractToFile p
 
+    for f in Directory.EnumerateFiles("Library/ScriptAssemblies")
+        |> Seq.where (Path.GetFileName >> _.StartsWith("UnityModManager")) do
+        printfn "deleting %s" f
+        File.Delete f
+
     if File.Exists projectDependenciesGraphPath then
         printfn "deleting %s" projectDependenciesGraphPath
 
