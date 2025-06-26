@@ -397,6 +397,7 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
-/GamePath.props
-/Build
-/TemplatePath.props
+
+/MicroPatches/GamePath.props
+/MicroPatches/Build
+/MicroPatches/TemplatePath.props

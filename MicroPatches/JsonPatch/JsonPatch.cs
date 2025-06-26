@@ -1,4 +1,6 @@
-﻿using System;
+﻿//#define ARRAY_PATCH_VERSION_2
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,6 +11,9 @@ using Kingmaker.Blueprints;
 
 using Microsoft.CodeAnalysis;
 
+using MicroUtils.Linq;
+
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using Owlcat.Runtime.Core.Logging;
@@ -22,8 +27,13 @@ public static partial class JsonPatch
         if (value is JArray arrayValue &&
             original is JArray originalArrayValue)
         {
+#if ARRAY_PATCH_VERSION_2
+            return GetArrayMapPatch(arrayValue, originalArrayValue, type is not null ? Util.GetListTypeElementType(type) : null)
+                .Upcast<JArray, JToken>();
+#else
             return GetArrayPatch(arrayValue, originalArrayValue, type is not null ? Util.GetListTypeElementType(type) : null)
                 .Upcast<JArray, JToken>();
+#endif
         }
 
         if (value is JObject objectValue &&
@@ -123,7 +133,7 @@ public static partial class JsonPatch
 
     static Optional<JArray> GetArrayPatch(JArray targetArray, JArray originalArray, Type? elementType)
     {
-        elementType = Parser.GetArrayElementType(targetArray);
+        elementType ??= Parser.GetArrayElementType(targetArray);
 
         JToken id(JToken e, int index)
         {
@@ -273,6 +283,11 @@ public static partial class JsonPatch
 
         logger.DebugLog(() => elementType is null, $"Could not get array element type for array:\n{original}", LogSeverity.Error);
 
+        if (patch.Any(element => element["Version"] is JValue j && j.Value<int>() == 2))
+        {
+            return PatchMapArray(original, patch, logger, elementType);
+        }
+
         var value = (JArray)original.DeepClone();
 
         foreach (var elementPatch in patch.OfType<JObject>().Select(ArrayElementPatch.FromJObject))
@@ -282,7 +297,7 @@ public static partial class JsonPatch
 
         return value;
     }
-
+    #region Old ArrayElementsPatch
     internal abstract record class ArrayElementPatch(string patchType)
     {
         public string PatchType => patchType;
@@ -447,5 +462,198 @@ public static partial class JsonPatch
 
             return array;
         }
+        #endregion
+    }
+
+    public class ArrayPatch
+    {
+        public enum ElementPatchType
+        {
+            Error = 0,
+            None,
+            NewElement,
+            ElementPatch
+        }
+
+        public record class Element()
+        {
+            public const int Version = 2;
+            public int TargetIndex { get; init; } = -1;
+            public ElementPatchType PatchType { get; init; } = ElementPatchType.Error;
+            public Optional<int> OriginalIndex { get; init; }
+            public Optional<JToken> Value { get; init; }
+
+            public static Element FromJson(JObject json)
+            {
+                var patchType = json[nameof(PatchType)]?.ToString() switch
+                {
+                    nameof(ElementPatchType.None) => ElementPatchType.None,
+                    nameof(ElementPatchType.NewElement) => ElementPatchType.NewElement,
+                    nameof(ElementPatchType.ElementPatch) => ElementPatchType.ElementPatch,
+                    _ => ElementPatchType.Error
+                };
+
+                var targetIndex = Optional.OfNullable(json[nameof(TargetIndex)] as JValue).Map(jv => jv.Value<int>()).DefaultValue(-1);
+                var originalIndex = Optional.OfNullable((json[nameof(OriginalIndex)] as JValue)).Map(jv => jv.Value<int>());
+                var value = json[nameof(Value)];
+                
+                if (patchType is ElementPatchType.Error ||
+                    patchType is not ElementPatchType.NewElement && value is null ||
+                    patchType is ElementPatchType.None && value is not null)
+                    return new();
+
+                return new() { PatchType = patchType, OriginalIndex = originalIndex, Value = Optional.OfNullable(value) };
+            }
+
+            public JObject ToJson()
+            {
+                var obj = new JObject();
+
+                obj["Version"] = 2;
+                obj["TargetIndex"] = this.TargetIndex;
+                obj[nameof(this.PatchType)] = Enum.GetName(typeof(ElementPatchType), this.PatchType);
+                
+                if (this.OriginalIndex.HasValue)
+                    obj[nameof(this.OriginalIndex)] = this.OriginalIndex.Value;
+                
+                if (this.Value.HasValue)
+                    obj[nameof(this.Value)] = this.Value.Value;
+
+                return obj;
+
+            }
+        }
+    }
+
+    public static (Optional<int> originalIndex, JToken element)[] GetArrayElementsMap(JArray originalArray, JArray targetArray, Func<JToken, int, JToken> id)
+    {
+        var originalElementsGroups = originalArray.Indexed().GroupBy(element => id(element.item, element.index));
+        var targetElementsGroups = targetArray.Indexed().GroupBy(element => id(element.item, element.index));
+
+        var elementMap = new Optional<(Optional<int> originalIndex, JToken element)>[targetArray.Count];
+
+        foreach (var group in targetElementsGroups)
+        {
+            var targetElements = group.ToArray();
+            var originalElements = originalElementsGroups.FirstOrDefault(g => JToken.DeepEquals(g.Key, group.Key))?.ToArray() ?? [];
+
+            if (originalElements.Length == 0)
+                PFLog.Mods.DebugLog("No original elements?");
+
+            for (var i = 0; i < targetElements.Length; i++)
+            {
+                var (targetIndex, targetElement) = targetElements[i];
+                var originalIndex = default(Optional<int>);
+
+                if (i < originalElements.Length)
+                    originalIndex = originalElements[i].index;
+
+                elementMap[targetIndex] = (originalIndex, targetElement);
+            }
+        }
+
+        return elementMap.Select(x => x.Value).ToArray();
+    }
+
+    public static Optional<JArray> GetArrayMapPatch(JArray targetArray, JArray originalArray, Type? elementType)
+    {
+        elementType ??= Parser.GetArrayElementType(originalArray);
+
+        JToken id(JToken e, int index)
+        {
+            if (elementType is not null && Overrides.IdentifiedByIndex(elementType))
+                return index;
+
+            return Parser.ElementIdentity(e, elementType);
+        }
+
+        var elementsMap = GetArrayElementsMap(originalArray, targetArray, id);
+
+        var patchArray = new ArrayPatch.Element[elementsMap.Length];
+
+        for (var i = 0; i < elementsMap.Length; i++)
+        {
+            var (originalIndex, element) = elementsMap[i];
+
+            var patchElement = new ArrayPatch.Element() { TargetIndex = i, OriginalIndex = originalIndex };
+
+            if (originalIndex.HasValue)
+            {
+                patchElement = patchElement with { PatchType = ArrayPatch.ElementPatchType.None };
+
+                if (!JToken.DeepEquals(originalArray[originalIndex.Value], element))
+                {
+                    var elementPatch = GetPatch(targetArray[i], originalArray[originalIndex.Value]);
+
+                    if (elementPatch.HasValue)
+                    {
+                        patchElement = patchElement with
+                        { 
+                            PatchType = ArrayPatch.ElementPatchType.ElementPatch,
+                            Value = elementPatch
+                        };
+                    }
+                }
+            }
+            else
+            {
+                patchElement = patchElement with { PatchType = ArrayPatch.ElementPatchType.NewElement, Value = element };
+            }
+
+            if (patchElement.PatchType is ArrayPatch.ElementPatchType.Error)
+            {
+                PFLog.Mods.Error($"Error creating patch for array element.\nOriginal:\n{originalArray[i]}\nTarget:{targetArray[i]}");
+                return default;
+            }
+
+            patchArray[i] = patchElement;
+        }
+
+        if (patchArray.Indexed().All(p => p.item.PatchType is ArrayPatch.ElementPatchType.None && p.index == p.item.OriginalIndex.DefaultValue(-1)))
+            return default;
+
+        return new JArray(patchArray
+            //.Where(p =>
+            //    p is { PatchType: not ArrayPatch.ElementPatchType.None } ||
+            //    p.TargetIndex != p.OriginalIndex.DefaultValue(-1))
+            .Select(p => p.ToJson()).ToArray());
+    }
+
+    internal static JArray PatchMapArray(JArray original, JArray patch, LogChannel logger, Type? elementType)
+    {
+
+
+        var array = new JArray();
+
+        for (var i = 0; i < patch.Count; i++)
+        {
+            void LogError() => logger.Error($"Unexpected value in patch array:\n{patch[i]}");
+
+            if (patch[i] is not JObject o)
+            {
+                LogError();
+                return original;
+            }    
+
+            var elementPatch = ArrayPatch.Element.FromJson(o);
+
+            var element = elementPatch.PatchType switch
+            {
+                ArrayPatch.ElementPatchType.None => elementPatch.OriginalIndex.Map(originalIndex => original[originalIndex]),
+                ArrayPatch.ElementPatchType.NewElement => elementPatch.Value,
+                ArrayPatch.ElementPatchType.ElementPatch => elementPatch.Value.Map(value => ApplyPatch(original[i], value)),
+                _ => default
+            };
+
+            if (!element.HasValue)
+            {
+                LogError();
+                return original;
+            }
+
+            array[elementPatch.TargetIndex] = element.Value;
+        }
+
+        return array;
     }
 }

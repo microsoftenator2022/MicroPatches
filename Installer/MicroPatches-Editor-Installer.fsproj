@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>MicroPatches_Editor_Installer</RootNamespace>
+    <SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishTrimmed>true</PublishTrimmed>
+    <VersionPrefix>1.17.7</VersionPrefix>
+    <VersionSuffix Condition=" '$(Configuration)' == 'Debug' ">debug</VersionSuffix>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\MicroPatches\Build\MicroPatches-Editor-$(VersionPrefix).zip" Link="MicroPatches-Editor.zip" />
+    <EmbeddedResource Include="UnityModManager.zip" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Strings.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Mono.Cecil" Version="0.11.6" />
+  </ItemGroup>
+</Project>
