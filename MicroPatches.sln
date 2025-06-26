@@ -5,7 +5,7 @@ VisualStudioVersion = 17.9.34407.89
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MicroPatches", "MicroPatches\MicroPatches.csproj", "{8E3BCF3C-C607-424E-913A-D1B290F72DD5}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MicroPatches-Editor-Installer", "Installer\MicroPatches-Editor-Installer.fsproj", "{160BFD9A-CB95-E66B-C5EE-A5E23013AACB}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MicroPatches-Editor-Installer", "Editor-Installer\MicroPatches-Editor-Installer.fsproj", "{160BFD9A-CB95-E66B-C5EE-A5E23013AACB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
