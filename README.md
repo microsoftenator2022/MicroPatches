@@ -12,7 +12,3 @@ If you encounter any issues with an experimental patch, let me know in the issue
 
 1. Either copy the exe to the root folder of the mod template and run it OR drag and drop the mod template folder onto the exe
 2. When the editor gets stuck on the splash screen, kill the editor in task manager and open the project from unity hub again
-
-### If the editor gets stuck importing assets
-
-Close the editor and repeat step 4
