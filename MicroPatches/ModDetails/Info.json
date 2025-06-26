@@ -8,5 +8,5 @@
   "AssemblyName": "MicroPatches.dll",
   "EntryMethod": "MicroPatches.Main.Load",
   "HomePage": "https://github.com/microsoftenator2022/MicroPatches",
-  "Repository": "https://raw.githubusercontent.com/microsoftenator2022/MicroPatches/master/ModDetails/Repository.json"
+  "Repository": "https://raw.githubusercontent.com/microsoftenator2022/MicroPatches/master/MicroPatches/ModDetails/Repository.json"
 }
