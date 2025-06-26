@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="GamePath.props" Condition="Exists('GamePath.props')" />
   <Import Project="TemplatePath.props" Condition="Exists('TemplatePath.props')" />
+  <Import Project="..\common.props" />
 
   <PropertyGroup>
-    <VersionPrefix>1.18</VersionPrefix>
     <VersionSuffix Condition=" '$(Configuration)' == 'Debug' ">debug</VersionSuffix>
     <TargetFramework>net481</TargetFramework>
     <Nullable>enable</Nullable>
