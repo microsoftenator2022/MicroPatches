@@ -67,6 +67,11 @@ let install templatePath =
             if File.Exists e.FullName then
                 File.Delete e.FullName
 
+            let dir = Path.GetDirectoryName e.FullName
+
+            if not (dir |> Directory.Exists) then
+                Directory.CreateDirectory(dir) |> ignore
+
             e.ExtractToFile e.FullName
 
     if File.Exists dnlibPath then

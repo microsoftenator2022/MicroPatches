@@ -17,7 +17,6 @@ let hideIfAttributeName = "HideIfAttribute"
 let checkTemplateFiles = [
     "WhRtModificationTemplate-release.sln"
 ]
-
 let checkTemplateDirectories = [
     "Blueprints"
     "BlueprintIndexingServer"
