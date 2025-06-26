@@ -10,13 +10,8 @@ If you encounter any issues with an experimental patch, let me know in the issue
 
 ## Mod Developers: Editor Template Extension Installation
 
-1. Ensure you do not have the project open in the editor.
-2. Replace the contents of `Assets/UnityModManager` with the contents of [this zip](https://github.com/microsoftenator2022/MicroPatches/releases/download/umm-stub/UnityModManager.zip)
-3. Delete `Assets/Libs/dnlib.dll`
-4. Delete `Library/APIUpdater/project-dependencies.graph`
-5. Extract the contents of `MicroPatches-Editor-x.y.z.zip` to the template folder, overwriting existing files
-6. Open the project in the editor select `Modifiction Tools` -> `Repair SharedString configs`
-7. Optional: `MicroPatches` -> `Refresh blueprints`
+1. Either copy the exe to the root folder of the mod template and run it OR drag and drop the mod template folder onto the exe
+2. When the editor gets stuck on the splash screen, kill the editor in task manager and open the project from unity hub again
 
 ### If the editor gets stuck importing assets
 
