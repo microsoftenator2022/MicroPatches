@@ -335,7 +335,7 @@ namespace MicroPatches.UGUI
             toggle.Element.graphic = t2.Element;
 
             Subscriptions.Add(toggle.Element.onValueChanged.AsObservable().Subscribe(enabled =>
-                patchGroup.GetPatches().ForEach(p => Main.Instance.SetPatchEnabled(p.PatchClass.Name, enabled))));
+                patchGroup.GetPatches().ForEach(p => Main.Instance!.SetPatchEnabled(p.PatchClass.Name, enabled))));
 
             var nameText = line.AddTextObject(displayName, Colors.Text);
             nameText.Element.fontSize = 12;

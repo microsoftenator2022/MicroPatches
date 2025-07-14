@@ -18,8 +18,8 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.2" IncludeAssets="build; compile; contentfiles; analyzers; buildtransitive" PrivateAssets="all" />
-    <PackageReference Include="MicroUtils.HarmonyAnalyzers" Version="1.3.0-beta1727184377">
+    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3" IncludeAssets="compile; build; contentfiles; analyzers; buildtransitive" PrivateAssets="all" />
+    <PackageReference Include="MicroUtils.HarmonyAnalyzers" Version="1.6.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -75,6 +75,7 @@
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Code\GameCore\Editor\Blueprints\WeakLinkDrawer.cs" />
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Code\GameCore\Editor\Validation\ReferenceGraph.cs" />
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Code\GameCore\Editor\Mods\SharedStringAssetRepair.cs" />
+      <TemplateFilesInclude Include="$(TemplatePath)\Assets\Editor\Build\Builder.cs" />
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Editor\Build\Tasks\PrepareLocalization.cs" />
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Editor\Build\Tasks\CheckAssetsValidity.cs" />
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Editor\Build\Tasks\CreateManifestAndSettings.cs" />
@@ -99,32 +100,13 @@
       <EditorFiles Include="Editor\**\*.*" />
     </ItemGroup>
 
-    <Copy 
-      SourceFiles="@(Files)" 
-      DestinationFiles="@(Files->'$(IntermediateOutputDir)\Mod\$(MSBuildProjectName)\%(RecursiveDir)%(Filename)%(Extension)')" 
-      SkipUnchangedFiles="false" />
-    <Copy 
-      Condition="$(TemplatePath) != ''"
-      SourceFiles="@(EditorFiles)" 
-      DestinationFiles="@(EditorFiles->'$(IntermediateOutputDir)\Editor\%(RecursiveDir)%(Filename)%(Extension)')" 
-      SkipUnchangedFiles="false" />
-    <Copy
-      SourceFiles="$(TargetDir)\MicroPatches.dll;$(TargetDir)\MicroPatches.pdb"
-      DestinationFolder="$(IntermediateOutputDir)\Editor\Assets\Editor\MicroPatches"
-      SkipUnchangedFiles="true" />
-    <Copy 
-      Condition="$(TemplatePath) != '' And '$(Configuration)' == 'Debug'" 
-      SourceFiles="$(TargetDir)\MicroPatches.dll;$(TargetDir)\MicroPatches.pdb" 
-      DestinationFolder="$(TemplatePath)\Assets\Editor\MicroPatches" 
-      SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(Files)" DestinationFiles="@(Files->'$(IntermediateOutputDir)\Mod\$(MSBuildProjectName)\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="false" />
+    <Copy Condition="$(TemplatePath) != ''" SourceFiles="@(EditorFiles)" DestinationFiles="@(EditorFiles->'$(IntermediateOutputDir)\Editor\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="false" />
+    <Copy SourceFiles="$(TargetDir)\MicroPatches.dll;$(TargetDir)\MicroPatches.pdb" DestinationFolder="$(IntermediateOutputDir)\Editor\Assets\Editor\MicroPatches" SkipUnchangedFiles="true" />
+    <Copy Condition="$(TemplatePath) != '' And '$(Configuration)' == 'Debug'" SourceFiles="$(TargetDir)\MicroPatches.dll;$(TargetDir)\MicroPatches.pdb" DestinationFolder="$(TemplatePath)\Assets\Editor\MicroPatches" SkipUnchangedFiles="true" />
     
-    <ZipDirectory
-      SourceDirectory="$(IntermediateOutputDir)\Mod\$(MSBuildProjectName)"
-      DestinationFile="$(IntermediateOutputDir)\$(SolutionName)-Mod-$(Version).zip" Overwrite="true" />
-    <ZipDirectory
-      Condition=" '$(Configuration)' == 'Debug' And $(TemplatePath) != ''"
-      SourceDirectory="$(IntermediateOutputDir)\Editor"
-      DestinationFile="$(IntermediateOutputDir)\$(SolutionName)-Editor-$(VersionPrefix).zip" Overwrite="true" />
+    <ZipDirectory SourceDirectory="$(IntermediateOutputDir)\Mod\$(MSBuildProjectName)" DestinationFile="$(IntermediateOutputDir)\$(SolutionName)-Mod-$(Version).zip" Overwrite="true" />
+    <ZipDirectory Condition=" '$(Configuration)' == 'Debug' And $(TemplatePath) != ''" SourceDirectory="$(IntermediateOutputDir)\Editor" DestinationFile="$(IntermediateOutputDir)\$(SolutionName)-Editor-$(VersionPrefix).zip" Overwrite="true" />
   </Target>
 
   <Target Name="Deploy" AfterTargets="Build">
@@ -132,9 +114,7 @@
       <Files Include="$(TargetDir)\**\*.*" />
     </ItemGroup>
 
-    <Copy 
-      SourceFiles="@(Files)" 
-      DestinationFiles="@(Files->'$(RogueTraderData)\UnityModManager\$(AssemblyName)\%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy SourceFiles="@(Files)" DestinationFiles="@(Files->'$(RogueTraderData)\UnityModManager\$(AssemblyName)\%(RecursiveDir)%(Filename)%(Extension)')" />
   </Target>
 
   <Target Name="PublishToSteamWorkshop" AfterTargets="Publish">

@@ -68,6 +68,7 @@ public static class MicroPatchesDomainReloadHandler
             //Debug.Log("Patching");
             Harmony.PatchAll();
             Harmony.PatchAll(typeof(GameServices).Assembly);
+            PatchRunner.RunPatches(Harmony);
         }
 
         if (MicroPatchesEditorPreferences.Instance.GameServicesAutoStart &&

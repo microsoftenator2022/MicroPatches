@@ -22,8 +22,8 @@ namespace MicroPatches.Patches
 
         public static bool HasPatchAttribute(this PatchClassProcessor patchClass) => containerAttributes.GetValue(patchClass) is not null;
 
-        public static bool IsEnabled(this MicroPatch mp) => Main.Instance.GetPatchEnabled(mp);
-        public static bool IsApplied(this MicroPatch mp) => Main.Instance.GetPatchApplied(mp);
+        public static bool IsEnabled(this MicroPatch mp) => Main.Instance!.GetPatchEnabled(mp);
+        public static bool IsApplied(this MicroPatch mp) => Main.Instance!.GetPatchApplied(mp);
         public static bool Failed(this MicroPatch mp) => mp.IsEnabled() && !mp.IsApplied();
 
         public static IEnumerable<MicroPatch> GetPatches(this MicroPatch.IPatchGroup group) =>

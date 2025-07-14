@@ -221,6 +221,12 @@ public static class GameServices
                 yield return null;
             }
 
+            PFLog.Mods.DebugLog("Loaded bundles:");
+            foreach (var bundle in AssetBundle.GetAllLoadedAssetBundles())
+            {
+                PFLog.Mods.DebugLog($"  {bundle.name}");
+            }
+
             if (!Canceled)
             {
                 EditorUtility.ClearProgressBar();

@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 
 using HarmonyLib;
 
+using Kingmaker;
 using Kingmaker.Modding;
 
 using MicroPatches.Patches;
@@ -32,7 +33,7 @@ partial class Main
         false;
 #endif
 
-    internal static Main Instance = null!;
+    internal static Main? Instance = null;
 
     internal Main(UnityModManager.ModEntry modEntry)
     {
@@ -47,20 +48,42 @@ partial class Main
 
     readonly Harmony Harmony;
 
-    public static Harmony HarmonyInstance => Instance.Harmony;
+    public static Harmony? HarmonyInstance => Instance?.Harmony;
 
     internal readonly UnityModManager.ModEntry ModEntry;
 
-    private static UnityModManager.ModEntry.ModLogger Logger => Instance.ModEntry.Logger;
+    private static UnityModManager.ModEntry.ModLogger? Logger => Instance?.ModEntry.Logger;
 
-    public static void PatchLog(string patchName, string message) => Logger.Log($"[MicroPatch {patchName}] {message}");
-    public static void PatchError(string patchName, string message) => Logger.Error($"[MicroPatch {patchName}] {message}");
-    public static void PatchWarning(string patchName, string message) => Logger.Warning($"[MicroPatch {patchName}] {message}");
-    public static void PatchLogException(Exception ex) => Logger.LogException(ex);
+    public static void PatchLog(string patchName, string message)
+    {
+        var s = $"[MicroPatch {patchName}] {message}";
+        Logger?.Log(s);
+        PFLog.Mods.Log(s);
+    }
+
+    public static void PatchError(string patchName, string message)
+    {
+        var s = $"[MicroPatch {patchName}] {message}";
+        Logger?.Error(s);
+        PFLog.Mods.Error(s);
+    }
+
+    public static void PatchWarning(string patchName, string message)
+    {
+        var s = $"[MicroPatch {patchName}] {message}";
+        Logger?.Warning(s);
+        PFLog.Mods.Warning(s);
+    }
+
+    public static void PatchLogException(Exception ex)
+    {
+        Logger?.LogException(ex);
+        PFLog.Mods.Exception(ex);
+    }
 
     static readonly Lazy<(Type t, PatchClassProcessor pc)[]> patchClasses = new(() =>
         AccessTools.GetTypesFromAssembly(Assembly.GetExecutingAssembly())
-            .Select(t => (t, pc: HarmonyInstance.CreateClassProcessor(t)))
+            .Select(t => (t, pc: HarmonyInstance!.CreateClassProcessor(t)))
             .Where(tuple => tuple.pc.HasPatchAttribute())
             .ToArray());
 
@@ -76,7 +99,7 @@ partial class Main
     {
         Instance = new(modEntry);
 
-        MicroPatch.Logger = Logger;
+        MicroPatch.Logger = Logger!;
 
         Instance.PrePatchTests();
         Instance.RunPatches();
@@ -92,7 +115,7 @@ partial class Main
 
     static bool OnUnload(UnityModManager.ModEntry modEntry)
     {
-        HarmonyInstance.UnpatchAll(modEntry.Info.Id);
+        HarmonyInstance!.UnpatchAll(modEntry.Info.Id);
         Instance = null!;
         return true;
     }
@@ -105,7 +128,7 @@ partial class Main
 
         RunPatches(enabledPatches.Where(p => !p.IsExperimental));
 
-        Logger.Log("Running experimental patches");
+        Logger!.Log("Running experimental patches");
         try
         {
             RunPatches(enabledPatches.Where(p => p.IsExperimental));
@@ -122,15 +145,15 @@ partial class Main
         {
             try
             {
-                Logger.Log($"Running patch class {p.PatchClass.Name}");
+                Logger!.Log($"Running patch class {p.PatchClass.Name}");
                 p.Patch.Patch();
 
                 AppliedPatches[p.PatchClass] = true;
             }
             catch (Exception ex)
             {
-                Logger.Error($"Exception in patch class {p.PatchClass.Name}");
-                Logger.LogException(ex);
+                Logger!.Error($"Exception in patch class {p.PatchClass.Name}");
+                Logger!.LogException(ex);
 
                 AppliedPatches[p.PatchClass] = false;
             }
@@ -157,7 +180,7 @@ partial class Main
                 }
                 catch (Exception e)
                 {
-                    Logger.LogException(e);
+                    Logger!.LogException(e);
                 }
             }
 

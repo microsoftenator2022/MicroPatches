@@ -1,68 +1,17 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Code.GameCore.Blueprints.BlueprintPatcher;
 
 using HarmonyLib;
 
-using Kingmaker;
-using Kingmaker.Blueprints;
-using Kingmaker.Blueprints.Items.Weapons;
-using Kingmaker.Blueprints.JsonSystem;
-using Kingmaker.Blueprints.JsonSystem.BinaryFormat;
-using Kingmaker.Blueprints.JsonSystem.Converters;
-using Kingmaker.Blueprints.JsonSystem.Helpers;
-using Kingmaker.Blueprints.Root;
-using Kingmaker.Code.UI.MVVM.VM.Retrain;
-using Kingmaker.Code.UI.MVVM.VM.SystemMap;
-using Kingmaker.Designers.EventConditionActionSystem.Actions;
-using Kingmaker.DialogSystem.Blueprints;
-using Kingmaker.ElementsSystem;
-using Kingmaker.EntitySystem.Entities;
-using Kingmaker.EntitySystem.Entities.Base;
-using Kingmaker.Localization;
-using Kingmaker.Modding;
-using Kingmaker.UI.Canvases;
 using Kingmaker.UI.Selection;
-using Kingmaker.UnitLogic.Abilities.Blueprints;
-using Kingmaker.UnitLogic.Commands;
-using Kingmaker.UnitLogic.Mechanics;
-using Kingmaker.UnitLogic.Mechanics.Blueprints;
-using Kingmaker.UnitLogic.Parts;
-using Kingmaker.UnitLogic.Progression.Features;
-using Kingmaker.View;
 
 using MicroPatches.Patches;
-using MicroPatches.UGUI;
 
 using MicroUtils.Linq;
-using MicroUtils.Transpiler;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
-using Owlcat.Runtime.Core;
 using Owlcat.Runtime.Core.Logging;
-
-using RogueTrader.SharedTypes;
-
-using TMPro;
-
-using UnityEngine;
-using UnityEngine.UI;
-
-using UnityModManagerNet;
 
 namespace MicroPatches
 {
@@ -167,7 +116,7 @@ namespace MicroPatches
                 }
             }
 
-            Logger.Log(sb.ToString());
+            Logger!.Log(sb.ToString());
 #endif
         }
 
@@ -192,7 +141,7 @@ namespace MicroPatches
 
                 foreach (var (ldstr, callLog) in matches)
                 {
-                    Main.Logger.Log($"Silencing '{ldstr.operand}'");
+                    Main.Logger!.Log($"Silencing '{ldstr.operand}'");
 
                     ldstr.opcode = OpCodes.Nop;
                     ldstr.operand = null;

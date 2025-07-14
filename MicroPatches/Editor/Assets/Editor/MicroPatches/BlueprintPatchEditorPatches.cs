@@ -5,8 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Threading.Tasks;
 
 using Code.GameCore.Blueprints.BlueprintPatcher;
+
+using Core.Reflection;
 
 using HarmonyLib;
 
@@ -35,6 +38,19 @@ static class BlueprintPatchEditorPatches
 {
     private class Binder : GuidClassBinder, ISerializationBinder
     {
+        static Lazy<Dictionary<Type, string>> typeToGuid = new (() =>
+        {
+            PFLog.Mods.Warning("Rebuilding TypeId cache");
+
+            return AppDomain.CurrentDomain.GetAssembliesSafe()
+                .AsParallel()
+                .SelectMany(v => v.GetTypesSafe())
+                .Where(t => !t.IsAbstract)
+                .Select(t => (g: t.CustomAttributes.OfType<TypeIdAttribute>().FirstOrDefault()?.GuidString, t))
+                .Where(p => !string.IsNullOrEmpty(p.g))
+                .ToDictionary(keySelector: p => p.t, elementSelector: p => p.g);
+        });
+
         void ISerializationBinder.BindToName(Type serializedType, out string assemblyName, out string typeName)
         {
             try
@@ -44,6 +60,10 @@ static class BlueprintPatchEditorPatches
             }
             catch (ArgumentException)
             {
+                assemblyName = serializedType.Name;
+                if (typeToGuid.Value.TryGetValue(serializedType, out typeName))
+                    return;
+
                 assemblyName = null;
                 typeName = null;
             }

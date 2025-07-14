@@ -4,6 +4,7 @@ using Kingmaker.Blueprints.JsonSystem;
 using Kingmaker.Modding;
 using Kingmaker.Utility.UnityExtensions;
 using Newtonsoft.Json;
+using System;
 using System.IO;
 using System.Linq;
 using OwlcatModification.Editor.Build.Context;
@@ -92,7 +93,14 @@ namespace OwlcatModification.Editor.Build.Tasks
                         string fileContents = File.ReadAllText(file);
                         using (var sr = new StringReader(fileContents))
                         using (var jr = new JsonTextReader(sr))
-                            patch = Json.Serializer.Deserialize<BlueprintPatch>(jr);
+                            try
+                            {
+                                patch = Json.Serializer.Deserialize<BlueprintPatch>(jr);
+                            }
+                            catch (Exception ex)
+                            {
+                                PFLog.Build.Error($"Exception occured reading patch: {ex}");
+                            }
                         if (patch == null)
                         {
                             PFLog.Build.Error($"Failed to read BlueprintPatch from file : {file}");
