@@ -109,22 +109,26 @@ let install templatePath =
 
 [<EntryPoint>]
 let main args =
+    Assembly.GetExecutingAssembly().GetName().Version
+    |> printfn "Version: %A"
+
     let templatePath = args |> Array.tryHead
 
-    match templatePath with
-    | Some path ->
-        if Directory.Exists path then
-            System.Environment.CurrentDirectory <- path |> Path.GetFullPath
-        else
-            DirectoryNotFoundException $"Template directory not found at '{path}'" |> raise
-    | None -> printfn "Using current directory"
+    try
+        match templatePath with
+        | Some path ->
+            if Directory.Exists path then
+                System.Environment.CurrentDirectory <- path |> Path.GetFullPath
+            else
+                DirectoryNotFoundException $"Template directory not found at '{path}'" |> raise
+        | None -> printfn "Using current directory"
 
-    if checkTemplateFiles |> Seq.forall File.Exists |> not
-        || checkTemplateDirectories |> Seq.forall Directory.Exists |> not then
-        System.Environment.CurrentDirectory
-        |> sprintf "'%s' does not look like a mod template"
-        |> System.ArgumentException
-        |> raise
+        if checkTemplateFiles |> Seq.forall File.Exists |> not
+            || checkTemplateDirectories |> Seq.forall Directory.Exists |> not then
+            System.Environment.CurrentDirectory
+            |> sprintf "'%s' does not look like a mod template"
+            |> System.ArgumentException
+            |> raise
 
     try
         install ()
