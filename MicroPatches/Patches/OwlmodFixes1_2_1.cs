@@ -24,16 +24,16 @@ namespace MicroPatches.Patches;
 [HarmonyPatch]
 internal static class OwlmodFixes1_2_1
 {
-    static string? GetGuidFromReferenceOrString(object obj)
-    {
-        if (obj is string s)
-            return s;
+    //static string? GetGuidFromReferenceOrString(object obj)
+    //{
+    //    if (obj is string s)
+    //        return s;
 
-        if (obj is BlueprintReferenceBase brb)
-            return $"!bp_{brb.Guid}";
+    //    if (obj is BlueprintReferenceBase brb)
+    //        return $"!bp_{brb.Guid}";
 
-        return null;
-    }
+    //    return null;
+    //}
 
     [HarmonyPatch(typeof(OwlcatModification), nameof(OwlcatModification.GetBlueprintPatch))]
     [HarmonyPrefix]
@@ -56,23 +56,23 @@ internal static class OwlmodFixes1_2_1
             Json.BlueprintBeingRead = null;
     }
     
-    [HarmonyPatch(typeof(BlueprintPatchObjectComparator), nameof(BlueprintPatchObjectComparator.ObjectsAreEqual))]
-    [HarmonyTranspiler]
-    static IEnumerable<CodeInstruction> ReferenceCasts(IEnumerable<CodeInstruction> instructions)
-    {
-        foreach (var i in instructions)
-        {
-            if (i.opcode == OpCodes.Castclass && ((Type)i.operand) == typeof(string))
-            {
-                yield return CodeInstruction.Call((object o) => GetGuidFromReferenceOrString(o))
-                    .WithBlocks(i.blocks)
-                    .WithLabels(i.labels);
-                continue;
-            }
+    //[HarmonyPatch(typeof(BlueprintPatchObjectComparator), nameof(BlueprintPatchObjectComparator.ObjectsAreEqual))]
+    //[HarmonyTranspiler]
+    //static IEnumerable<CodeInstruction> ReferenceCasts(IEnumerable<CodeInstruction> instructions)
+    //{
+    //    foreach (var i in instructions)
+    //    {
+    //        if (i.opcode == OpCodes.Castclass && ((Type)i.operand) == typeof(string))
+    //        {
+    //            yield return CodeInstruction.Call((object o) => GetGuidFromReferenceOrString(o))
+    //                .WithBlocks(i.blocks)
+    //                .WithLabels(i.labels);
+    //            continue;
+    //        }
 
-            yield return i;
-        }
-    }
+    //        yield return i;
+    //    }
+    //}
 
     [HarmonyPatch(typeof(BlueprintPatchObjectComparator), nameof(BlueprintPatchObjectComparator.ObjectsAreEqual))]
     [HarmonyPrefix]
