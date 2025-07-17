@@ -296,4 +296,21 @@ class BlueprintPatchWithMod : BlueprintPatch
             }
         }
     }
+
+    [MicroPatchGroup(typeof(BetterModLoggerPatchesGroup))]
+    [HarmonyPatch(typeof(OwlcatModification), nameof(OwlcatModification.LoadFromDirectory))]
+    static class LogModAndVersionOnLoad
+    {
+        static void Postfix(OwlcatModification __result)
+        {
+            if (__result.LoadException is not null)
+            {
+                PFLog.Mods.Error($"Exception while loading modification from {__result.Path}");
+                PFLog.Mods.Exception(__result.LoadException);
+                return;
+            }
+
+            __result.Logger.Log($"Successfully loaded {__result.Manifest.DisplayName} {__result.Manifest.Version}");
+        }
+    }
 }
