@@ -180,9 +180,6 @@ public static partial class JsonPatch
             { typeof(Kingmaker.ElementsSystem.Element),
                 static t => IdentifyByProperties(t,
                     nameof(Kingmaker.ElementsSystem.Element.name)) },
-            //{ typeof(Kingmaker.UnitLogic.Levelup.Selections.AddFeaturesToLevelUp),
-            //    static t => IdentifyByProperties(t,
-            //        nameof(Kingmaker.UnitLogic.Levelup.Selections.AddFeaturesToLevelUp.Group)) },
         };
 
         // TODO: check that these actually make sense to do by index
@@ -198,6 +195,7 @@ public static partial class JsonPatch
             typeof(Kingmaker.Visual.Sound.UnitAsksComponent.BarkEntry),
             typeof(Kingmaker.Visual.Sound.UnitAsksComponent.PersonalizedBark),
             typeof(Warhammer.SpaceCombat.Blueprints.Progression.BlueprintAbilitiesUnlockTable.AbilityList),
+            typeof(Kingmaker.UnitLogic.Progression.Paths.BlueprintPath.RankEntry)
         ];
 
     }
