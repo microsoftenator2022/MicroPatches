@@ -130,7 +130,6 @@ let main args =
             |> System.ArgumentException
             |> raise
 
-    try
         install ()
     with e ->
         printfn "Exception occured"
