@@ -58,27 +58,35 @@ partial class Main
     {
         var s = $"[MicroPatch {patchName}] {message}";
         Logger?.Log(s);
-        PFLog.Mods.Log(s);
+
+        if (Logger is null)
+            PFLog.Mods.Log(s);
     }
 
     public static void PatchError(string patchName, string message)
     {
         var s = $"[MicroPatch {patchName}] {message}";
         Logger?.Error(s);
-        PFLog.Mods.Error(s);
+
+        if (Logger is null)
+            PFLog.Mods.Error(s);
     }
 
     public static void PatchWarning(string patchName, string message)
     {
         var s = $"[MicroPatch {patchName}] {message}";
         Logger?.Warning(s);
-        PFLog.Mods.Warning(s);
+        
+        if (Logger is null)
+            PFLog.Mods.Warning(s);
     }
 
     public static void PatchLogException(Exception ex)
     {
         Logger?.LogException(ex);
-        PFLog.Mods.Exception(ex);
+
+        if (Logger is null)
+            PFLog.Mods.Exception(ex);
     }
 
     static readonly Lazy<(Type t, PatchClassProcessor pc)[]> patchClasses = new(() =>
@@ -128,15 +136,27 @@ partial class Main
 
         RunPatches(enabledPatches.Where(p => !p.IsExperimental));
 
+#if DEBUG
+        var harmonyDebug = Harmony.DEBUG;
+#endif
+
         Logger!.Log("Running experimental patches");
         try
         {
+#if DEBUG
+            Harmony.DEBUG = true;
+#endif
+
             RunPatches(enabledPatches.Where(p => p.IsExperimental));
         }
         catch (Exception ex)
         {
             Logger.LogException(ex);
         }
+
+#if DEBUG
+        Harmony.DEBUG = harmonyDebug;
+#endif
     }
 
     void RunPatches(IEnumerable<MicroPatch> patches)
