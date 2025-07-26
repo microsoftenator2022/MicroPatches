@@ -6,8 +6,10 @@ open Mono.Cecil
 
 open Strings
 
+let playerLogPath = Path.Join(System.Environment.ExpandEnvironmentVariables rtAppData, "Player.log")
+
 let getGameDir () =
-    use log = Path.Join(System.Environment.ExpandEnvironmentVariables rtAppData, "Player.log") |> File.OpenText
+    use log = playerLogPath |> File.OpenText
     let rec getLines () = seq {
         match log.ReadLine() |> Option.ofObj with
         | Some l ->
@@ -114,29 +116,33 @@ let main args =
 
     let templatePath = args |> Array.tryHead
 
-    try
-        match templatePath with
-        | Some path ->
-            if Directory.Exists path then
-                System.Environment.CurrentDirectory <- path |> Path.GetFullPath
-            else
-                DirectoryNotFoundException $"Template directory not found at '{path}'" |> raise
-        | None -> printfn "Using current directory"
+    if File.Exists playerLogPath |> not then
+        eprintfn "Player.log not found. Run the game at least once!"
+        -1
+    else
+        try
+            match templatePath with
+            | Some path ->
+                if Directory.Exists path then
+                    System.Environment.CurrentDirectory <- path |> Path.GetFullPath
+                else
+                    DirectoryNotFoundException $"Template directory not found at '{path}'" |> raise
+            | None -> printfn "Using current directory"
 
-        if checkTemplateFiles |> Seq.forall File.Exists |> not
-            || checkTemplateDirectories |> Seq.forall Directory.Exists |> not then
-            System.Environment.CurrentDirectory
-            |> sprintf "'%s' does not look like a mod template"
-            |> System.ArgumentException
-            |> raise
+            if checkTemplateFiles |> Seq.forall File.Exists |> not
+                || checkTemplateDirectories |> Seq.forall Directory.Exists |> not then
+                System.Environment.CurrentDirectory
+                |> sprintf "'%s' does not look like a mod template"
+                |> System.ArgumentException
+                |> raise
 
-        install ()
-    with e ->
-        printfn "Exception occured"
-        printfn "%A" e
+            install ()
+        with e ->
+            printfn "Exception occured"
+            printfn "%A" e
 
-    printfn "Press any key to exit"
+        printfn "Press any key to exit"
 
-    System.Console.ReadKey() |> ignore
+        System.Console.ReadKey() |> ignore
 
-    0
+        0
