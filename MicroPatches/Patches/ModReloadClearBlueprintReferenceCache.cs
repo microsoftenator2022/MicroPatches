@@ -7,7 +7,7 @@ using Kingmaker.Modding;
 
 namespace MicroPatches.Patches;
 
-[MicroPatch("Clear BlueprintReference caches when reloading OMM mods", Optional = false)]
+[MicroPatch("Clear BlueprintReference caches when reloading OMM mods", Experimental = true, Optional = false)]
 [HarmonyPatch]
 public static class ModReloadClearBlueprintReferenceCache
 {

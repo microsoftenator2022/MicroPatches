@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
-using System.Text;
-using System.Threading.Tasks;
 
 using Code.GameCore.Blueprints.BlueprintPatcher;
 
@@ -12,7 +9,6 @@ using HarmonyLib;
 
 using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.JsonSystem;
-using Kingmaker.ElementsSystem;
 
 namespace MicroPatches.Patches
 {

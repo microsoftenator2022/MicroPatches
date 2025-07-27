@@ -16,7 +16,7 @@ using UnityEngine;
 
 namespace MicroPatches.Patches;
 
-[MicroPatch("Load OwlMod BlueprintDirectReferences dependencies", Optional = false)]
+[MicroPatch("Load OwlMod BlueprintDirectReferences dependencies", Experimental = true, Optional = false)]
 [HarmonyPatch]
 public static class OwlModDirectReferenceBundleDependenciesFix
 {
@@ -109,8 +109,6 @@ public static class OwlModDirectReferenceBundleDependenciesFix
 
         var start = matcher.Pos;
 
-        //Main.PatchLog(nameof(OwlcatModification_LoadBundles_Transpiler), $"Start: [{start:X}] = {matcher.Instruction}");
-
         matcher = matcher
             .MatchStartForward(
                 new CodeMatch(OpCodes.Ldloc_0),
@@ -119,43 +117,12 @@ public static class OwlModDirectReferenceBundleDependenciesFix
 
         var end = matcher.Pos;
 
-        //Main.PatchLog(nameof(OwlcatModification_LoadBundles_Transpiler), $"End: {end:X} = {matcher.Instruction}");
-
         var iList = matcher
             .RemoveInstructionsInRange(start, end - 1)
             .InstructionEnumeration()
             .ToList();
 
-        //Main.PatchLog(nameof(OwlcatModification_LoadBundles_Transpiler), string.Join("\n", iList));
-
         return iList;
-
-        //var iList = instructions.ToList();
-
-        //var skipSectionStart = instructions.FindInstructionsIndexed(
-        //[
-        //    ci => ci.opcode == OpCodes.Ldloc_2,
-        //    ci => ci.opcode == OpCodes.Ldstr && ci.operand is DirectReferenceBundleName
-        //]).ToArray();
-
-        //var skipSectionEnd = instructions.FindInstructionsIndexed(
-        //[
-        //    ci => ci.opcode == OpCodes.Ldloc_0,
-        //    ci => ci.Calls(AccessTools.Method(typeof(IEnumerator), nameof(IEnumerator.MoveNext))),
-        //    ci => ci.opcode == OpCodes.Brtrue
-        //]).ToArray();
-
-        //if (skipSectionStart.Length != 2 || skipSectionEnd.Length != 3)
-        //    throw new Exception("Could not find target instructions");
-
-        //var startIndex = skipSectionStart[0].index;
-        //var endIndex = skipSectionEnd[0].index;
-
-        //iList.RemoveRange(start, end - start);
-
-        //Main.Logger.Log(string.Join("\n", iList));
-
-        //return iList;
     }
 
     [HarmonyPatch(typeof(OwlcatModification), nameof(OwlcatModification.LoadBundles))]
