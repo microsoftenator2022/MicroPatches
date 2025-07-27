@@ -5,11 +5,17 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
+using Code.GameCore.Blueprints.BlueprintPatcher;
+
+using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.JsonSystem.EditorDatabase;
+using Kingmaker.Modding;
 using Kingmaker.Utility.EditorPreferences;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
+using OwlcatModification.Editor;
 
 using SharpCompress.Archives.Tar;
 
@@ -33,6 +39,8 @@ public static class RefreshBlueprints
         }
 
         BlueprintsDatabase.InvalidateAllCache();
+
+        //using var _ = BlueprintsDatabase.PauseIndexing();
 
         EditorUtility.DisplayCancelableProgressBar("Refreshing blueprints", "Reading archive index", 0);
 
@@ -102,5 +110,106 @@ public static class RefreshBlueprints
         BlueprintsDatabase.InvalidateAllCache();
 
         EditorUtility.ClearProgressBar();
+    }
+
+    const string RestoredModBlueprintsDirectoryName = "ModBlueprints";
+    static readonly string RestoredModBlueprintsPath =
+        Path.Combine(BlueprintsDatabase.DbPathPrefix, RestoredModBlueprintsDirectoryName);
+
+    static void RestoreBlueprintsFromModDirectories()
+    {
+        if (!Directory.Exists(RestoredModBlueprintsPath))
+            Directory.CreateDirectory(RestoredModBlueprintsPath);
+
+        foreach (var modDir in Directory.EnumerateDirectories(@"Assets\Modifications"))
+        {
+            var blueprintsDir = Path.Join(modDir, "Blueprints");
+
+            if (!Directory.Exists(blueprintsDir))
+                continue;
+
+            foreach (var blueprint in Directory.EnumerateFiles(blueprintsDir, "*.jbp", SearchOption.AllDirectories))
+            {
+                try
+                {
+                    var json = JObject.Parse(File.ReadAllText(blueprint));
+
+                    if (!string.IsNullOrEmpty(BlueprintsDatabase.IdToPath(json["AssetId"].ToString())))
+                        continue;
+
+                    var blueprintRelativePath = Path.GetRelativePath(blueprintsDir, blueprint);
+
+                    var destination = Path.Join(
+                        RestoredModBlueprintsPath,
+                        Path.GetFileName(modDir),
+                        blueprintRelativePath);
+
+                    Directory.CreateDirectory(Path.GetDirectoryName(destination));
+
+                    File.Copy(blueprint, destination, false);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogException(ex);
+                }
+            }
+        }
+    }
+
+    static readonly JsonSerializer BlueprintPatchSerializer = JsonSerializer.Create(BlueprintPatcher.Settings);
+
+    static void CreateInheritedBlueprintFromPatch(
+        string targetAssetId,
+        string path,
+        BlueprintChangeDataDrawer.JsonPatchType patchType)
+    {
+        using var patchFile = File.OpenText(path);
+
+        var blueprint = BlueprintsDatabase.DuplicateAsset(BlueprintsDatabase.LoadById<SimpleBlueprint>(targetAssetId));
+        var newGuid = blueprint.AssetGuid;
+        var targetPath = BlueprintsDatabase.IdToPath(newGuid);
+        var wrapper = BlueprintsDatabase.LoadWrapperAtPath(targetPath);
+
+        var json = JObject.Parse(File.ReadAllText(targetPath));
+        var overrides = new JArray();
+
+        switch (patchType)
+        {
+            case BlueprintChangeDataDrawer.JsonPatchType.Edit:
+            {
+                using var jr = new JsonTextReader(patchFile);
+                var patch = BlueprintPatchSerializer.Deserialize<BlueprintPatch>(jr);
+
+                patch.TargetGuid = newGuid;
+
+                wrapper.Data = BlueprintPatcher.TryPatchBlueprint(patch, wrapper.Data, newGuid);
+                wrapper.Save(targetPath);
+
+                foreach (var n in patch.FieldOverrides.Select(fo => fo.FieldName))
+                    overrides.Add(n);
+
+                foreach (var n in patch.ArrayPatches.Select(ap => ap.FieldName))
+                    overrides.Add(n);
+
+                foreach (var cp in patch.ComponentsPatches)
+                    overrides.Add(
+                        JsonConvert.DeserializeObject<BlueprintComponentPatchData>(cp.FieldValue, BlueprintPatcher.Settings)
+                            .ComponentValue.name);
+                break;
+            }
+            case BlueprintChangeDataDrawer.JsonPatchType.Micro:
+                var patchJson = JObject.Parse(patchFile.ReadToEnd());
+                File.WriteAllText(targetPath, MicroPatches.JsonPatch.ApplyPatch(json, patchJson).ToString());
+
+                // TODO: Generate list for m_Overrides. How?
+
+                break;
+
+            default:
+                throw new NotImplementedException();
+        }
+
+        json["Data"]["m_Overrides"] = overrides;
+        File.WriteAllText(targetPath, json.ToString());
     }
 }

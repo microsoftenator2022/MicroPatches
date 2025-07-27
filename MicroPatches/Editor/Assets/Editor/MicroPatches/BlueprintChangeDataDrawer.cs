@@ -14,7 +14,7 @@ using static Kingmaker.Modding.OwlcatModificationSettings;
 [CustomPropertyDrawer(typeof(BlueprintChangeData))]
 public class BlueprintChangeDataDrawer : PropertyDrawer
 {
-    enum JsonPatchType
+    public enum JsonPatchType
     {
         Replace,
         Edit,
