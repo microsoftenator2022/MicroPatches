@@ -1,0 +1,25 @@
+{
+    "name": "Mods.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:c5ecc461727906345a35491a0440694f",
+        "GUID:493eeb1ed5fc4dc8aebbb2d76f015b6f",
+        "GUID:1c5667189692440db234b98cecdc67cb",
+        "GUID:afdbbd67e7394c1e9c2359badc7e6b28",
+        "GUID:2fa563c8c2aadb54e998a974e5636933",
+        "GUID:68bd7fdb68ef2684e982e8a9825b18a5",
+        "GUID:2fa563c8c2aadb54e998a974e5636933",
+        "GUID:5c1ff9bd975acec488150743d53a93ca"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
