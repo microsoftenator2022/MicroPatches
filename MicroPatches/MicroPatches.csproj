@@ -48,6 +48,7 @@
     <Reference Include="$(RogueTraderInstallDir)\WH40KRT_Data\Managed\UberLogger.dll*" Private="false" />
     <Reference Include="$(RogueTraderInstallDir)\WH40KRT_Data\Managed\PFLog.dll*" Private="false" />
     <Reference Include="$(RogueTraderInstallDir)\WH40KRT_Data\Managed\Kingmaker.Blueprints.JsonSystem.Hepers.dll*" Publicize="true" Private="false" />
+    <Reference Include="$(RogueTraderInstallDir)\WH40KRT_Data\Managed\BundlesBaseTypes.dll*" Publicize="true" Private="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -66,6 +67,11 @@
     <Compile Remove="CopyTemplateFilesTask\**\*.*" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Monitor_ArrowGreen.png" />
+    <EmbeddedResource Include="Monitor_ArrowGreenUP.png" />
+  </ItemGroup>
+
   <Target Name="CopyEditorFilesToProject" Condition="$(TemplatePath) != ''" BeforeTargets="BeforeBuild">
     <ItemGroup>
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Editor\MicroPatches\**\*.*" />
@@ -75,10 +81,12 @@
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Code\GameCore\Editor\Blueprints\WeakLinkDrawer.cs" />
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Code\GameCore\Editor\Validation\ReferenceGraph.cs" />
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Code\GameCore\Editor\Mods\SharedStringAssetRepair.cs" />
+      <TemplateFilesInclude Include="$(TemplatePath)\Assets\Editor\Mods.Editor.asmdef" />
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Editor\Build\Builder.cs" />
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Editor\Build\Tasks\PrepareLocalization.cs" />
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Editor\Build\Tasks\CheckAssetsValidity.cs" />
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Editor\Build\Tasks\CreateManifestAndSettings.cs" />
+      <TemplateFilesInclude Include="$(TemplatePath)\Assets\Editor\Build\Tasks\ExtractBlueprintDirectReferences.cs" />
       <TemplateFiles Include="@(TemplateFilesInclude)" />
       <TemplateFiles Remove="@(TemplateFilesExclude)" />
     </ItemGroup>
