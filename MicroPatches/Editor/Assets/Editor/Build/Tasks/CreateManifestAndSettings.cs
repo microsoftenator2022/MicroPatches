@@ -28,6 +28,11 @@ namespace OwlcatModification.Editor.Build.Tasks
 
         [InjectContext(ContextUsage.In)]
         private IModificationRuntimeSettings m_ModificationSettings;
+        
+        #region MicroPatches
+        [InjectContext(ContextUsage.In)]
+        private IBundleBuildResults m_BundleBuildResults;
+        #endregion
 #pragma warning restore 649
 
         public int Version
@@ -54,6 +59,16 @@ namespace OwlcatModification.Editor.Build.Tasks
                 PFLog.Build.Log($"Adding BlueprintPatches info to ModificationSettings");
                 m_ModificationSettings.Settings.BlueprintPatches = patchUpdatedData;
             }
+
+            #region MicroPatches
+            if (m_BundleBuildResults?.BundleInfos.Count > 0)
+                foreach (var bi in m_BundleBuildResults.BundleInfos.Where(entry => entry.Key.StartsWith(@"Bundles\")))
+                {
+                    m_ModificationSettings.Settings.BundleDependencies.BundleToDependencies.Add(
+                        bi.Key,
+                        bi.Value.Dependencies.Select(path => path.StartsWith(@"Bundles\") ? path.Remove(0, 8) : path).ToList());
+                }
+            #endregion
 
             string settingsJsonFilePath = Path.Combine(buildFolderPath, Kingmaker.Modding.OwlcatModification.SettingsFileName);
             string settingsJsonContent = JsonUtility.ToJson(m_ModificationSettings.Settings, true);
