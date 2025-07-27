@@ -30,7 +30,7 @@ namespace MicroPatches.Patches;
 class BetterModLoggerPatchesGroup : MicroPatchGroup
 {
     public override string DisplayName => "Better OwlMod logging";
-    public override bool Experimental => true;
+    public override bool Experimental => false;
 }
 
 [MicroPatchGroup(typeof(BetterModLoggerPatchesGroup))]

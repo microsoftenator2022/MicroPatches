@@ -63,13 +63,13 @@ namespace MicroPatches.Patches
             if (maybeCompanion is null)
                 return true;
 
-#if DEBUG
-            Main.PatchLog(nameof(TurnBasedEventsTriggerRemoteCompanionFix), $"{__originalMethod}\n" +
-                $"  Owner = {__instance.Fact.Owner.Name}\n" +
-                $"  Companion state = {maybeCompanion.State}\n" +
-                $"  In combat? {__instance.Fact.Owner.IsInCombat}\n" +
-                $"  In party? {__instance.Fact.Owner.IsInPlayerParty}");
-#endif
+//#if DEBUG
+//            Main.PatchLog(nameof(TurnBasedEventsTriggerRemoteCompanionFix), $"{__originalMethod}\n" +
+//                $"  Owner = {__instance.Fact.Owner.Name}\n" +
+//                $"  Companion state = {maybeCompanion.State}\n" +
+//                $"  In combat? {__instance.Fact.Owner.IsInCombat}\n" +
+//                $"  In party? {__instance.Fact.Owner.IsInPlayerParty}");
+//#endif
 
             return maybeCompanion.State is CompanionState.InParty;
         }

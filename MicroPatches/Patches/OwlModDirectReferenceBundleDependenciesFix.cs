@@ -16,10 +16,7 @@ using UnityEngine;
 
 namespace MicroPatches.Patches;
 
-[MicroPatch("Load OwlMod BlueprintDirectReferences dependencies",
-    Optional = false,
-    Experimental = true
-    )]
+[MicroPatch("Load OwlMod BlueprintDirectReferences dependencies", Optional = false)]
 [HarmonyPatch]
 public static class OwlModDirectReferenceBundleDependenciesFix
 {

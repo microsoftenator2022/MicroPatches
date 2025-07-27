@@ -15,7 +15,7 @@ using UnityEngine.UI;
 
 namespace MicroPatches.Patches;
 
-[MicroPatch("Fix missing Ability Variants action bar", Experimental = true)]
+[MicroPatch("Fix missing Ability Variants action bar", Optional = false)]
 [HarmonyPatch]
 internal static class AbilityVariantsActionBarFix
 {

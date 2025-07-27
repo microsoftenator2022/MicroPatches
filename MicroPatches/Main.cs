@@ -40,8 +40,6 @@ partial class Main
         ModEntry = modEntry;
         this.Harmony = new Harmony(modEntry.Info.Id);
 
-        //Harmony.DEBUG = true;
-
         modEntry.OnUnload = OnUnload;
         modEntry.OnGUI = OnGUI;
     }
