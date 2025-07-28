@@ -51,14 +51,18 @@ internal static class AbilityVariantsActionBarFix
     [HarmonyPostfix]
     static void ActionBarSlotPCView_BindViewImplementation_Postfix(ActionBarSlotPCView __instance)
     {
+        //void log(string msg) => Main.PatchLog(nameof(AbilityVariantsActionBarFix), msg);
+
         if (__instance.m_ConvertedView == null)
             return;
 
         if (__instance.m_ConvertedView.m_SlotView != null)
             return;
 
+        //log($"{string.Join("\n", (object[])__instance.gameObject.GetComponents<Component>())}");
+
         __instance.m_ConvertedView.m_SlotView =
-            UnityEngine.Object.Instantiate(__instance.GetComponentInParent<ActionBarBaseSlotView>());
+            UnityEngine.Object.Instantiate(__instance.GetComponentInParent<ActionBarBaseSlotView>(true));
 
         if (__instance.m_ConvertedView.m_SlotView == null)
             __instance.m_ConvertedView.m_SlotView =
