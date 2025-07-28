@@ -24,6 +24,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="PublishToWorkshop" IncludeAssets="compile; build; native; contentfiles; analyzers; buildtransitive" Version="1.0.10" PrivateAssets="all" />
+    <PackageReference Include="MicroWrath.Generator.Tasks" Version="0.10.0-prerelease-20240811-1424" />
   </ItemGroup>
 
   <ItemGroup>
@@ -52,7 +53,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="ModDetails\Info.json" CopyToOutputDirectory="PreserveNewest" Link="%(Filename)%(Extension)" />
+    <!--<None Include="ModDetails\Info.json" CopyToOutputDirectory="PreserveNewest" Link="%(Filename)%(Extension)" />-->
     <None Include="ModDetails\OwlcatModificationManifest.json" CopyToOutputDirectory="PreserveNewest" Link="%(Filename)%(Extension)" />
     <None Include="CopyFiles.fsx" />
   </ItemGroup>
@@ -71,6 +72,20 @@
     <EmbeddedResource Include="Monitor_ArrowGreen.png" />
     <EmbeddedResource Include="Monitor_ArrowGreenUP.png" />
   </ItemGroup>
+
+  <Target Name="InfoJson" BeforeTargets="OutputDirectories">
+    <InfoJson
+      OutputPath="$(OutDir)"
+      Id="$(MSBuildProjectName)"
+      Version="$(Version)"
+      DisplayName="MicroPatches"
+      Author="microsoftenator"
+      ManagerVersion="0.25.0"
+      HomePage="https://github.com/microsoftenator2022/MicroPatches"
+      Repository="https://raw.githubusercontent.com/microsoftenator2022/MicroPatches/master/MicroPatches/ModDetails/Repository.json"
+      AssemblyName="MicroPatches.dll"
+      EntryMethod="MicroPatches.Main.Load" />
+  </Target>
 
   <Target Name="CopyEditorFilesToProject" Condition="$(TemplatePath) != ''" BeforeTargets="BeforeBuild">
     <ItemGroup>
