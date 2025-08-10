@@ -139,6 +139,17 @@ public static class OwlModDirectReferenceBundleDependenciesFix
 #endif
 
         BundlesLoadService.Instance.LoadDependencies(bundleName);
+        var dd = BundlesLoadService.Instance.m_ResourceReplacementProvider.GetDependenciesForBundle(bundleName);
+
+        if (dd is not null && dd.BundleToDependencies.TryGetValue(bundleName, out var deps) && deps.Count > 0)
+        {
+            __instance.Logger.Log("Dependencies loaded:");
+            foreach (var d in deps)
+            {
+                __instance.Logger.Log($"  {d} {BundlesLoadService.Instance.m_Bundles.Keys.Contains(d)}");
+            }
+        }
+
         __instance.m_ReferencedAssetsBundle = BundlesLoadService.Instance.RequestBundle(bundleName);
 
 #if DEBUG
@@ -167,9 +178,9 @@ public static class OwlModDirectReferenceBundleDependenciesFix
 
             }
             
-            BundlesLoadService.Instance.UnloadBundle(bundleName);
+            //BundlesLoadService.Instance.UnloadBundle(bundleName);
         }
 
-        BundlesLoadService.Instance.UnloadDependencies(bundleName);
+        //BundlesLoadService.Instance.UnloadDependencies(bundleName);
     }
 }

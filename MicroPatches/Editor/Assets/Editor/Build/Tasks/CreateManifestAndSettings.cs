@@ -64,10 +64,12 @@ namespace OwlcatModification.Editor.Build.Tasks
             if (m_BundleBuildResults?.BundleInfos.Count > 0)
                 foreach (var bi in m_BundleBuildResults.BundleInfos)
                 {
+                    static string removeBundlesPrefix(string path) => path.StartsWith(@"Bundles\") ? path.Remove(0, 8) : path;
+
                     if (bi.Key.StartsWith(@"Bundles\"))
                         m_ModificationSettings.Settings.BundleDependencies.BundleToDependencies.Add(
-                            bi.Key,
-                            bi.Value.Dependencies.Select(path => path.StartsWith(@"Bundles\") ? path.Remove(0, 8) : path).ToList());
+                            removeBundlesPrefix(bi.Key),
+                            bi.Value.Dependencies.Select(removeBundlesPrefix).ToList());
                 }
             #endregion
 
