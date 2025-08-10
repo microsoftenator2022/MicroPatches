@@ -183,4 +183,11 @@ public static class OwlModDirectReferenceBundleDependenciesFix
 
         //BundlesLoadService.Instance.UnloadDependencies(bundleName);
     }
+
+    [HarmonyPatch(typeof(OwlcatModification), nameof(OwlcatModification.PatchMaterialShaders))]
+    [HarmonyTranspiler]
+    static IEnumerable<CodeInstruction> OwlcatModification_PatchMaterialShaders_Transpiler(IEnumerable<CodeInstruction> instructions)
+    {
+        yield return new CodeInstruction(OpCodes.Ret);
+    }
 }
