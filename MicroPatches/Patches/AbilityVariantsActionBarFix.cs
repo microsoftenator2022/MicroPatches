@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 
 using HarmonyLib;
 
-using Kingmaker.BundlesLoading;
 using Kingmaker.Code.UI.MVVM.View.ActionBar;
 using Kingmaker.Code.UI.MVVM.View.ActionBar.PC;
 
@@ -58,8 +56,6 @@ internal static class AbilityVariantsActionBarFix
 
         if (__instance.m_ConvertedView.m_SlotView != null)
             return;
-
-        //log($"{string.Join("\n", (object[])__instance.gameObject.GetComponents<Component>())}");
 
         __instance.m_ConvertedView.m_SlotView =
             UnityEngine.Object.Instantiate(__instance.GetComponentInParent<ActionBarBaseSlotView>(true));
