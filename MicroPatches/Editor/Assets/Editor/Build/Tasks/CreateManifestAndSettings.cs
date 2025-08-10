@@ -62,11 +62,12 @@ namespace OwlcatModification.Editor.Build.Tasks
 
             #region MicroPatches
             if (m_BundleBuildResults?.BundleInfos.Count > 0)
-                foreach (var bi in m_BundleBuildResults.BundleInfos.Where(entry => entry.Key.StartsWith(@"Bundles\")))
+                foreach (var bi in m_BundleBuildResults.BundleInfos)
                 {
-                    m_ModificationSettings.Settings.BundleDependencies.BundleToDependencies.Add(
-                        bi.Key,
-                        bi.Value.Dependencies.Select(path => path.StartsWith(@"Bundles\") ? path.Remove(0, 8) : path).ToList());
+                    if (bi.Key.StartsWith(@"Bundles\"))
+                        m_ModificationSettings.Settings.BundleDependencies.BundleToDependencies.Add(
+                            bi.Key,
+                            bi.Value.Dependencies.Select(path => path.StartsWith(@"Bundles\") ? path.Remove(0, 8) : path).ToList());
                 }
             #endregion
 
