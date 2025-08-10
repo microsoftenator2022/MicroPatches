@@ -34,7 +34,7 @@ public class MicroPatchesEditorPreferences
     private MicroPatchesEditorPreferences()
     {
         this.UseMicroPatchMode = EditorPrefs.GetBool(UseMicroPatchModeSettingsKey, false);
-        this.GameServicesAutoStart = EditorPrefs.GetBool(GameServicesAutoStartSettingsKey, false);
+        this.GameServicesAutoStart = EditorPrefs.GetBool(GameServicesAutoStartSettingsKey, true);
     }
 
     public void Save()
