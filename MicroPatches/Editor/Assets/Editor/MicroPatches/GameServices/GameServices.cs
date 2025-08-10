@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection.Emit;
+using System.Text.RegularExpressions;
 
 using HarmonyLib;
 
@@ -14,7 +15,6 @@ using Kingmaker.Blueprints.JsonSystem;
 using Kingmaker.Blueprints.JsonSystem.Converters;
 using Kingmaker.Blueprints.JsonSystem.EditorDatabase.ResourceReplacementProvider;
 using Kingmaker.BundlesLoading;
-using Kingmaker.Modding;
 using Kingmaker.Utility.EditorPreferences;
 using Kingmaker.Utility.UnityExtensions;
 
@@ -27,15 +27,48 @@ using Newtonsoft.Json;
 
 using Owlcat.Runtime.Core.Utility.Locator;
 
-using RogueTrader.SharedTypes;
-
 using UnityEditor;
 
 using UnityEngine;
 
 public static class GameServices
 {
-    static string GamePath => EditorPreferences.Instance.ModsGameBuildPath;
+    const string rtAppData = @"%LocalAppData%Low\Owlcat Games\Warhammer 40000 Rogue Trader";
+    static readonly Regex gamePathRegex = new Regex(@"^Mono path\[0\] = '(.*?)/WH40KRT_Data/Managed'$");
+    
+    static string GamePath
+    {
+        get
+        {
+            var gamePath = EditorPreferences.Instance.ModsGameBuildPath;
+            if (!string.IsNullOrWhiteSpace(gamePath) && Directory.Exists(gamePath))
+                return gamePath;
+            
+            var playerLogPath = Path.Join(Environment.ExpandEnvironmentVariables(rtAppData), "Player.log");
+            if (File.Exists(playerLogPath))
+            {
+                var f = File.OpenText(playerLogPath);
+                var line = f.ReadLine();
+                while (line != null)
+                {
+                    var match = gamePathRegex.Match(line);
+                    if (match.Success)
+                    {
+                        gamePath = match.Groups[1].Value;
+                        break;
+                    }
+
+                    line = f.ReadLine();
+                }
+            }
+
+            if (gamePath != EditorPreferences.Instance.ModsGameBuildPath)
+                EditorPreferences.Instance.ModsGameBuildPath = gamePath;
+
+            return gamePath;
+        }
+    }
+
     static string AppDataPath => Path.Combine(GamePath, "WH40KRT_Data");
     static string GetBundlesFolder() => "Bundles";
     static string BundlesPath(string filename) => Path.Combine(AppDataPath, "..", "Bundles", filename);
