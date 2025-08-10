@@ -98,6 +98,8 @@
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Code\GameCore\Editor\Mods\SharedStringAssetRepair.cs" />
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Editor\Mods.Editor.asmdef" />
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Editor\Build\Builder.cs" />
+      <TemplateFilesInclude Include="$(TemplatePath)\Assets\Editor\Build\Context\BundleLayoutManager.cs" />
+      <TemplateFilesInclude Include="$(TemplatePath)\Assets\Editor\Build\Tasks\PrepareBundles.cs" />
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Editor\Build\Tasks\PrepareLocalization.cs" />
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Editor\Build\Tasks\CheckAssetsValidity.cs" />
       <TemplateFilesInclude Include="$(TemplatePath)\Assets\Editor\Build\Tasks\CreateManifestAndSettings.cs" />
