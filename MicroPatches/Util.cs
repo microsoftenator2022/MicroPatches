@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -82,9 +83,9 @@ public static class Util
                 yield return m;
     }
 
+    [Conditional("DEBUG")]
     public static void DebugLog(this LogChannel channel, string message, LogSeverity severity = LogSeverity.Message)
     {
-#if DEBUG
         Action<string> logF = severity switch
         {
             LogSeverity.Message => channel.Log,
@@ -94,21 +95,18 @@ public static class Util
         };
 
         logF(message);
-#endif
     }
 
+    [Conditional("DEBUG")]
     public static void DebugLog(this LogChannel channel, Func<bool> predicate, string message, LogSeverity severity = LogSeverity.Message)
     {
-#if DEBUG
         if (predicate()) channel.DebugLog(message, severity);
-#endif
     }
 
+    [Conditional("DEBUG")]
     public static void DebugLogException(this LogChannel channel, Exception e)
     {
-#if DEBUG
         channel.Exception(e);
-#endif
     }
 
     public static (string guid, long fileid)? GetAssetId(this BlueprintReferencedAssets @this, UnityEngine.Object asset)

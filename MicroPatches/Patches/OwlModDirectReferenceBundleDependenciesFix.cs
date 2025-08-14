@@ -88,7 +88,7 @@ public static class OwlModDirectReferenceBundleDependenciesFix
     [HarmonyPostfix]
     static void OwlcatModification_LoadBundle_Postfix(string bundleName, OwlcatModification __instance, AssetBundle __result)
     {
-        __instance.Logger.Log($"Load bundle {bundleName}. Is null? {__result == null}");
+        __instance.Logger.DebugLog($"Load bundle {bundleName}. Is null? {__result == null}");
     }
 
     [HarmonyPatch(typeof(OwlcatModificationsManager), nameof(OwlcatModificationsManager.AppliedModifications), MethodType.Getter)]
@@ -134,9 +134,7 @@ public static class OwlModDirectReferenceBundleDependenciesFix
         if (bundleName is null)
             return;
 
-#if DEBUG
-        __instance.Logger.Log($"Try load {DirectReferenceBundleName} ({bundleName})");
-#endif
+        __instance.Logger.DebugLog($"Try load {DirectReferenceBundleName} ({bundleName})");
 
         BundlesLoadService.Instance.LoadDependencies(bundleName);
 
@@ -155,15 +153,11 @@ public static class OwlModDirectReferenceBundleDependenciesFix
 
         __instance.m_ReferencedAssetsBundle = BundlesLoadService.Instance.RequestBundle(bundleName);
 
-#if DEBUG
-        __instance.Logger.Log($"Bundle {bundleName} is not null? {__instance.m_ReferencedAssetsBundle != null}");
-#endif
+        __instance.Logger.DebugLog($"Bundle {bundleName} is not null? {__instance.m_ReferencedAssetsBundle != null}");
 
         if (__instance.m_ReferencedAssetsBundle != null)
         {
-#if DEBUG
-            __instance.Logger.Log("Load BlueprintReferencedAssets");
-#endif
+            __instance.Logger.DebugLog("Load BlueprintReferencedAssets");
 
             __instance.m_ReferencedAssets = __instance.m_ReferencedAssetsBundle.LoadAllAssets<BlueprintReferencedAssets>().Single();
 
