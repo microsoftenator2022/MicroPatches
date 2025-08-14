@@ -31,6 +31,7 @@ class BetterModLoggerPatchesGroup : MicroPatchGroup
 {
     public override string DisplayName => "Better OwlMod logging";
     public override bool Experimental => false;
+    public override bool Optional =>  true;
 }
 
 [MicroPatchGroup(typeof(BetterModLoggerPatchesGroup))]
@@ -41,6 +42,9 @@ static class BetterModLogger
     [HarmonyPostfix]
     static void AddModLogSink(OwlcatModification __instance, string dataFolderPath)
     {
+        if (__instance is null || __instance.Logger is null)
+            return;
+
         Main.PatchLog(nameof(BetterModLogger), $"{__instance.UniqueName}.Logger.Name = {__instance.Logger?.Name}");
 
         if (__instance.Logger is null || __instance.Logger.Name != __instance.Manifest.UniqueName)
