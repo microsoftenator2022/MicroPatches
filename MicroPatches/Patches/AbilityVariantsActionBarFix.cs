@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if false
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -93,3 +94,4 @@ internal static class AbilityVariantsActionBarFix
         return outline;
     }
 }
+#endif
