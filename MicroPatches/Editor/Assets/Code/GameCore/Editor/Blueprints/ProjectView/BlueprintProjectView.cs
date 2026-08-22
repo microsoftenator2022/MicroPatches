@@ -13,6 +13,7 @@ using Kingmaker.Editor.Blueprints;
 using Kingmaker.Editor.Blueprints.ProjectView;
 using Kingmaker.Editor.Cutscenes;
 using Kingmaker.Editor.NodeEditor.Window;
+using Kingmaker.Editor.UIElements.ValuePicker;
 using Owlcat.Editor.Core.Utility;
 using Owlcat.Editor.Utility;
 using UnityEditor;
