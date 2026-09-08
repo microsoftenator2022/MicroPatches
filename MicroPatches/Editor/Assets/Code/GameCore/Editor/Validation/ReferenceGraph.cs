@@ -161,9 +161,9 @@ namespace Kingmaker.Editor.Validation
         #region MicroPatches
         //static ReferenceGraph()
         //{
-        //    BlueprintsDatabase.OnPreSave += id => Graph?.CleanReferencesInBlueprintWithId(id);
-        //    BlueprintsDatabase.OnSavedId += id => Graph?.ParseFileWithId(id);
-        //    IsReferenceTrackingSuppressed = EditorPreferences.Instance.SuppressReferenceTracking;
+        //    BlueprintsDatabase.OnPreSave +=  Graph.CleanReferencesInBlueprintWithId;
+        //    BlueprintsDatabase.OnSavedId += Graph.ParseFileWithId;
+        //   IsReferenceTrackingSuppressed = EditorPreferences.Instance.SuppressReferenceTracking;
         //}
 
         static ReferenceGraph()
@@ -357,8 +357,8 @@ namespace Kingmaker.Editor.Validation
                             Entries.Add(
                                 new Entry
                                 {
-                                    ObjectGuid = pair.Item1,
-                                    ObjectName = Path.GetFileNameWithoutExtension(pair.Item2),
+                                    ObjectGuid = pair.Guid,
+                                    ObjectName = Path.GetFileNameWithoutExtension(pair.Path),
                                     ObjectType = data.Type.Name,
                                     References = new List<Ref>()
                                 });
@@ -378,7 +378,9 @@ namespace Kingmaker.Editor.Validation
         public void CollectPotentialBlueprints()
         {
             // todo: maybe just FindFiles will be better?
-            m_ReferencingBlueprintPaths = BlueprintsDatabase.SearchByType(typeof(SimpleBlueprint)).Select(p=>p.Item2).ToList();
+            m_ReferencingBlueprintPaths = BlueprintsDatabase.SearchByType(typeof(SimpleBlueprint))
+                .Select(p=>p.Path)
+                .ToList();
         }
         
         public void CollectPotentialScenes()

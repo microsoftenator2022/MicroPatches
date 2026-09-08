@@ -54,6 +54,15 @@ namespace OwlcatModification.Editor.Build.Tasks
 			{
 				string assetPath = AssetDatabase.GUIDToAssetPath(assetGuid);
 				string bundleName = m_LayoutManager.GetBundleForAssetPath(assetPath, m_ModificationParameters.TargetFolderName);
+				
+				#region MicroPatches
+				if (File.GetAttributes(assetPath).HasFlag(FileAttributes.Directory))
+				{
+					// The template tries to treat subfolders in the Content folder as assets, causing an error, so skip them.
+					continue;
+				}
+				#endregion
+				
 				if (bundleName == null)
 				{
                     #region MicroPatches
